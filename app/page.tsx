@@ -1,65 +1,192 @@
-import Image from "next/image";
+'use client';
+
+import React, { useState } from 'react';
+import { Header } from '@/components/Header';
+import { Hero } from '@/components/Hero';
+import { QRScanner } from '@/components/QRScanner';
+import { ProductInfo } from '@/components/ProductInfo';
+import { Footer } from '@/components/Footer';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Product } from '@/types/product';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleScanSuccess = async (qrCode: string) => {
+    setIsLoading(true);
+    setError(null);
+    setProduct(null);
+
+    try {
+      const response = await fetch('/api/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ qrCode }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        if (data.valid && data.product) {
+          setProduct(data.product);
+        } else {
+          setError(data.message || 'Mã QR không hợp lệ');
+        }
+      } else {
+        setError(data.message || 'Không thể xác minh mã QR');
+      }
+    } catch (err) {
+      setError('Đã xảy ra lỗi kết nối. Vui lòng thử lại.');
+      console.error('Scan error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleScanError = (errorMessage: string) => {
+    setError(errorMessage);
+  };
+
+  const handleReset = () => {
+    setProduct(null);
+    setError(null);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <div className="min-h-screen flex flex-col bg-white">
+      <Header />
+
+      <main className="flex-1">
+        {/* Hero Section */}
+        <Hero />
+
+        {/* Scanner Section */}
+        <section id="scanner" className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold text-primary-900 mb-4">
+                Quét mã QR để xác minh
+              </h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                Hướng camera vào mã QR trên sản phẩm hoặc upload ảnh để kiểm tra tính hợp lệ
+              </p>
+            </div>
+
+            {/* Error Display */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3"
+                >
+                  <svg
+                    className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <div>
+                    <h4 className="font-medium text-red-800">Lỗi</h4>
+                    <p className="text-red-700 text-sm mt-1">{error}</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Loading Overlay */}
+            {isLoading && (
+              <div className="mb-6 p-6 bg-blue-50 border border-blue-200 rounded-xl">
+                <div className="flex items-center justify-center gap-3">
+                  <LoadingSpinner size="md" />
+                  <span className="text-blue-700 font-medium">Đang xác minh mã QR...</span>
+                </div>
+              </div>
+            )}
+
+            {/* Scanner or Product Result */}
+            <AnimatePresence mode="wait">
+              {product ? (
+                <motion.div
+                  key="product"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <ProductInfo product={product} />
+                </motion.div>
+              ) : (
+                <motion.div key="scanner" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <QRScanner onScanSuccess={handleScanSuccess} onScanError={handleScanError} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* How it works section */}
+            <div id="how-it-works" className="mt-20">
+              <h3 className="text-2xl font-bold text-center text-primary-900 mb-12">
+                Cách hoạt động
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {[
+                  {
+                    step: '01',
+                    title: 'Quét mã QR',
+                    desc: 'Đưa camera vào gần mã QR trên sản phẩm hoặc upload ảnh có mã QR',
+                    icon: (
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    step: '02',
+                    title: 'Xác minh tự động',
+                    desc: 'Hệ thống kiểm tra mã QR với cơ sở dữ liệu và cập nhật trạng thái',
+                    icon: (
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    step: '03',
+                    title: 'Xem kết quả',
+                    desc: 'Nhận thông tin chi tiết về sản phẩm, nhà sản xuất và tình trạng hợp lệ',
+                    icon: (
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                    ),
+                  },
+                ].map((item, index) => (
+                  <div key={index} className="text-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-100 text-primary-600 mb-4">
+                      {item.icon}
+                    </div>
+                    <span className="text-sm font-semibold text-accent-gold mb-2 block">Bước {item.step}</span>
+                    <h4 className="text-lg font-semibold text-primary-900 mb-2">{item.title}</h4>
+                    <p className="text-gray-600">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
+
+      <Footer />
     </div>
   );
 }

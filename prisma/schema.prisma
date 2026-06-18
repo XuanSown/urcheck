@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Product {
+  id              String    @id @default(cuid())
+  name            String
+  description     String?
+  sku             String    @unique
+  batchNumber     String
+  manufactureDate DateTime
+  expiryDate      DateTime
+  imageUrl        String?
+  companyName     String
+  companyAddress  String?
+  verified        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  qrCodes QrCode[]
+
+  @@index([sku])
+  @@index([batchNumber])
+  @@index([companyName])
+}
+
+model QrCode {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  productId      String
+  scanCount      Int       @default(0)
+  lastScannedAt  DateTime?
+  createdAt      DateTime  @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([code])
+  @@index([productId])
+}
+
+model ScanLog {
+  id         String    @id @default(cuid())
+  qrCode     String
+  ipAddress  String?
+  userAgent  String?
+  scannedAt  DateTime  @default(now())
+
+  @@index([qrCode])
+  @@index([scannedAt])
+}

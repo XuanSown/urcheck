@@ -1,0 +1,115 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import prisma from '@/lib/db';
+import { verifySchema } from '@/lib/validators';
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    // Validate input
+    const validated = verifySchema.parse(body);
+    const qrCode = validated.qrCode.trim();
+
+    // Find QR code in database
+    const qrRecord = await prisma.qrCode.findUnique({
+      where: { code: qrCode },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            sku: true,
+            batchNumber: true,
+            manufactureDate: true,
+            expiryDate: true,
+            imageUrl: true,
+            companyName: true,
+            companyAddress: true,
+            verified: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
+    });
+
+    if (!qrRecord) {
+      return NextResponse.json(
+        {
+          success: false,
+          valid: false,
+          message: 'Mã QR không tồn tại trong hệ thống',
+        },
+        { status: 404 }
+      );
+    }
+
+    // Update scan count and last scanned
+    await prisma.qrCode.update({
+      where: { id: qrRecord.id },
+      data: {
+        scanCount: { increment: 1 },
+        lastScannedAt: new Date(),
+      },
+    });
+
+    // Log the scan
+    const userAgent = request.headers.get('user-agent');
+    const ipAddress = request.headers.get('x-forwarded-for') || request.headers.get('cf-connecting-ip');
+
+    await prisma.scanLog.create({
+      data: {
+        qrCode: qrCode,
+        ipAddress: ipAddress ?? null,
+        userAgent: userAgent ?? null,
+      },
+    });
+
+    const product = qrRecord.product;
+    const isExpired = new Date(product.expiryDate) < new Date();
+    const isValid = product.verified && !isExpired;
+
+    return NextResponse.json({
+      success: true,
+      valid: isValid,
+      product: {
+        ...product,
+        manufactureDate: product.manufactureDate.toISOString(),
+        expiryDate: product.expiryDate.toISOString(),
+        createdAt: product.createdAt.toISOString(),
+        updatedAt: product.updatedAt.toISOString(),
+      },
+      message: isValid
+        ? 'Sản phẩm hợp lệ'
+        : isExpired
+        ? 'Sản phẩm đã hết hạn sử dụng'
+        : 'Sản phẩm chưa được xác minh',
+    });
+  } catch (error) {
+    console.error('Verify error:', error);
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          success: false,
+          valid: false,
+          error: 'Validation error',
+          message: 'Dữ liệu không hợp lệ',
+        },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        valid: false,
+        error: 'Internal server error',
+        message: 'Đã xảy ra lỗi, vui lòng thử lại sau',
+      },
+      { status: 500 }
+    );
+  }
+}

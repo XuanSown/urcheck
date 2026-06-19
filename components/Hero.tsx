@@ -63,7 +63,7 @@ export function Hero() {
         <motion.div
           initial={{ opacity: 0, y: 30, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+          transition={{ duration: 0.8, delay: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="mb-6 sm:mb-8 flex justify-center"
         >
           <motion.div
@@ -88,7 +88,7 @@ export function Hero() {
               opacity: 1,
               transition: {
                 staggerChildren: 0.15,
-                delayChildren: 0.2,
+                delayChildren: 1.4,
               },
             },
           }}
@@ -191,7 +191,7 @@ export function Hero() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 1 }}
+          transition={{ duration: 0.6, delay: 2.2 }}
           className="mt-10 sm:mt-16 flex flex-wrap justify-center gap-4 sm:gap-8 lg:gap-10 text-xs sm:text-sm text-gray-500 dark:text-gray-400"
         >
           {[
@@ -203,7 +203,7 @@ export function Hero() {
               key={index}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 1 + index * 0.15 }}
+              transition={{ duration: 0.4, delay: 2.2 + index * 0.15 }}
               className="flex items-center gap-1.5 sm:gap-2"
             >
               <div className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-primary-600 dark:text-primary-500">
@@ -220,7 +220,7 @@ export function Hero() {
         className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.5 }}
+        transition={{ delay: 2.6 }}
       >
         <motion.div
           animate={{ y: [0, 8, 0] }}

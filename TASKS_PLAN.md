@@ -220,6 +220,15 @@
 
 ---
 
+## 🚀 FUTURE FEATURES (Đề xuất phát triển)
+
+Các tính năng tiềm năng phù hợp với nhu cầu khách hàng:
+- **Phân tích & Cảnh báo thành phần (Ingredient Analyzer)**
+- **Tủ đồ mỹ phẩm & Nhắc hạn sử dụng (Beauty Shelf & Expiry Tracker)**
+- **Tích hợp kênh mua chính hãng (Official Store Routing)**
+
+---
+
 ## 📝 NOTES
 
 - Project dùng Next.js 16.2.9 với App Router

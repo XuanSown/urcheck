@@ -10,8 +10,7 @@ interface LogoProps {
 }
 
 /**
- * Logo component that renders the UR Check logo with transparent background.
- * Uses mix-blend-mode to remove the white background from the PNG.
+ * Logo component that renders the UR Check logo.
  */
 export function Logo({ className = '', size = 'md', variant = 'dark' }: LogoProps) {
   const sizeMap = {
@@ -22,14 +21,14 @@ export function Logo({ className = '', size = 'md', variant = 'dark' }: LogoProp
 
   const { width, height, imgClass } = sizeMap[size];
 
-  // For dark variant (dark logo on light background): use multiply blend mode
-  // For light variant (need white logo on dark background): use screen blend mode + invert
+  // For dark variant: use logo-main.png
+  // For light variant: use logo-white.png
   const isDark = variant === 'dark';
 
   return (
     <div className={`inline-flex items-center ${className}`}>
       <Image
-        src={isDark ? '/images/logo-dark.png' : '/images/logo-dark.png'}
+        src={'/images/logo-main.png'}
         alt="ur check"
         width={width}
         height={height}

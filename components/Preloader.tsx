@@ -8,11 +8,10 @@ export function Preloader() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Tự động ẩn preloader sau 2.5s (giả lập thời gian load)
-    // Trong thực tế có thể kết hợp với sự kiện window load
+    // Giảm thời gian chờ xuống 1.2s để tạo cảm giác nhanh và mượt hơn
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2500);
+    }, 1200);
 
     return () => clearTimeout(timer);
   }, []);
@@ -26,20 +25,8 @@ export function Preloader() {
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
-          {/* Subtle background effects */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <motion.div
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-primary-500/10 rounded-full blur-[80px]"
-              animate={{
-                scale: [0.8, 1.2, 0.8],
-                opacity: [0.3, 0.6, 0.3],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-            />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-primary-500/10 rounded-full blur-[80px] animate-pulse-glow" />
           </div>
 
           <div className="relative flex flex-col items-center">

@@ -12,15 +12,31 @@ interface HeaderProps {
 
 export function Header({ className }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Use ref to track scroll position without triggering re-renders
+  const lastScrollY = React.useRef(0);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      const currentScrollY = window.scrollY;
+      
+      setIsScrolled(currentScrollY > 10);
+      
+      // Hide when scrolling down past 100px, show when scrolling up
+      if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+        setIsHidden(true);
+        if (isMobileMenuOpen) setIsMobileMenuOpen(false);
+      } else if (currentScrollY < lastScrollY.current) {
+        setIsHidden(false);
+      }
+      
+      lastScrollY.current = currentScrollY;
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isMobileMenuOpen]);
 
   // Close mobile menu on resize
   useEffect(() => {
@@ -40,10 +56,9 @@ export function Header({ className }: HeaderProps) {
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out',
-        isScrolled
-          ? 'py-2 sm:py-3'
-          : 'py-3 sm:py-4',
+        'fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)]',
+        isScrolled ? 'py-2 sm:py-3' : 'py-3 sm:py-4',
+        isHidden ? '-translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100 pointer-events-auto',
         className
       )}
     >

@@ -1,51 +1,161 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface HeaderProps {
   className?: string;
 }
 
 export function Header({ className }: HeaderProps) {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Close mobile menu on resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) setIsMobileMenuOpen(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const navLinks = [
+    { href: '#how-it-works', label: 'Cách hoạt động' },
+    { href: '#support', label: 'Hỗ trợ' },
+    { href: '#contact', label: 'Liên hệ' },
+  ];
+
   return (
-    <header className={cn('w-full py-4 px-4 sm:px-6 lg:px-8', className)}>
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <Link href="/" className="flex items-center space-x-3">
-          <div className="relative h-10 w-auto">
-            <Image
-              src="/images/logo-dark.png"
-              alt="ur check"
-              width={120}
-              height={40}
-              className="object-contain h-10 w-auto"
-              style={{ width: 'auto', height: 'auto' }}
-              priority
-            />
-          </div>
-        </Link>
-        <nav className="hidden sm:flex items-center space-x-6">
-          <Link
-            href="#how-it-works"
-            className="text-primary-600 hover:text-primary-700 font-medium transition-colors"
-          >
-            Cách hoạt động
+    <header
+      className={cn(
+        'fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out',
+        isScrolled
+          ? 'py-2 sm:py-3'
+          : 'py-3 sm:py-4',
+        className
+      )}
+    >
+      {/* Glass background layer */}
+      <div
+        className={cn(
+          'absolute inset-0 transition-all duration-500',
+          isScrolled
+            ? 'bg-white/70 dark:bg-gray-950/70 backdrop-blur-2xl border-b border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_30px_rgba(0,0,0,0.05)]'
+            : 'bg-transparent'
+        )}
+      />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between">
+          {/* Logo — smaller */}
+          <Link href="/" className="flex items-center gap-2 group">
+            <motion.div
+              whileHover={{ scale: 0.96 }}
+              whileTap={{ scale: 0.92 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="relative"
+            >
+              <Image
+                src="/images/logo-dark.png"
+                alt="ur check"
+                width={56}
+                height={20}
+                className="object-contain h-5 w-auto group-hover:opacity-80 transition-opacity duration-300"
+                style={{ width: 'auto', height: 'auto' }}
+                priority
+              />
+            </motion.div>
           </Link>
-          <Link
-            href="#support"
-            className="text-primary-600 hover:text-primary-700 font-medium transition-colors"
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-8">
+            {navLinks.map((link, i) => (
+              <motion.div
+                key={link.href}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * i, duration: 0.4 }}
+              >
+                <Link
+                  href={link.href}
+                  className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-500 transition-colors duration-300 link-underline"
+                >
+                  {link.label}
+                </Link>
+              </motion.div>
+            ))}
+          </nav>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="md:hidden relative z-10 p-2.5 -mr-2.5 text-gray-700 dark:text-gray-300 hover:text-primary-600 transition-colors"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle menu"
           >
-            Hỗ trợ
-          </Link>
-          <Link
-            href="#contact"
-            className="text-primary-600 hover:text-primary-700 font-medium transition-colors"
-          >
-            Liên hệ
-          </Link>
-        </nav>
+            <div className="w-6 h-6 relative flex flex-col justify-center items-center">
+              <motion.span
+                className="absolute w-5 h-[1.5px] bg-current rounded-full"
+                animate={isMobileMenuOpen
+                  ? { rotate: 45, y: 0 }
+                  : { rotate: 0, y: -5 }
+                }
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              />
+              <motion.span
+                className="absolute w-5 h-[1.5px] bg-current rounded-full"
+                animate={isMobileMenuOpen
+                  ? { rotate: -45, y: 0 }
+                  : { rotate: 0, y: 5 }
+                }
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              />
+            </div>
+          </button>
+        </div>
+
+        {/* Mobile Menu — full glass overlay */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, filter: 'blur(10px)' }}
+              animate={{ opacity: 1, height: 'auto', filter: 'blur(0px)' }}
+              exit={{ opacity: 0, height: 0, filter: 'blur(10px)' }}
+              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+              className="md:hidden mt-2 overflow-hidden rounded-2xl bg-white/80 dark:bg-gray-950/80 backdrop-blur-2xl border border-gray-200/50 dark:border-gray-800/50 shadow-xl"
+            >
+              <nav className="flex flex-col p-4 gap-1">
+                {navLinks.map((link, index) => (
+                  <motion.div
+                    key={link.href}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.05 * index, duration: 0.3 }}
+                  >
+                    <Link
+                      href={link.href}
+                      className="block px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-900/20 rounded-xl transition-all duration-200"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  </motion.div>
+                ))}
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </header>
   );

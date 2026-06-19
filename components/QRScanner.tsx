@@ -25,14 +25,11 @@ export function QRScanner({ onScanSuccess, onScanError }: QRScannerProps) {
     setError(null);
     setMode('camera');
 
-    // Cần 1 khoảng chờ nhỏ để DOM kịp render div "qr-reader" nếu nó bị ẩn
     await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
-      // 1. Xin quyền truy cập camera chủ động trước khi khởi tạo bộ quét
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        // Tắt stream ngay vì mình chỉ cần trình duyệt hiện popup xin quyền
         stream.getTracks().forEach(track => track.stop());
       } catch (mediaError: any) {
         console.error("Camera Permission Error:", mediaError);
@@ -47,7 +44,6 @@ export function QRScanner({ onScanSuccess, onScanError }: QRScannerProps) {
         }
       }
 
-      // 2. Sau khi đã có quyền, khởi tạo Html5Qrcode
       if (scannerRef.current) {
         try { await scannerRef.current.stop(); } catch (e) {}
         scannerRef.current.clear();
@@ -67,7 +63,7 @@ export function QRScanner({ onScanSuccess, onScanError }: QRScannerProps) {
           stopScanner();
         },
         (decodeError) => {
-          // Ignore scan errors - it's normal when no QR is visible
+          // Ignore scan errors
         }
       );
 
@@ -124,7 +120,6 @@ export function QRScanner({ onScanSuccess, onScanError }: QRScannerProps) {
     fileInputRef.current?.click();
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopScanner();
@@ -136,8 +131,8 @@ export function QRScanner({ onScanSuccess, onScanError }: QRScannerProps) {
       <div
         id="qr-scanner-container"
         className={cn(
-          'relative overflow-hidden rounded-2xl bg-gray-900',
-          mode === 'camera' ? 'aspect-square' : 'aspect-square min-h-[300px]'
+          'relative overflow-hidden rounded-2xl bg-gray-900 shadow-2xl',
+          mode === 'camera' ? 'aspect-square' : 'aspect-square min-h-[250px] sm:min-h-[300px]'
         )}
       >
         <AnimatePresence mode="wait">
@@ -147,22 +142,30 @@ export function QRScanner({ onScanSuccess, onScanError }: QRScannerProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 flex flex-col items-center justify-center text-white p-8"
+              className="absolute inset-0 flex flex-col items-center justify-center text-white p-6 sm:p-8"
             >
-              <svg
-                className="w-20 h-20 mb-4 opacity-50"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <motion.div
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="mb-4"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-                />
-              </svg>
-              <p className="text-center text-sm">Nhấn "Mở camera" để bắt đầu quét QR code</p>
+                <svg
+                  className="w-16 h-16 sm:w-20 sm:h-20 opacity-50"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                  />
+                </svg>
+              </motion.div>
+              <p className="text-center text-xs sm:text-sm opacity-70 max-w-[200px] sm:max-w-none">
+                Nhấn &quot;Mở camera&quot; để bắt đầu quét QR code
+              </p>
             </motion.div>
           )}
 
@@ -174,7 +177,6 @@ export function QRScanner({ onScanSuccess, onScanError }: QRScannerProps) {
               exit={{ opacity: 0 }}
               className="absolute inset-0"
             >
-              {/* QR Scanner iframe/container */}
               <div id="qr-reader" className="h-full w-full" />
             </motion.div>
           )}
@@ -183,16 +185,31 @@ export function QRScanner({ onScanSuccess, onScanError }: QRScannerProps) {
         {/* Overlay frame for camera mode */}
         {mode === 'camera' && (
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute inset-8 border-2 border-white/30 rounded-2xl" />
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-accent-gold rounded-lg" />
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-0.5 h-full bg-accent-gold/20" />
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-0.5 w-full bg-accent-gold/20" />
+            <div className="absolute inset-6 sm:inset-8 border-2 border-white/20 rounded-2xl transition-all duration-300" />
+            <motion.div
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 sm:w-48 sm:h-48 border-2 border-primary-500 rounded-lg"
+              animate={{
+                boxShadow: ['0 0 20px rgba(234, 88, 12, 0.3)', '0 0 40px rgba(234, 88, 12, 0.6)', '0 0 20px rgba(234, 88, 12, 0.3)'],
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            {/* Scan line */}
+            <motion.div
+              className="absolute left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-transparent via-primary-500 to-transparent"
+              animate={{ top: ['25%', '75%', '25%'] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            {/* Corner accents */}
+            <div className="absolute top-6 left-6 sm:top-8 sm:left-8 w-5 h-5 sm:w-6 sm:h-6 border-t-2 border-l-2 border-primary-500" />
+            <div className="absolute top-6 right-6 sm:top-8 sm:right-8 w-5 h-5 sm:w-6 sm:h-6 border-t-2 border-r-2 border-primary-500" />
+            <div className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8 w-5 h-5 sm:w-6 sm:h-6 border-b-2 border-l-2 border-primary-500" />
+            <div className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 w-5 h-5 sm:w-6 sm:h-6 border-b-2 border-r-2 border-primary-500" />
           </div>
         )}
 
         {/* Loading overlay */}
         {mode === 'upload' && (
-          <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/70 flex items-center justify-center backdrop-blur-sm">
             <LoadingSpinner size="lg" />
           </div>
         )}
@@ -202,14 +219,13 @@ export function QRScanner({ onScanSuccess, onScanError }: QRScannerProps) {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="absolute bottom-0 left-0 right-0 bg-red-500 text-white p-4"
+            className="absolute bottom-0 left-0 right-0 bg-red-600 text-white p-3 sm:p-4"
           >
-            <p className="text-center text-sm">{error}</p>
+            <p className="text-center text-xs sm:text-sm">{error}</p>
           </motion.div>
         )}
       </div>
 
-      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -219,14 +235,20 @@ export function QRScanner({ onScanSuccess, onScanError }: QRScannerProps) {
       />
 
       {/* Control buttons */}
-      <div className="flex flex-wrap gap-3 mt-6 justify-center">
+      <div className="flex flex-col sm:flex-row gap-3 mt-5 sm:mt-6 justify-center">
         {!isScanning ? (
-          <Button onClick={startCamera} size="lg" className="shadow-lg">
-            <svg
+          <Button
+            onClick={startCamera}
+            size="lg"
+            className="w-full sm:w-auto shadow-lg hover:shadow-xl hover:shadow-primary-500/20 transform hover:scale-[1.03] active:scale-95 transition-all duration-300 group"
+          >
+            <motion.svg
               className="mr-2 h-5 w-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
             >
               <path
                 strokeLinecap="round"
@@ -240,11 +262,16 @@ export function QRScanner({ onScanSuccess, onScanError }: QRScannerProps) {
                 strokeWidth={2}
                 d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
               />
-            </svg>
-            Mở camera
+            </motion.svg>
+            <span>Mở camera</span>
           </Button>
         ) : (
-          <Button onClick={stopScanner} variant="outline" size="lg">
+          <Button
+            onClick={stopScanner}
+            variant="outline"
+            size="lg"
+            className="w-full sm:w-auto hover:scale-[1.03] active:scale-95 transition-all duration-300"
+          >
             <svg
               className="mr-2 h-5 w-5"
               fill="none"
@@ -264,11 +291,16 @@ export function QRScanner({ onScanSuccess, onScanError }: QRScannerProps) {
                 d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"
               />
             </svg>
-            Dừng camera
+            <span>Dừng camera</span>
           </Button>
         )}
 
-        <Button onClick={triggerFileUpload} variant="secondary" size="lg">
+        <Button
+          onClick={triggerFileUpload}
+          variant="secondary"
+          size="lg"
+          className="w-full sm:w-auto hover:scale-[1.03] active:scale-95 transition-all duration-300"
+        >
           <svg
             className="mr-2 h-5 w-5"
             fill="none"
@@ -282,7 +314,7 @@ export function QRScanner({ onScanSuccess, onScanError }: QRScannerProps) {
               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
           </svg>
-          Upload ảnh QR
+          <span>Upload ảnh QR</span>
         </Button>
       </div>
     </div>

@@ -3,13 +3,16 @@ import { cn } from '@/lib/utils';
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
+  glass?: boolean;
 }
 
-export function Card({ className, children, ...props }: CardProps) {
+export function Card({ className, children, glass = false, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        'bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden',
+        'bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-500',
+        'hover:shadow-2xl hover:border-primary-200 dark:hover:border-primary-800',
+        glass && 'glass',
         className
       )}
       {...props}
@@ -19,25 +22,25 @@ export function Card({ className, children, ...props }: CardProps) {
   );
 }
 
-export function CardHeader({ className, children, ...props }: CardProps) {
+export function CardHeader({ className, children, ...props }: Omit<CardProps, 'glass'>) {
   return (
-    <div className={cn('px-6 py-4 border-b border-gray-100', className)} {...props}>
+    <div className={cn('px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100', className)} {...props}>
       {children}
     </div>
   );
 }
 
-export function CardContent({ className, children, ...props }: CardProps) {
+export function CardContent({ className, children, ...props }: Omit<CardProps, 'glass'>) {
   return (
-    <div className={cn('px-6 py-4', className)} {...props}>
+    <div className={cn('px-4 sm:px-6 py-3 sm:py-4', className)} {...props}>
       {children}
     </div>
   );
 }
 
-export function CardFooter({ className, children, ...props }: CardProps) {
+export function CardFooter({ className, children, ...props }: Omit<CardProps, 'glass'>) {
   return (
-    <div className={cn('px-6 py-4 border-t border-gray-100 bg-gray-50', className)} {...props}>
+    <div className={cn('px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 bg-gray-50', className)} {...props}>
       {children}
     </div>
   );

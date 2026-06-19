@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
-import Image from 'next/image';
+import { Logo } from '@/components/Logo';
 import Link from 'next/link';
 
 export function Hero() {
@@ -72,15 +72,7 @@ export function Hero() {
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
             className="relative group"
           >
-            <Image
-              src="/images/logo-dark.png"
-              alt="ur check"
-              width={80}
-              height={28}
-              className="object-contain h-7 sm:h-8 w-auto"
-              style={{ width: 'auto', height: 'auto' }}
-              priority
-            />
+            <Logo size="md" variant="dark" />
             {/* Subtle glow on hover */}
             <div className="absolute inset-0 bg-primary-500/20 blur-xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </motion.div>

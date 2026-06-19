@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { Logo } from '@/components/Logo';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -47,13 +47,13 @@ export function Header({ className }: HeaderProps) {
         className
       )}
     >
-      {/* Glass background layer */}
+      {/* Glass background layer — always visible for fixed nav clarity */}
       <div
         className={cn(
           'absolute inset-0 transition-all duration-500',
           isScrolled
-            ? 'bg-white/70 dark:bg-gray-950/70 backdrop-blur-2xl border-b border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_30px_rgba(0,0,0,0.05)]'
-            : 'bg-transparent'
+            ? 'bg-white/80 dark:bg-gray-950/80 backdrop-blur-2xl border-b border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_30px_rgba(0,0,0,0.08)]'
+            : 'bg-white/50 dark:bg-gray-950/50 backdrop-blur-xl border-b border-gray-200/20 dark:border-gray-800/20'
         )}
       />
 
@@ -67,15 +67,7 @@ export function Header({ className }: HeaderProps) {
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               className="relative"
             >
-              <Image
-                src="/images/logo-dark.png"
-                alt="ur check"
-                width={56}
-                height={20}
-                className="object-contain h-5 w-auto group-hover:opacity-80 transition-opacity duration-300"
-                style={{ width: 'auto', height: 'auto' }}
-                priority
-              />
+              <Logo size="sm" variant="dark" className="group-hover:opacity-80 transition-opacity duration-300" />
             </motion.div>
           </Link>
 

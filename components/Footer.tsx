@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
+import { Logo } from '@/components/Logo';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
@@ -9,16 +9,6 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
-    product: [
-      { href: '#how-it-works', label: 'Cách hoạt động' },
-      { href: '#scanner', label: 'Quét QR Code' },
-      { href: '#support', label: 'Câu hỏi thường gặp' },
-    ],
-    legal: [
-      { href: '#terms', label: 'Điều khoản sử dụng' },
-      { href: '#privacy', label: 'Chính sách bảo mật' },
-      { href: '#cookies', label: 'Chính sách Cookie' },
-    ],
     contact: [
       { icon: '📧', label: 'support@urcheck.vn', href: 'mailto:support@urcheck.vn' },
       { icon: '📞', label: '1900 xxxx', href: 'tel:1900xxxx' },
@@ -66,20 +56,12 @@ export function Footer() {
         whileInView="visible"
         viewport={{ once: true, margin: '-50px' }}
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 lg:gap-12">
           {/* Brand Section */}
-          <motion.div className="sm:col-span-2 lg:col-span-1 space-y-4" variants={itemVariants}>
+          <motion.div className="space-y-4" variants={itemVariants}>
             <Link href="/" className="inline-block group">
               <div className="relative">
-                <Image
-                  src="/images/logo-dark.png"
-                  alt="ur check"
-                  width={64}
-                  height={22}
-                  className="object-contain h-6 w-auto invert brightness-0 filter group-hover:opacity-80 transition-opacity duration-300"
-                  style={{ width: 'auto', height: 'auto' }}
-                  priority
-                />
+                <Logo size="sm" variant="light" className="group-hover:opacity-80 transition-opacity duration-300" />
                 {/* Animated underline */}
                 <motion.div
                   className="absolute -bottom-1.5 left-0 h-[1px] bg-gradient-to-r from-primary-500 to-primary-400"
@@ -105,46 +87,6 @@ export function Footer() {
                 </span>
               ))}
             </div>
-          </motion.div>
-
-          {/* Khám phá */}
-          <motion.div className="space-y-4" variants={itemVariants}>
-            <h3 className="text-xs font-semibold text-white uppercase tracking-[0.2em]">
-              Khám phá
-            </h3>
-            <ul className="space-y-2.5">
-              {footerLinks.product.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-gray-500 hover:text-primary-400 transition-colors duration-300 inline-flex items-center group"
-                  >
-                    <span className="inline-block w-0 overflow-hidden group-hover:w-4 transition-all duration-300 text-primary-500">→</span>
-                    <span>{link.label}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-
-          {/* Pháp lý */}
-          <motion.div className="space-y-4" variants={itemVariants}>
-            <h3 className="text-xs font-semibold text-white uppercase tracking-[0.2em]">
-              Pháp lý
-            </h3>
-            <ul className="space-y-2.5">
-              {footerLinks.legal.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-gray-500 hover:text-primary-400 transition-colors duration-300 inline-flex items-center group"
-                  >
-                    <span className="inline-block w-0 overflow-hidden group-hover:w-4 transition-all duration-300 text-primary-500">→</span>
-                    <span>{link.label}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
           </motion.div>
 
           {/* Liên hệ */}

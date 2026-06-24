@@ -19,21 +19,76 @@ model Product {
   batchNumber     String
   manufactureDate DateTime
   expiryDate      DateTime
-  imageUrl        String?
+  skinType        String?   // e.g., "da dầu", "da khô", "da nhạy cảm"
+  suitableFor     String?   // e.g., "nam/nữ", "trẻ em", "người lớn"
+  pros            String[]  // ưu điểm
+  cons            String[]  // nhược điểm
+  ingredientAnalysis String? // phân tích thành phần chi tiết
+  tags            String[]  // tags để tìm kiếm
+  status          ProductStatus @default(PUBLISHED)
+  publishedAt     DateTime?
+  purchaseLinks   Json?     // [{ platform: 'Shopee', url: '...' }, { platform: 'Tiki', url: '...' }]
+  imageUrl        String?   // deprecated - sử dụng ProductImage thay thế
   companyName     String
   companyAddress  String?
   verified        Boolean   @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  qrCodes QrCode[]
+  barcodes Barcode[]
+  images   ProductImage[]
+  versions ProductVersion[]
 
   @@index([sku])
   @@index([batchNumber])
   @@index([companyName])
+  @@index([status])
+  @@index([publishedAt])
 }
 
-model QrCode {
+model ProductImage {
+  id         String   @id @default(cuid())
+  productId  String
+  url        String   // Supabase Storage URL
+  altText    String?
+  sortOrder  Int      // để sắp xếp thứ tự ảnh
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([sortOrder])
+}
+
+model ProductVersion {
+  id           String   @id @default(cuid())
+  productId    String
+  productSnapshot Json   // full snapshot của product
+  imageSnapshot Json?    // snapshot của product images (array stored as JSON)
+  changedBy    String   // adminUserId
+  changeReason String?  // lý do chỉnh sửa
+  createdAt    DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([createdAt])
+}
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String   // bcrypt hash
+  email     String?  @unique
+  role      UserRole @default(ADMIN)
+  isActive  Boolean  @default(true)
+  lastLogin DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Barcode {
   id             String    @id @default(cuid())
   code           String    @unique
   productId      String
@@ -45,15 +100,28 @@ model QrCode {
 
   @@index([code])
   @@index([productId])
+  @@map("barcodes")
 }
 
 model ScanLog {
   id         String    @id @default(cuid())
-  qrCode     String
+  barcode    String
   ipAddress  String?
   userAgent  String?
   scannedAt  DateTime  @default(now())
 
-  @@index([qrCode])
+  @@index([barcode])
   @@index([scannedAt])
+  @@map("scan_logs")
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum UserRole {
+  ADMIN
+  CUSTOMER
 }

@@ -1,12 +1,40 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+// Predefined EAN barcodes for seed products
+const SEED_BARCODES: Record<string, string> = {
+  'ORD-VC10-30ML': '8934012345670',    // EAN-13 (VN prefix)
+  'BOJ-SUN50-50ML': '8801234567893',    // EAN-13 (KR prefix)
+  'HL-OILCL-150ML': '4987176456786',    // EAN-13 (JP prefix)
+  'TRD-COL-30ML': '88012346',           // EAN-8 (KR, smaller product)
+};
+
 async function main() {
+  // Hash password for admin
+  const hashedPassword = await bcrypt.hash('admin123', 10);
+
   // Clear existing data
   await prisma.scanLog.deleteMany();
-  await prisma.qrCode.deleteMany();
+  await prisma.barcode.deleteMany();
+  await prisma.productImage.deleteMany();
+  await prisma.productVersion.deleteMany();
   await prisma.product.deleteMany();
+  await prisma.adminUser.deleteMany();
+
+  // Create default admin user
+  await prisma.adminUser.create({
+    data: {
+      username: 'admin',
+      password: hashedPassword,
+      email: 'admin@urcheck.vn',
+      role: 'ADMIN',
+      isActive: true,
+    },
+  });
+
+  console.log('✅ Created admin user: admin / admin123');
 
   // Sample products
   const products = [
@@ -60,24 +88,24 @@ async function main() {
     },
   ];
 
-  // Create products with QR codes
+  // Create products with barcodes
   for (const productData of products) {
     const product = await prisma.product.create({
       data: productData,
     });
 
-    // Generate QR code (simulated - in production this would be a real QR code)
-    const qrCode = `UR-${product.sku}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    // Assign barcode (EAN-13 or EAN-8 format)
+    const barcodeValue = SEED_BARCODES[product.sku];
 
-    await prisma.qrCode.create({
+    await prisma.barcode.create({
       data: {
-        code: qrCode,
+        code: barcodeValue,
         productId: product.id,
         scanCount: 0,
       },
     });
 
-    console.log(`Created product: ${product.name} with QR code: ${qrCode}`);
+    console.log(`Created product: ${product.name} with barcode: ${barcodeValue}`);
   }
 
   console.log('\n✅ Seed completed successfully!');

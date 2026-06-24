@@ -12,8 +12,8 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "ur check - Kiểm tra nguồn gốc sản phẩm mỹ phẩm",
-  description: "Quét QR code để kiểm tra tính hợp lệ và thông tin chi tiết về sản phẩm mỹ phẩm. Hỗ trợ kiểm tra nguồn gốc, hạn sử dụng, và thông tin nhà sản xuất.",
-  keywords: ["QR code", "kiểm tra sản phẩm", "mỹ phẩm", "verify product", "cosmetics"],
+  description: "Quét mã vạch để kiểm tra tính hợp lệ và thông tin chi tiết về sản phẩm mỹ phẩm. Hỗ trợ kiểm tra nguồn gốc, hạn sử dụng, và thông tin nhà sản xuất.",
+  keywords: ["barcode", "mã vạch", "EAN-13", "EAN-8", "kiểm tra sản phẩm", "mỹ phẩm", "verify product", "cosmetics"],
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

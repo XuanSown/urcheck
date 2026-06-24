@@ -9,11 +9,11 @@ export async function POST(request: NextRequest) {
 
     // Validate input
     const validated = verifySchema.parse(body);
-    const qrCode = validated.qrCode.trim();
+    const barcode = validated.barcode.trim();
 
-    // Find QR code in database
-    const qrRecord = await prisma.qrCode.findUnique({
-      where: { code: qrCode },
+    // Find barcode in database
+    const barcodeRecord = await prisma.barcode.findUnique({
+      where: { code: barcode },
       include: {
         product: {
           select: {
@@ -35,20 +35,20 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (!qrRecord) {
+    if (!barcodeRecord) {
       return NextResponse.json(
         {
           success: false,
           valid: false,
-          message: 'Mã QR không tồn tại trong hệ thống',
+          message: 'Mã vạch không tồn tại trong hệ thống',
         },
         { status: 404 }
       );
     }
 
     // Update scan count and last scanned
-    await prisma.qrCode.update({
-      where: { id: qrRecord.id },
+    await prisma.barcode.update({
+      where: { id: barcodeRecord.id },
       data: {
         scanCount: { increment: 1 },
         lastScannedAt: new Date(),
@@ -61,13 +61,13 @@ export async function POST(request: NextRequest) {
 
     await prisma.scanLog.create({
       data: {
-        qrCode: qrCode,
+        barcode: barcode,
         ipAddress: ipAddress ?? null,
         userAgent: userAgent ?? null,
       },
     });
 
-    const product = qrRecord.product;
+    const product = barcodeRecord.product;
     const isExpired = new Date(product.expiryDate) < new Date();
     const isValid = product.verified && !isExpired;
 

@@ -12,7 +12,7 @@ docker-compose up -d
 ### Step 2: Initialize Database
 ```bash
 cd "D:\Thực tập\urcheck\urcheck"
-npx prisma migrate dev --name init
+npx prisma migrate deploy
 npm run seed
 ```
 
@@ -30,7 +30,7 @@ Open http://localhost:3000
 ✅ `TASKS_PLAN.md` - Full 21-task plan with tracking
 ✅ `DATABASE_SETUP.md` - Detailed setup instructions
 ✅ `setup-db.bat` - One-click setup script
-✅ `.env.example` - Environment template
+📋 `.env.example` - Environment template (copy to `.env.local`)
 ✅ `prisma/seed.ts` - Sample data (4 products)
 
 ---
@@ -41,19 +41,31 @@ Open http://localhost:3000
 - ✅ Prisma client generated
 - ✅ Docker PostgreSQL ready
 - ✅ All API routes implemented:
-  - `POST /api/verify` - Verify QR code
+  - `POST /api/verify` - Verify barcode
   - `GET /api/product/[sku]` - Get product by SKU
   - `GET /api/health` - Health check
+  - `GET /api/admin/products` - List products (paginated, searchable)
+  - `POST /api/admin/products` - Create product
+  - `GET /api/admin/products/[id]` - Get product detail
+  - `PUT /api/admin/products/[id]` - Update product
+  - `DELETE /api/admin/products/[id]` - Delete product
+  - `POST /api/admin/products/[id]/images` - Upload image
+  - `DELETE /api/admin/products/[id]/images` - Delete image
+  - `PUT /api/admin/products/[id]/images` - Reorder images
+  - `GET /api/admin/products/[id]/versions` - Version history
+  - `POST /api/admin/products/[id]/rollback` - Rollback version
+  - `GET /api/admin/verify` - Check admin session
+  - `POST /api/admin/login` / `/api/admin/logout`
 - ✅ React components with Framer Motion
-- ✅ QR scanner (camera + upload)
+- ✅ Barcode scanner (camera + upload)
 - ✅ Tailwind CSS styling
 
 ---
 
 ## After Database Setup
 
-You can test with these seed QR codes (output from `npm run seed`):
-- Format: `UR-{SKU}-{RANDOM}`
+You can test with these seed barcodes (output from `npm run seed`):
+- Format: `EAN-13 (13 digits)` or `EAN-8 (8 digits)`
 - 3 valid products + 1 expired (Torriden collagen)
 
 ---

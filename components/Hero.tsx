@@ -135,7 +135,7 @@ export function Hero() {
             }}
             className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-8 sm:mb-12 max-w-xl sm:max-w-2xl mx-auto leading-relaxed px-2"
           >
-            Quét QR code để xác minh tính hợp lệ, ngày sản xuất, hạn sử dụng và thông tin nhà sản xuất.
+            Quét mã vạch để xác minh tính hợp lệ, ngày sản xuất, hạn sử dụng và thông tin nhà sản xuất.
             <span className="hidden sm:inline"> Nhanh chóng, miễn phí, không cần đăng ký.</span>
           </motion.p>
 
@@ -178,10 +178,10 @@ export function Hero() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                    d="M3 5h1v14H3M6 5h1v14H6M9 5h2v14H9M13 5h1v14h-1M16 5h2v14h-2M21 5h1v14h-1"
                   />
                 </svg>
-                <span className="relative z-10">Quét QR Code ngay</span>
+                <span className="relative z-10">Quét mã vạch ngay</span>
               </Button>
             </Link>
           </motion.div>

@@ -63,10 +63,10 @@ npm run seed
 
 This will create:
 - 4 sample products (3 valid, 1 expired)
-- QR codes for each product
-- You'll see console output with the generated QR codes
+- Barcodes (EAN-13/EAN-8) for each product
+- You'll see console output with the generated barcodes
 
-**Example QR code format:** `UR-ORD-VC10-30ML-ABC123`
+**Example barcode format:** `8934012345670`
 
 ---
 
@@ -99,20 +99,20 @@ Open http://localhost:3000 in your browser.
 
 ---
 
-## Testing the QR Scanner
+## Testing the Barcode Scanner
 
 1. Open the app in browser
 2. Click "Mở camera" to start camera scanning
-3. Or click "Upload ảnh QR" to upload a QR code image
+3. Or click "Upload ảnh mã vạch" to upload a barcode image
 
-**Test QR codes** (from seed output):
-- Use any QR code printed from the seed output
-- Format: `UR-{SKU}-{RANDOM}`
+**Test barcodes** (from seed output):
+- Use any barcode printed from the seed output
+- Format: `EAN-13` or `EAN-8`
 
 **Expected results:**
 - ✅ Valid products: Show green "Hợp lệ" badge with full product info
 - ❌ Expired product (Torriden collagen): Shows "Hết hạn" in red
-- ❌ Invalid QR code: Shows "Mã QR không tồn tại trong hệ thống"
+- ❌ Invalid barcode: Shows "Mã vạch không tồn tại trong hệ thống"
 
 ---
 
@@ -168,14 +168,14 @@ Wait for logs showing: "database system is ready to accept connections"
 urcheck/
 ├── app/
 │   ├── api/
-│   │   ├── verify/route.ts      # POST - Verify QR code
+│   │   ├── verify/route.ts      # POST - Verify barcode
 │   │   ├── product/[sku]/route.ts  # GET - Product by SKU
 │   │   └── health/route.ts      # GET - Health check
 │   ├── layout.tsx
-│   ├── page.tsx                 # Main page with QR scanner
+│   ├── page.tsx                 # Main page with barcode scanner
 │   └── globals.css
 ├── components/
-│   ├── QRScanner.tsx           # QR code scanner component
+│   ├── BarcodeScanner.tsx      # Barcode scanner component
 │   ├── ProductInfo.tsx         # Product display
 │   ├── Header.tsx
 │   ├── Hero.tsx

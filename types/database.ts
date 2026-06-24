@@ -56,7 +56,7 @@ export interface Database {
           updatedAt?: Date;
         };
       };
-      qr_codes: {
+      barcodes: {
         Row: {
           id: string;
           code: string;
@@ -85,21 +85,21 @@ export interface Database {
       scan_logs: {
         Row: {
           id: string;
-          qrCode: string;
+          barcode: string;
           ipAddress: string | null;
           userAgent: string | null;
           scannedAt: Date;
         };
         Insert: {
           id?: string;
-          qrCode: string;
+          barcode: string;
           ipAddress?: string | null;
           userAgent?: string | null;
           scannedAt?: Date;
         };
         Update: {
           id?: string;
-          qrCode?: string;
+          barcode?: string;
           ipAddress?: string | null;
           userAgent?: string | null;
           scannedAt?: Date;

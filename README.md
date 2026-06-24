@@ -1,10 +1,10 @@
 # ur check — Xác minh nguồn gốc sản phẩm mỹ phẩm
 
-> Nền tảng quét QR Code để kiểm tra tính hợp lệ, ngày sản xuất, hạn sử dụng và thông tin nhà sản xuất mỹ phẩm. Nhanh chóng, miễn phí, không cần đăng ký.
+> Nền tảng quét mã vạch (barcode) để kiểm tra tính hợp lệ, ngày sản xuất, hạn sử dụng và thông tin nhà sản xuất mỹ phẩm. Nhanh chóng, miễn phí, không cần đăng ký.
 
 ## ✨ Tính năng
 
-- **Quét QR Code** — Sử dụng camera hoặc upload ảnh để quét mã QR trên sản phẩm
+- **Quét mã vạch** — Sử dụng camera hoặc upload ảnh để quét mã vạch (EAN-13, EAN-8) trên sản phẩm
 - **Xác minh tức thì** — Kiểm tra tính hợp lệ sản phẩm trong vài giây
 - **Thông tin chi tiết** — Hiển thị số lô, SKU, ngày sản xuất, hạn sử dụng, nhà sản xuất
 - **Responsive** — Tối ưu trải nghiệm trên mọi thiết bị (mobile, tablet, desktop)
@@ -18,7 +18,7 @@
 | Ngôn ngữ | TypeScript |
 | Styling | Tailwind CSS v4 |
 | Animation | Framer Motion |
-| QR Scanner | html5-qrcode |
+| Barcode Scanner | html5-qrcode |
 | Database | Prisma + Supabase (PostgreSQL) |
 | Font | **JetBrains Mono** (duy nhất) |
 
@@ -68,7 +68,8 @@ cd urcheck
 npm install
 
 # Thiết lập biến môi trường
-cp .env.local.example .env.local
+cp .env.example .env.local
+# Sau đó điền giá trị thật cho DATABASE_URL, DIRECT_URL, SUPABASE keys
 
 # Khởi tạo database
 npx prisma generate
@@ -94,7 +95,7 @@ urcheck/
 │   ├── Header.tsx        # Navigation header
 │   ├── Hero.tsx          # Hero section
 │   ├── Footer.tsx        # Footer
-│   ├── QRScanner.tsx     # QR code scanner
+│   ├── BarcodeScanner.tsx # Barcode scanner (EAN-13, EAN-8)
 │   └── ProductInfo.tsx   # Hiển thị thông tin sản phẩm
 ├── lib/                   # Utilities & database
 ├── prisma/               # Database schema & migrations

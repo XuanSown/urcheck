@@ -45,3 +45,11 @@ export function CardFooter({ className, children, ...props }: Omit<CardProps, 'g
     </div>
   );
 }
+
+export function CardTitle({ className, children, ...props }: Omit<CardProps, 'glass'>) {
+  return (
+    <h3 className={cn('font-semibold text-gray-900', className)} {...props}>
+      {children}
+    </h3>
+  );
+}

@@ -21,6 +21,16 @@
 | 9 | **Trang chủ `/` đổi thành trang verify** (Cách 1) | Không tạo `/v/[code]` riêng |
 | 10 | **Render QR bằng thư viện JS** frontend | `qrcode.react` (React component) |
 
+### Quyết định bổ sung (lần 2)
+
+| # | Quyết định | Chi tiết |
+|---|---|---|
+| 11 | **Domain**: `urcheck.vercel.app` | URL QR: `https://urcheck.vercel.app/?q=AB12CD` |
+| 12 | **Logo urcheck nhúng giữa QR** | Branding, error correction `H` (30%) |
+| 13 | **Nhãn QR size mặc định 2×2cm**, cho phép chọn **2, 3, 4 cm** | Mỹ phẩm thường nhỏ |
+| 14 | **Dashboard admin thống kê scan** | "Top QR được quét nhiều nhất" |
+| 15 | **Đa ngôn ngữ** Việt ↔ Anh | Trang verify `/`, trang admin |
+
 ---
 
 ## 🏗️ Kiến trúc đề xuất

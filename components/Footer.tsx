@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Logo } from '@/components/Logo';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
@@ -159,10 +160,13 @@ export function Footer() {
                 <span>Hệ thống đang hoạt động</span>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-600">
-              <span>Phát triển tại</span>
-              <span className="text-sm">🇻🇳</span>
-              <span>Việt Nam</span>
+            <div className="flex items-center gap-3 text-xs text-gray-600">
+              <LanguageSwitcher />
+              <div className="flex items-center gap-2">
+                <span>Phát triển tại</span>
+                <span className="text-sm">🇻🇳</span>
+                <span>Việt Nam</span>
+              </div>
             </div>
           </div>
         </motion.div>

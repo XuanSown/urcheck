@@ -62,13 +62,13 @@ export function Header({ className }: HeaderProps) {
         className
       )}
     >
-      {/* Glass background layer — always visible for fixed nav clarity */}
+      {/* Glass background layer — solid enough to fully mask content behind */}
       <div
         className={cn(
           'absolute inset-0 transition-all duration-500',
           isScrolled
-            ? 'bg-white/80 dark:bg-gray-950/80 backdrop-blur-2xl border-b border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_30px_rgba(0,0,0,0.08)]'
-            : 'bg-white/50 dark:bg-gray-950/50 backdrop-blur-xl border-b border-gray-200/20 dark:border-gray-800/20'
+            ? 'bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl border-b border-gray-200/60 dark:border-gray-800/60 shadow-[0_4px_30px_rgba(0,0,0,0.08)]'
+            : 'bg-white/90 dark:bg-gray-950/90 backdrop-blur-xl border-b border-gray-200/40 dark:border-gray-800/40'
         )}
       />
 

@@ -153,7 +153,7 @@ export function Hero() {
             }}
             className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4 sm:px-0"
           >
-            <Link href="#scanner" className="w-full sm:w-auto">
+            <Link href="#verify" className="w-full sm:w-auto">
               <Button
                 size="xl"
                 className="w-full sm:w-auto shadow-xl hover:shadow-2xl hover:shadow-primary-500/20 transform hover:scale-[1.03] active:scale-95 transition-all duration-300 group relative overflow-hidden"

@@ -10,9 +10,9 @@ import { ProductInfo } from '@/components/ProductInfo';
 import { Footer } from '@/components/Footer';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Button } from '@/components/ui/Button';
+import { QrScanner } from '@/components/QrScanner';
 import { Product } from '@/types/product';
 import { useLocale } from '@/components/I18nProvider';
-import { LOCALES, type Locale } from '@/lib/i18n';
 import { extractQrCode } from '@/lib/qr-utils';
 
 interface VerifyResponse {
@@ -38,6 +38,7 @@ function HomeInner() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [verifyResult, setVerifyResult] = useState<VerifyResponse | null>(null);
+  const [showScanner, setShowScanner] = useState(false);
 
   // When ?q=AB12CD is in the URL, pre-fill the input and trigger verification.
   useEffect(() => {
@@ -92,25 +93,6 @@ function HomeInner() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* Language switcher (top-right). Persists via I18nProvider. */}
-      <div className="fixed top-3 right-3 z-40 flex items-center gap-1 bg-white/80 backdrop-blur border border-gray-200 rounded-full p-1 shadow-sm">
-        {LOCALES.map((loc: Locale) => (
-          <button
-            key={loc}
-            type="button"
-            onClick={() => setLocale(loc)}
-            className={`px-2.5 py-1 text-xs font-semibold rounded-full transition-colors ${
-              locale === loc
-                ? 'bg-primary-600 text-white'
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-            aria-pressed={locale === loc}
-          >
-            {loc.toUpperCase()}
-          </button>
-        ))}
-      </div>
-
       <Header />
 
       <main className="flex-1">
@@ -158,16 +140,32 @@ function HomeInner() {
                       >
                         {locale === 'vi' ? 'Mã QR hoặc URL' : 'QR code or URL'}
                       </label>
-                      <input
-                        id="qr-input"
-                        type="text"
-                        value={codeInput}
-                        onChange={(e) => setCodeInput(e.target.value)}
-                        placeholder={t('verify_input_placeholder')}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-base"
-                        autoComplete="off"
-                        autoFocus
-                      />
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                          id="qr-input"
+                          type="text"
+                          value={codeInput}
+                          onChange={(e) => setCodeInput(e.target.value)}
+                          placeholder={t('verify_input_placeholder')}
+                          className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-base"
+                          autoComplete="off"
+                          autoFocus
+                        />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="lg"
+                          onClick={() => setShowScanner(true)}
+                          className="w-full sm:w-auto"
+                          aria-label={locale === 'vi' ? 'Mở camera quét mã QR' : 'Open camera to scan QR'}
+                        >
+                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 001.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          {locale === 'vi' ? 'Quét bằng camera' : 'Scan with camera'}
+                        </Button>
+                      </div>
                     </div>
                     <Button
                       type="submit"
@@ -247,6 +245,17 @@ function HomeInner() {
       </main>
 
       <Footer />
+
+      {/* QR scanner dialog — opened from input button or Hero CTA */}
+      <QrScanner
+        isOpen={showScanner}
+        onClose={() => setShowScanner(false)}
+        onScanSuccess={(decoded) => {
+          setShowScanner(false);
+          setCodeInput(decoded);
+          void handleVerify(decoded);
+        }}
+      />
     </div>
   );
 }

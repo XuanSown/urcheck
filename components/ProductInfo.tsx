@@ -206,7 +206,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
       {/* Scan another button */}
       <div className="mt-6 sm:mt-8 text-center">
-        <Link href="#scanner">
+        <Link href="#verify" className="w-full sm:w-auto">
           <Button
             size="lg"
             className="w-full sm:w-auto shadow-lg hover:shadow-xl hover:shadow-primary-500/20 transform hover:scale-[1.03] active:scale-95 transition-all duration-300 group"

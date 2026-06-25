@@ -9,7 +9,16 @@ const loginSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    // Parse body safely - empty or malformed JSON must return 400, not 500.
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Dữ liệu không hợp lệ' },
+        { status: 400 }
+      );
+    }
     const validated = loginSchema.parse(body);
 
     const result = await loginAdmin(validated.username, validated.password);

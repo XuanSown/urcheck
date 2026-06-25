@@ -70,7 +70,13 @@ export function extractQrCode(rawInput: string): string | null {
     try {
       const url = new URL(trimmed);
       const q = url.searchParams.get('q');
-      if (q && /^[A-Z0-9]{4,12}$/i.test(q)) return q.toUpperCase();
+      if (q) {
+        // searchParams.get already URL-decodes, so a value like "FF%2011"
+        // becomes "FF 11" here. Strip any non-alphanumeric chars that
+        // might have slipped in (e.g. spaces, punctuation).
+        const cleaned = q.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (cleaned.length >= 4 && cleaned.length <= 12) return cleaned;
+      }
       const m = url.pathname.match(/\/(?:v|verify|q)\/([A-Z0-9]{4,12})/i);
       if (m) return m[1].toUpperCase();
     } catch {

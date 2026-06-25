@@ -379,7 +379,7 @@ function AdminProductsInner() {
                     <p className="text-xs text-gray-500 mb-2">SKU: {product.sku}</p>
 
                     <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                      <span>{product.barcodeCount} mã vạch</span>
+                      <span>{product.barcodeCount} mã QR</span>
                       <span>•</span>
                       <span>{product.versionCount} phiên bản</span>
                     </div>

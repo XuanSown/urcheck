@@ -574,12 +574,12 @@ export default function ProductForm({
         {/* Barcodes - only shown when ENABLE_BARCODE=true */}
         {barcodeAllowed && (
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Mã barcode / EAN</h2>
+          <h2 className="text-lg font-semibold mb-4">Mã QR</h2>
           <div className="space-y-3">
             {/* Existing barcodes (in edit mode) */}
             {formData.existingBarcodes && formData.existingBarcodes.length > 0 && (
               <div className="mb-3">
-                <p className="text-xs text-gray-500 mb-2">Mã hiện tại:</p>
+                <p className="text-xs text-gray-500 mb-2">Mã QR hiện tại:</p>
                 <div className="flex flex-wrap gap-2">
                   {formData.existingBarcodes.map((barcode, idx) => (
                     <span
@@ -606,7 +606,7 @@ export default function ProductForm({
                     setFormData(prev => ({ ...prev, barcodes: newBarcodes }));
                   }}
                   className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
-                  placeholder="Nhập mã barcode (EAN-13, EAN-8)"
+                  placeholder="Nhập mã QR"
                 />
                 <Button
                   type="button"
@@ -639,7 +639,7 @@ export default function ProductForm({
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Thêm mã barcode
+              Thêm mã QR
             </Button>
           </div>
         </Card>
@@ -993,7 +993,7 @@ export default function ProductForm({
                   {/* Barcodes */}
                   {(previewData.existingBarcodes?.length || previewData.barcodes?.length) ? (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Mã vạch</h4>
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Mã QR</h4>
                       <div className="flex flex-wrap gap-2">
                         {[...(previewData.existingBarcodes || []), ...(previewData.barcodes || [])].map((barcode: string, idx: number) => (
                           <span key={`${barcode}-${idx}`} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-mono rounded">

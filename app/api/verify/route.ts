@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           valid: false,
-          message: 'Mã vạch không tồn tại trong hệ thống',
+          message: 'Mã QR không tồn tại trong hệ thống',
         },
         { status: 404 }
       );

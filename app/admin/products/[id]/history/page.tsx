@@ -140,7 +140,7 @@ export default function VersionHistoryPage() {
       companyWebsite: 'Website công ty',
       purchaseLinks: 'Link mua hàng',
       images: 'Hình ảnh',
-      barcodes: 'Mã vạch',
+      barcodes: 'Mã QR',
     };
     return labels[field] || field;
   };

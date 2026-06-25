@@ -73,12 +73,12 @@ export function Footer() {
               </div>
             </Link>
             <p className="text-gray-500 text-sm leading-relaxed max-w-xs">
-              Nền tảng xác minh nguồn gốc sản phẩm mỹ phẩm bằng công nghệ mã vạch — nhanh chóng, chính xác và miễn phí.
+              Nền tảng xác minh nguồn gốc sản phẩm mỹ phẩm bằng công nghệ mã QR — nhanh chóng, chính xác và miễn phí.
             </p>
 
             {/* Tech stack badges */}
             <div className="flex flex-wrap gap-2 pt-1">
-              {['Barcode Scan', 'Xác minh tức thì', 'Miễn phí'].map((tag) => (
+              {['QR Scan', 'Xác minh tức thì', 'Miễn phí'].map((tag) => (
                 <span
                   key={tag}
                   className="inline-flex items-center px-2.5 py-1 text-[10px] sm:text-xs font-medium rounded-md bg-gray-900 text-gray-500 border border-gray-800 hover:border-gray-700 hover:text-gray-400 transition-colors duration-200"

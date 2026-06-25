@@ -135,7 +135,7 @@ export function Hero() {
             }}
             className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-8 sm:mb-12 max-w-xl sm:max-w-2xl mx-auto leading-relaxed px-2"
           >
-            Quét mã vạch để xác minh tính hợp lệ, ngày sản xuất, hạn sử dụng và thông tin nhà sản xuất.
+            Quét mã QR để xác minh tính hợp lệ, ngày sản xuất, hạn sử dụng và thông tin nhà sản xuất.
             <span className="hidden sm:inline"> Nhanh chóng, miễn phí, không cần đăng ký.</span>
           </motion.p>
 
@@ -181,7 +181,7 @@ export function Hero() {
                     d="M3 5h1v14H3M6 5h1v14H6M9 5h2v14H9M13 5h1v14h-1M16 5h2v14h-2M21 5h1v14h-1"
                   />
                 </svg>
-                <span className="relative z-10">Quét mã vạch ngay</span>
+                <span className="relative z-10">Quét mã QR ngay</span>
               </Button>
             </Link>
           </motion.div>

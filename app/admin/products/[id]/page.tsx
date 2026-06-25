@@ -280,7 +280,7 @@ export default function EditProductPage() {
                   {/* Barcodes */}
                   {previewData.existingBarcodes && previewData.existingBarcodes.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Mã vạch ({previewData.existingBarcodes.length})</h4>
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Mã QR ({previewData.existingBarcodes.length})</h4>
                       <div className="flex flex-wrap gap-2">
                         {previewData.existingBarcodes.map(barcode => (
                           <span key={barcode} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-mono rounded">

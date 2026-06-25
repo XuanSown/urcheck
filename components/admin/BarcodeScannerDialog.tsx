@@ -105,7 +105,7 @@ export default function BarcodeScannerDialog({
 
     // Check if barcode already exists
     if (existingBarcodes.includes(barcode)) {
-      setError(`Mã vạch "${barcode}" đã tồn tại trong danh sách. Vui lòng thêm mã khác.`);
+      setError(`Mã QR "${barcode}" đã tồn tại trong danh sách. Vui lòng thêm mã khác.`);
       setTimeout(() => {
         setMode('idle');
         setError(null);
@@ -140,7 +140,7 @@ export default function BarcodeScannerDialog({
 
         handleBarcode(result);
       } catch (err: any) {
-        setError('Không tìm thấy mã vạch hợp lệ trong ảnh');
+        setError('Không tìm thấy mã QR hợp lệ trong ảnh');
         setTimeout(() => {
           setMode('idle');
           setError(null);
@@ -181,8 +181,8 @@ export default function BarcodeScannerDialog({
           {/* Header */}
           <div className="p-4 border-b border-gray-100 flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-gray-900">Quét mã barcode</h3>
-              <p className="text-sm text-gray-500">Thêm mã vạch cho sản phẩm</p>
+              <h3 className="font-semibold text-gray-900">Quét mã QR</h3>
+              <p className="text-sm text-gray-500">Thêm mã QR cho sản phẩm</p>
             </div>
             <button
               onClick={onClose}
@@ -212,7 +212,7 @@ export default function BarcodeScannerDialog({
                     <rect x="3" y="4" width="18" height="16" rx="2" />
                     <path strokeDasharray="4 4" d="M7 8h10M7 12h6" />
                   </svg>
-                  <p className="text-gray-400 mb-6">Chọn phương thức quét mã barcode</p>
+                  <p className="text-gray-400 mb-6">Chọn phương thức quét mã QR</p>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Button onClick={startCamera} size="lg">
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

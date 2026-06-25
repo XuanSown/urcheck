@@ -115,7 +115,7 @@ export function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeScannerPro
           setMode('idle');
         })
         .catch((err) => {
-          const errorMessage = 'Không tìm thấy mã vạch hợp lệ trong ảnh';
+          const errorMessage = 'Không tìm thấy mã QR hợp lệ trong ảnh';
           setError(errorMessage);
           onScanError?.(errorMessage);
           setMode('idle');
@@ -169,7 +169,7 @@ export function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeScannerPro
                 </svg>
               </motion.div>
               <p className="text-center text-xs sm:text-sm opacity-70 max-w-[200px] sm:max-w-none">
-                Nhấn &quot;Mở camera&quot; để bắt đầu quét mã vạch
+                Nhấn &quot;Mở camera&quot; để bắt đầu quét mã QR
               </p>
             </motion.div>
           )}
@@ -319,7 +319,7 @@ export function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeScannerPro
               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
           </svg>
-          <span>Upload ảnh mã vạch</span>
+          <span>Upload ảnh mã QR</span>
         </Button>
       </div>
     </div>

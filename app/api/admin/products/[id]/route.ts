@@ -108,7 +108,7 @@ export async function PUT(
       if (existingBarcodes.length > 0) {
         const duplicates = existingBarcodes.map(b => `${b.code} (${b.product.name})`).join(', ');
         return NextResponse.json(
-          { success: false, error: `Mã vạch đã tồn tại trong sản phẩm khác: ${duplicates}` },
+          { success: false, error: `Mã QR đã tồn tại trong sản phẩm khác: ${duplicates}` },
           { status: 409 }
         );
       }

@@ -56,44 +56,61 @@ export async function loginAdmin(
   username: string,
   password: string
 ): Promise<{ success: boolean; sessionToken?: string; error?: string }> {
+  // 1. Look up the user. If the DB itself is unreachable, surface that
+  //    explicitly so the operator knows to check DATABASE_URL / network.
+  let user;
   try {
-    // Find user
-    const user = await prisma.adminUser.findFirst({
+    user = await prisma.adminUser.findFirst({
       where: { username, isActive: true },
     });
+  } catch (dbError) {
+    console.error('Login DB error:', dbError);
+    return {
+      success: false,
+      error: 'Không kết nối được cơ sở dữ liệu. Vui lòng thử lại sau.',
+    };
+  }
 
-    if (!user) {
-      return { success: false, error: 'Tài khoản không tồn tại' };
-    }
+  if (!user) {
+    return { success: false, error: 'Tài khoản không tồn tại' };
+  }
 
-    // Verify password
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) {
-      return { success: false, error: 'Mật khẩu không đúng' };
-    }
+  // 2. Verify password. Wrap separately so a corrupted hash surfaces as
+  //    a clear error instead of the generic catch-all.
+  let isValid = false;
+  try {
+    isValid = await bcrypt.compare(password, user.password);
+  } catch (bcryptError) {
+    console.error('Bcrypt error during login:', bcryptError);
+    return {
+      success: false,
+      error: 'Mật khẩu trong cơ sở dữ liệu bị lỗi. Liên hệ quản trị viên.',
+    };
+  }
+  if (!isValid) {
+    return { success: false, error: 'Mật khẩu không đúng' };
+  }
 
-    // Update last login
+  // 3. Update last login. Failure here is non-fatal — log and continue.
+  try {
     await prisma.adminUser.update({
       where: { id: user.id },
       data: { lastLogin: new Date() },
     });
-
-    // Create session
-    const session: AdminSession = {
-      userId: user.id,
-      username: user.username,
-      role: user.role,
-      expires: Date.now() + SESSION_MAX_AGE,
-    };
-
-    const sessionToken = createSessionToken(session);
-
-    // Set cookie (use Next.js Response cookies in API route)
-    return { success: true, sessionToken };
-  } catch (error) {
-    console.error('Login error:', error);
-    return { success: false, error: 'Đã xảy ra lỗi, vui lòng thử lại' };
+  } catch (updateError) {
+    console.warn('Failed to update lastLogin (non-fatal):', updateError);
   }
+
+  // 4. Create session
+  const session: AdminSession = {
+    userId: user.id,
+    username: user.username,
+    role: user.role,
+    expires: Date.now() + SESSION_MAX_AGE,
+  };
+
+  const sessionToken = createSessionToken(session);
+  return { success: true, sessionToken };
 }
 
 // Logout function

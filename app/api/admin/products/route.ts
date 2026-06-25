@@ -3,6 +3,12 @@ import { z } from 'zod';
 import { requireAdmin } from '@/lib/auth';
 import prisma from '@/lib/db';
 import { productSchema } from '@/lib/validators';
+import {
+  buildQrUrl,
+  generateBatchCode,
+  generateOrderCode,
+  generateQrCode,
+} from '@/lib/qr-utils';
 
 // GET /api/admin/products?page=&limit=&search=&status=
 export async function GET(request: NextRequest) {
@@ -143,7 +149,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create product with images and barcodes in transaction
+    // Create product with images, barcodes and QR code in transaction
     const result = await prisma.$transaction(async (tx) => {
       // Create product
       const product = await tx.product.create({
@@ -169,7 +175,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Create barcodes if provided
+      // Create barcodes if provided (legacy pipeline, hidden behind flag)
       if (validatedData.barcodes && validatedData.barcodes.length > 0) {
         await tx.barcode.createMany({
           data: validatedData.barcodes.map(code => ({
@@ -178,6 +184,20 @@ export async function POST(request: NextRequest) {
           })),
         });
       }
+
+      // Auto-create QR code for this product (one product = one QR)
+      const qrCodeValue = generateQrCode(product.name);
+      const qrOrderCode = validatedData.orderCode?.trim() || generateOrderCode();
+      const qrBatchCode = validatedData.batchCode?.trim() || generateBatchCode();
+      const qrCode = await tx.qrCode.create({
+        data: {
+          code: qrCodeValue,
+          url: buildQrUrl(qrCodeValue),
+          productId: product.id,
+          orderCode: qrOrderCode,
+          batchCode: qrBatchCode,
+        },
+      });
 
       // Create version record
       const productSnapshot = {
@@ -198,13 +218,16 @@ export async function POST(request: NextRequest) {
         companyName: product.companyName,
         companyAddress: product.companyAddress,
         verified: product.verified,
+        qrCode: qrCodeValue,
+        orderCode: qrOrderCode,
+        batchCode: qrBatchCode,
       };
 
       await tx.productVersion.create({
         data: {
           productId: product.id,
           productSnapshot,
-          changedBy: 'system', // Will be replaced with actual admin user ID
+          changedBy: 'system',
           changeReason: 'Tạo mới sản phẩm',
         },
       });
@@ -213,14 +236,14 @@ export async function POST(request: NextRequest) {
       const fullProduct = await tx.product.findUnique({
         where: { id: product.id },
         include: {
-          images: {
-            orderBy: { sortOrder: 'asc' },
-          },
+          images: { orderBy: { sortOrder: 'asc' } },
           barcodes: true,
+          qrCodes: { orderBy: { createdAt: 'desc' } },
           _count: {
             select: {
               barcodes: true,
               versions: true,
+              qrCodes: true,
             },
           },
         },
@@ -233,6 +256,15 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Tạo sản phẩm thành công',
       data: formatProductResponse(result!),
+      qrCode: result?.qrCodes?.[0]
+        ? {
+            id: result.qrCodes[0].id,
+            code: result.qrCodes[0].code,
+            url: result.qrCodes[0].url,
+            orderCode: result.qrCodes[0].orderCode,
+            batchCode: result.qrCodes[0].batchCode,
+          }
+        : null,
     }, { status: 201 });
   } catch (error) {
     console.error('Create product error:', error);

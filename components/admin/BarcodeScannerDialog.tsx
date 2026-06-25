@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
+import { isBarcodeEnabled } from '@/lib/feature-flags';
 
 interface BarcodeScannerDialogProps {
   isOpen: boolean;
@@ -17,6 +18,11 @@ export default function BarcodeScannerDialog({
   onBarcodeDetected,
   existingBarcodes,
 }: BarcodeScannerDialogProps) {
+  // Hide the dialog entirely when the legacy barcode feature is disabled.
+  if (!isBarcodeEnabled()) {
+    return null;
+  }
+
   const [mode, setMode] = useState<'idle' | 'camera' | 'upload'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);

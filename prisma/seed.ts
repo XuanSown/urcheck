@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import { createHash, randomBytes } from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -25,12 +26,40 @@ function pastDate(monthsAgo: number): Date {
   return d;
 }
 
+// Seed QR helpers (mirror lib/qr-utils.ts so seed works without env vars).
+function seedGenerateQrCode(productName: string, salt: string): string {
+  const hash = createHash('sha256')
+    .update(`${productName}::${salt}::${randomBytes(4).toString('hex')}`)
+    .digest('hex')
+    .toUpperCase();
+  return hash.substring(0, 6).replace(/[^A-Z0-9]/g, 'X');
+}
+
+function seedGenerateOrderCode(): string {
+  const d = new Date();
+  const yy = String(d.getFullYear()).slice(-2);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const rand = createHash('sha256').update(randomBytes(4)).digest('hex').substring(0, 4).toUpperCase();
+  return `ORD-${yy}${mm}${dd}-${rand}`;
+}
+
+function seedGenerateBatchCode(): string {
+  const d = new Date();
+  const yy = String(d.getFullYear()).slice(-2);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const rand = createHash('sha256').update(randomBytes(4)).digest('hex').substring(0, 4).toUpperCase();
+  return `BATCH-${yy}${mm}${dd}-${rand}`;
+}
+
 async function main() {
   // Hash password for admin
   const hashedPassword = await bcrypt.hash('admin123', 10);
 
-  // Clear existing data
+  // Clear existing data (preserve schema order to avoid FK issues)
   await prisma.scanLog.deleteMany();
+  await prisma.qrCode.deleteMany();
   await prisma.barcode.deleteMany();
   await prisma.productImage.deleteMany();
   await prisma.productVersion.deleteMany();
@@ -118,15 +147,14 @@ async function main() {
     },
   ];
 
-  // Create products with barcodes
+  // Create products with barcodes and QR codes
   for (const productData of products) {
     const product = await prisma.product.create({
       data: productData,
     });
 
-    // Assign barcode (EAN-13 or EAN-8 format)
+    // Assign legacy EAN barcode (kept in DB but UI hidden behind flag)
     const barcodeValue = SEED_BARCODES[product.sku];
-
     await prisma.barcode.create({
       data: {
         code: barcodeValue,
@@ -135,21 +163,39 @@ async function main() {
       },
     });
 
+    // Auto-generate QR code (active flow)
+    const qrCodeValue = seedGenerateQrCode(product.name, product.id);
+    const qrUrl = `http://localhost:3000/?q=${qrCodeValue}`;
+    await prisma.qrCode.create({
+      data: {
+        code: qrCodeValue,
+        url: qrUrl,
+        productId: product.id,
+        orderCode: seedGenerateOrderCode(),
+        batchCode: seedGenerateBatchCode(),
+        scanCount: 0,
+        isActive: true,
+      },
+    });
+
     const expired = product.expiryDate < new Date();
     console.log(
       `Created product: ${product.name}\n` +
-      `  barcode: ${barcodeValue} | status: ${expired ? '❌ EXPIRED' : '✅ VALID'}`
+      `  barcode: ${barcodeValue} | status: ${expired ? '❌ EXPIRED' : '✅ VALID'}\n` +
+      `  QR:      ${qrCodeValue}  →  ${qrUrl}`
     );
   }
 
   console.log('\n✅ Seed completed successfully!');
   console.log(`Total products: ${products.length}`);
-  console.log(`\n📋 Test barcodes:`);
+  console.log(`\n📋 Test barcodes (legacy, hidden in UI):`);
   console.log(`  - 8934012345670  → Serum Vitamin C (VALID)`);
   console.log(`  - 8801234567893  → Kem chống nắng BOJ (VALID)`);
   console.log(`  - 4987176456786  → Tẩy trang HADA LABO (VALID)`);
   console.log(`  - 88012346       → Collagen Torriden (EXPIRED - để test)`);
   console.log(`\n🔑 Admin login: admin / admin123`);
+  console.log(`\n💡 To find generated QR codes, look at the seed output above or run:`);
+  console.log(`   npx prisma studio   →   open "qr_codes" table`);
 }
 
 main()

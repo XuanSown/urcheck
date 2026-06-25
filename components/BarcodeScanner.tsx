@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { cn } from '@/lib/utils';
+import { isBarcodeEnabled } from '@/lib/feature-flags';
 
 interface BarcodeScannerProps {
   onScanSuccess: (decodedText: string) => void;
@@ -15,6 +16,13 @@ interface BarcodeScannerProps {
 type ScanMode = 'camera' | 'upload' | 'idle';
 
 export function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeScannerProps) {
+  // Hide the entire scanner if the legacy barcode feature is disabled.
+  // We still keep this component intact (do not delete) so it can be
+  // re-enabled by flipping ENABLE_BARCODE=true in .env.
+  if (!isBarcodeEnabled()) {
+    return null;
+  }
+
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [mode, setMode] = useState<ScanMode>('idle');

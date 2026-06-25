@@ -36,6 +36,7 @@ model Product {
   updatedAt       DateTime  @updatedAt
 
   barcodes Barcode[]
+  qrCodes QrCode[]
   images   ProductImage[]
   versions ProductVersion[]
 
@@ -113,6 +114,27 @@ model ScanLog {
   @@index([barcode])
   @@index([scannedAt])
   @@map("scan_logs")
+}
+
+model QrCode {
+  id            String    @id @default(cuid())
+  code          String    @unique                // 6 ký tự hash (vd "AB12CD")
+  url           String                          // URL đầy đủ, vd "https://urcheck.vercel.app/?q=AB12CD"
+  productId     String
+  orderCode     String?                         // Mã đơn hàng (admin nhập hoặc tự sinh)
+  batchCode     String?                         // Mã lô (admin nhập hoặc tự sinh)
+  scanCount     Int       @default(0)
+  lastScannedAt DateTime?
+  isActive      Boolean   @default(true)        // Có thể tắt QR cũ khi cần
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([code])
+  @@index([productId])
+  @@index([scanCount])
+  @@map("qr_codes")
 }
 
 enum ProductStatus {

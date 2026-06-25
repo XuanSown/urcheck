@@ -1,0 +1,161 @@
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/db';
+import { isQrEnabled } from '@/lib/feature-flags';
+import { extractQrCode } from '@/lib/qr-utils';
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ code: string }> }
+) {
+  try {
+    if (!isQrEnabled()) {
+      return NextResponse.json(
+        {
+          success: false,
+          valid: false,
+          message: 'Tính năng QR đang tạm tắt',
+        },
+        { status: 503 }
+      );
+    }
+
+    const { code: rawCode } = await params;
+    const code = extractQrCode(rawCode);
+
+    if (!code) {
+      return NextResponse.json(
+        {
+          success: false,
+          valid: false,
+          message: 'Mã QR không hợp lệ',
+        },
+        { status: 400 }
+      );
+    }
+
+    const qrCode = await prisma.qrCode.findUnique({
+      where: { code },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            sku: true,
+            batchNumber: true,
+            manufactureDate: true,
+            expiryDate: true,
+            imageUrl: true,
+            companyName: true,
+            companyAddress: true,
+            verified: true,
+            createdAt: true,
+            updatedAt: true,
+            skinType: true,
+            suitableFor: true,
+            pros: true,
+            cons: true,
+            ingredientAnalysis: true,
+            tags: true,
+          },
+        },
+      },
+    });
+
+    if (!qrCode || !qrCode.isActive) {
+      return NextResponse.json(
+        {
+          success: false,
+          valid: false,
+          message: 'Mã QR không tồn tại trong hệ thống',
+        },
+        { status: 404 }
+      );
+    }
+
+    // Best-effort scan tracking (do not fail the response if it errors)
+    try {
+      const userAgent = request.headers.get('user-agent');
+      const ipAddress =
+        request.headers.get('x-forwarded-for') ||
+        request.headers.get('cf-connecting-ip') ||
+        request.headers.get('x-real-ip');
+
+      await prisma.$transaction([
+        prisma.qrCode.update({
+          where: { id: qrCode.id },
+          data: {
+            scanCount: { increment: 1 },
+            lastScannedAt: new Date(),
+          },
+        }),
+      ]);
+      // The ScanLog model only accepts the legacy "barcode" column, so we
+      // route QR scans through it as well to keep history consistent.
+      await prisma.scanLog.create({
+        data: {
+          barcode: `QR:${qrCode.code}`,
+          ipAddress: ipAddress ?? null,
+          userAgent: userAgent ?? null,
+        },
+      });
+    } catch (trackErr) {
+      console.warn('QR scan tracking failed:', trackErr);
+    }
+
+    const product = qrCode.product;
+    const isExpired = new Date(product.expiryDate) < new Date();
+    const isValid = product.verified && !isExpired;
+
+    return NextResponse.json({
+      success: true,
+      valid: isValid,
+      qrCode: {
+        id: qrCode.id,
+        code: qrCode.code,
+        url: qrCode.url,
+        orderCode: qrCode.orderCode,
+        batchCode: qrCode.batchCode,
+        scanCount: qrCode.scanCount,
+        lastScannedAt: qrCode.lastScannedAt?.toISOString() ?? null,
+        isActive: qrCode.isActive,
+      },
+      product: {
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        sku: product.sku,
+        batchNumber: product.batchNumber,
+        manufactureDate: product.manufactureDate.toISOString(),
+        expiryDate: product.expiryDate.toISOString(),
+        imageUrl: product.imageUrl,
+        companyName: product.companyName,
+        companyAddress: product.companyAddress,
+        verified: product.verified,
+        skinType: product.skinType,
+        suitableFor: product.suitableFor,
+        pros: product.pros,
+        cons: product.cons,
+        ingredientAnalysis: product.ingredientAnalysis,
+        tags: product.tags,
+        createdAt: product.createdAt.toISOString(),
+        updatedAt: product.updatedAt.toISOString(),
+      },
+      message: isValid
+        ? 'Sản phẩm hợp lệ'
+        : isExpired
+        ? 'Sản phẩm đã hết hạn sử dụng'
+        : 'Sản phẩm chưa được xác minh',
+    });
+  } catch (error) {
+    console.error('GET /api/qr/[code] error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        valid: false,
+        message: 'Đã xảy ra lỗi, vui lòng thử lại',
+      },
+      { status: 500 }
+    );
+  }
+}

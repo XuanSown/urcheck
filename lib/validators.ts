@@ -33,6 +33,8 @@ export const productSchema = z.object({
   companyAddress: z.string().optional(),
   verified: z.boolean().optional().default(true),
   barcodes: z.array(z.string()).max(10).optional().default([]),
+  orderCode: z.string().max(100).optional(),
+  batchCode: z.string().max(100).optional(),
 }).refine(
   (data) => {
     const manufactureDate = new Date(data.manufactureDate);

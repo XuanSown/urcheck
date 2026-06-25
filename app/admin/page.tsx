@@ -8,26 +8,47 @@ import { formatNumber, formatDate, formatPercent } from '@/lib/format-utils';
 
 // Async component to fetch dashboard data
 async function getDashboardData() {
-  const [totalProducts, totalBarcodes, recentScans, expiringProducts, productsByStatus] = await Promise.all([
+  const [
+    totalProducts,
+    totalBarcodes,
+    totalQrCodes,
+    totalQrScans,
+    recentScans,
+    expiringProducts,
+    productsByStatus,
+    topQrCodes,
+  ] = await Promise.all([
     prisma.product.count(),
     prisma.barcode.count(),
+    prisma.qrCode.count({ where: { isActive: true } }),
+    prisma.qrCode.aggregate({ _sum: { scanCount: true } }),
     prisma.scanLog.count({
       where: {
         scannedAt: {
-          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
         },
       },
     }),
     prisma.product.count({
       where: {
         expiryDate: {
-          lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Expiring in 30 days
+          lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         },
       },
     }),
     prisma.product.groupBy({
       by: ['status'],
       _count: { id: true },
+    }),
+    prisma.qrCode.findMany({
+      where: { isActive: true },
+      orderBy: { scanCount: 'desc' },
+      take: 5,
+      include: {
+        product: {
+          select: { id: true, name: true, sku: true },
+        },
+      },
     }),
   ]);
 
@@ -67,11 +88,14 @@ async function getDashboardData() {
   return {
     totalProducts,
     totalBarcodes,
+    totalQrCodes,
+    totalQrScans: totalQrScans._sum.scanCount || 0,
     recentScans,
     expiringProducts,
     productsByStatus,
     scanActivity,
     topScannedProducts,
+    topQrCodes,
   };
 }
 
@@ -117,7 +141,7 @@ export async function AdminDashboardPage() {
       </div>
 
       {/* Metrics cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">Tổng sản phẩm</CardTitle>
@@ -168,6 +192,33 @@ export async function AdminDashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold text-amber-600">{formatNumber(data.expiringProducts)}</div>
             <p className="text-xs text-gray-500 mt-1">Hết hạn trong 30 ngày</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">Mã QR</CardTitle>
+            <svg className="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+            </svg>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-900">{formatNumber(data.totalQrCodes)}</div>
+            <p className="text-xs text-gray-500 mt-1">Mã QR đang hoạt động</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">Lượt quét QR</CardTitle>
+            <svg className="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary-600">{formatNumber(data.totalQrScans)}</div>
+            <p className="text-xs text-gray-500 mt-1">Tổng lượt quét QR</p>
           </CardContent>
         </Card>
       </div>
@@ -224,7 +275,7 @@ export async function AdminDashboardPage() {
       </div>
 
       {/* Bottom row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Top scanned products */}
         <Card>
           <CardHeader>
@@ -246,6 +297,35 @@ export async function AdminDashboardPage() {
                 </div>
               ))}
               {data.topScannedProducts.length === 0 && (
+                <p className="text-center text-gray-400 py-4">Chưa có dữ liệu</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Top QR codes */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Mã QR được quét nhiều nhất</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {data.topQrCodes.map((qr, idx) => (
+                <div key={qr.id} className="flex items-center gap-3 p-3 rounded-lg bg-primary-50/50 hover:bg-primary-50 transition-colors border border-primary-100/50">
+                  <span className="text-sm font-bold text-primary-300 w-5">#{idx + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {qr.product?.name ?? 'Sản phẩm đã xoá'}
+                    </p>
+                    <p className="text-xs font-mono text-primary-700">{qr.code}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-primary-600">{formatNumber(qr.scanCount)}</p>
+                    <p className="text-xs text-gray-500">lượt quét</p>
+                  </div>
+                </div>
+              ))}
+              {data.topQrCodes.length === 0 && (
                 <p className="text-center text-gray-400 py-4">Chưa có dữ liệu</p>
               )}
             </div>

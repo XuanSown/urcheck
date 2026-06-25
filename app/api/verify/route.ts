@@ -2,9 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/db';
 import { verifySchema } from '@/lib/validators';
+import { isBarcodeEnabled } from '@/lib/feature-flags';
 
 export async function POST(request: NextRequest) {
   try {
+    // Legacy barcode endpoint. Returns 503 while the feature flag is off so
+    // the route is still discoverable but does not leak product data.
+    if (!isBarcodeEnabled()) {
+      return NextResponse.json(
+        {
+          success: false,
+          valid: false,
+          message: 'Tính năng quét barcode đang được tắt tạm thời. Vui lòng sử dụng QR code.',
+        },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
 
     // Validate input

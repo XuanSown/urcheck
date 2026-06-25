@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireAdmin } from '@/lib/auth';
+import { requireAdminApi } from '@/lib/auth';
 import prisma from '@/lib/db';
 import { productSchema } from '@/lib/validators';
 import {
@@ -13,7 +13,8 @@ import {
 // GET /api/admin/products?page=&limit=&search=&status=
 export async function GET(request: NextRequest) {
   try {
-    await requireAdmin();
+    const auth = await requireAdminApi();
+    if ('error' in auth) return auth.error;
 
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
@@ -115,7 +116,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAdmin();
+    const auth = await requireAdminApi();
+    if ('error' in auth) return auth.error;
     const body = await request.json();
     const validatedData = productSchema.parse(body);
 

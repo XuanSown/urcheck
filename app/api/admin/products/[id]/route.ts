@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireAdmin } from '@/lib/auth';
+import { requireAdminApi } from '@/lib/auth';
 import prisma from '@/lib/db';
 import { productSchema } from '@/lib/validators';
 
@@ -9,7 +9,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin();
+    const auth = await requireAdminApi();
+    if ('error' in auth) return auth.error;
     const { id } = await params;
 
     const product = await prisma.product.findUnique({
@@ -57,7 +58,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin();
+    const auth = await requireAdminApi();
+    if ('error' in auth) return auth.error;
     const { id } = await params;
     const body = await request.json();
 
@@ -278,7 +280,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin();
+    const auth = await requireAdminApi();
+    if ('error' in auth) return auth.error;
     const { id } = await params;
 
     // Check if product exists

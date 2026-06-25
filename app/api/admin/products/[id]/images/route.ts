@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { requireAdminApi } from '@/lib/auth';
 import prisma from '@/lib/db';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase';
 
@@ -46,7 +46,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin();
+    const auth = await requireAdminApi();
+    if ('error' in auth) return auth.error;
     const { id } = await params;
 
     // Verify product exists
@@ -163,7 +164,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin();
+    const auth = await requireAdminApi();
+    if ('error' in auth) return auth.error;
     const { id } = await params;
     const { searchParams } = new URL(request.url);
     const imageId = searchParams.get('imageId');
@@ -263,7 +265,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin();
+    const auth = await requireAdminApi();
+    if ('error' in auth) return auth.error;
     const { id } = await params;
     const body = await request.json();
 

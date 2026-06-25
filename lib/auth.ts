@@ -122,11 +122,41 @@ export async function getCurrentAdmin() {
   return user;
 }
 
-// Admin guard for server components
+// Admin guard for server components.
+// Returns the current admin user or redirects to /admin/login.
 export async function requireAdmin() {
   const session = await verifySession();
   if (!session) {
     redirect('/admin/login');
   }
   return await getCurrentAdmin();
+}
+
+// Admin guard for API route handlers.
+// Returns { user } on success or { error } containing a NextResponse on
+// failure. Callers should `if ('error' in result) return result.error;`.
+export async function requireAdminApi(): Promise<
+  { user: Awaited<ReturnType<typeof getCurrentAdmin>> } | { error: import('next/server').NextResponse }
+> {
+  const session = await verifySession();
+  if (!session) {
+    const { NextResponse } = await import('next/server');
+    return {
+      error: NextResponse.json(
+        { success: false, error: 'Chưa đăng nhập hoặc phiên đã hết hạn' },
+        { status: 401 }
+      ),
+    };
+  }
+  const user = await getCurrentAdmin();
+  if (!user) {
+    const { NextResponse } = await import('next/server');
+    return {
+      error: NextResponse.json(
+        { success: false, error: 'Không tìm thấy thông tin người dùng' },
+        { status: 401 }
+      ),
+    };
+  }
+  return { user };
 }

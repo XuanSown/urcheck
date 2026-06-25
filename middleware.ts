@@ -59,7 +59,8 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match admin routes
+    // Match admin routes (including the bare /admin root).
+    '/admin',
     '/admin/:path*',
   ],
 };

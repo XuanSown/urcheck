@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 
-export default function AdminLoginPage() {
+function AdminLoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -28,8 +29,15 @@ export default function AdminLoginPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Redirect to admin dashboard
-        router.push('/admin');
+        // Honor ?redirect=... if it points to an internal admin path;
+        // otherwise fall back to the dashboard. This prevents redirect loops
+        // when middleware redirected the user here with a deep link.
+        const rawRedirect = searchParams.get('redirect') || '/admin';
+        const safeRedirect =
+          rawRedirect.startsWith('/admin') && !rawRedirect.startsWith('/admin/login')
+            ? rawRedirect
+            : '/admin';
+        router.push(safeRedirect);
         router.refresh();
       } else {
         setError(data.error || 'Đăng nhập thất bại');
@@ -142,5 +150,13 @@ export default function AdminLoginPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminLoginForm />
+    </Suspense>
   );
 }

@@ -21,10 +21,6 @@ export async function middleware(request: NextRequest) {
 
   // If it's a public route, allow access
   if (isPublicRoute(path)) {
-    // If trying to access login while already logged in, redirect to dashboard
-    if (hasSession && path === '/admin/login') {
-      return NextResponse.redirect(new URL('/admin', request.url));
-    }
     return NextResponse.next();
   }
 

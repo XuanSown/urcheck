@@ -1,9 +1,10 @@
 'use client';
 
+import type { ReactElement } from 'react';
 import { useTheme, type Theme } from './ThemeProvider';
 import { cn } from '@/lib/utils';
 
-const OPTIONS: Array<{ value: Theme; label: string; icon: JSX.Element }> = [
+const OPTIONS: Array<{ value: Theme; label: string; icon: ReactElement }> = [
   {
     value: 'light',
     label: 'Sáng',

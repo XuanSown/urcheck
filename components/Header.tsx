@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Logo } from '@/components/Logo';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -97,7 +98,7 @@ export function Header({ className }: HeaderProps) {
               >
                 <Link
                   href={link.href}
-                  className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-500 transition-colors duration-300 link-underline"
+                  className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-300 link-underline"
                 >
                   {link.label}
                 </Link>
@@ -105,9 +106,12 @@ export function Header({ className }: HeaderProps) {
             ))}
           </nav>
 
+          {/* Theme toggle (light/dark/system) */}
+          <ThemeToggle variant="iconOnly" />
+
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden relative z-10 p-2.5 -mr-2.5 text-gray-700 dark:text-gray-300 hover:text-primary-600 transition-colors"
+            className="md:hidden relative z-10 p-2.5 -mr-2.5 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -140,7 +144,7 @@ export function Header({ className }: HeaderProps) {
               animate={{ opacity: 1, height: 'auto', filter: 'blur(0px)' }}
               exit={{ opacity: 0, height: 0, filter: 'blur(10px)' }}
               transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-              className="md:hidden mt-2 overflow-hidden rounded-2xl bg-white/80 dark:bg-gray-950/80 backdrop-blur-2xl border border-gray-200/50 dark:border-gray-800/50 shadow-xl"
+              className="md:hidden mt-2 overflow-hidden rounded-2xl bg-white/90 dark:bg-gray-950/90 backdrop-blur-2xl border border-gray-200/50 dark:border-gray-800/50 shadow-xl"
             >
               <nav className="flex flex-col p-4 gap-1">
                 {navLinks.map((link, index) => (
@@ -152,7 +156,7 @@ export function Header({ className }: HeaderProps) {
                   >
                     <Link
                       href={link.href}
-                      className="block px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-900/20 rounded-xl transition-all duration-200"
+                      className="block px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50/50 dark:hover:bg-primary-900/20 rounded-xl transition-all duration-200"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {link.label}

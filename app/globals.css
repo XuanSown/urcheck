@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode: add `.dark` class to <html> or any ancestor
+   to activate all `dark:` variants. This lets users toggle theme manually. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #111111;
@@ -40,24 +44,37 @@
   --font-mono: var(--font-jetbrains-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #f5f5f5;
-    --primary-50: #2d1808;
-    --primary-100: #452208;
-    --primary-200: #5e2d0a;
-    --primary-300: #77360d;
-    --primary-400: #8f3f0f;
-    --primary-500: #a84812;
-    --primary-600: #c2410c;
-    --primary-700: #ea580c;
-    --primary-800: #fb923c;
-    --primary-900: #fed7aa;
-    --accent-stone: #d6d3d1;
-    --accent-stone-light: #e7e5e4;
-    --accent-stone-dark: #a8a29e;
-  }
+/* Dark mode variables — activated when <html class="dark"> is set.
+   (Replaces the previous prefers-color-scheme media query so users can
+   toggle theme manually via ThemeToggle.) */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #f5f5f5;
+  --primary-50: #2d1808;
+  --primary-100: #452208;
+  --primary-200: #5e2d0a;
+  --primary-300: #77360d;
+  --primary-400: #8f3f0f;
+  --primary-500: #a84812;
+  --primary-600: #c2410c;
+  --primary-700: #ea580c;
+  --primary-800: #fb923c;
+  --primary-900: #fed7aa;
+  --accent-stone: #d6d3d1;
+  --accent-stone-light: #e7e5e4;
+  --accent-stone-dark: #a8a29e;
+}
+
+/* Smooth transition when switching theme */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+
+html.theme-transitioning,
+html.theme-transitioning * {
+  transition: background-color 0.3s ease, color 0.3s ease,
+              border-color 0.3s ease, box-shadow 0.3s ease !important;
 }
 
 /* ========================================

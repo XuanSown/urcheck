@@ -24,7 +24,7 @@ export function Card({ className, children, glass = false, ...props }: CardProps
 
 export function CardHeader({ className, children, ...props }: Omit<CardProps, 'glass'>) {
   return (
-    <div className={cn('px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100', className)} {...props}>
+    <div className={cn('px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-800', className)} {...props}>
       {children}
     </div>
   );
@@ -40,7 +40,7 @@ export function CardContent({ className, children, ...props }: Omit<CardProps, '
 
 export function CardFooter({ className, children, ...props }: Omit<CardProps, 'glass'>) {
   return (
-    <div className={cn('px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 bg-gray-50', className)} {...props}>
+    <div className={cn('px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50', className)} {...props}>
       {children}
     </div>
   );
@@ -48,7 +48,7 @@ export function CardFooter({ className, children, ...props }: Omit<CardProps, 'g
 
 export function CardTitle({ className, children, ...props }: Omit<CardProps, 'glass'>) {
   return (
-    <h3 className={cn('font-semibold text-gray-900', className)} {...props}>
+    <h3 className={cn('font-semibold text-gray-900 dark:text-gray-100', className)} {...props}>
       {children}
     </h3>
   );

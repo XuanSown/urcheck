@@ -51,7 +51,7 @@ function AdminLoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-accent-stone-light px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-accent-stone-light dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 px-4 transition-colors">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -67,8 +67,8 @@ function AdminLoginForm() {
         </div>
 
         {/* Login Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-          <h2 className="text-xl font-semibold text-gray-900 text-center mb-6">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-8 transition-colors">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 text-center mb-6">
             Đăng nhập Admin
           </h2>
 
@@ -76,7 +76,7 @@ function AdminLoginForm() {
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"
+              className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-400"
             >
               {error}
             </motion.div>
@@ -84,7 +84,7 @@ function AdminLoginForm() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Tên đăng nhập
               </label>
               <input
@@ -92,7 +92,7 @@ function AdminLoginForm() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all text-gray-900"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                 placeholder="Nhập tên đăng nhập"
                 required
                 disabled={isLoading}
@@ -100,7 +100,7 @@ function AdminLoginForm() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Mật khẩu
               </label>
               <input
@@ -108,7 +108,7 @@ function AdminLoginForm() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all text-gray-900"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                 placeholder="Nhập mật khẩu"
                 required
                 disabled={isLoading}
@@ -136,17 +136,17 @@ function AdminLoginForm() {
           </form>
 
           <div className="mt-6 text-center">
-            <Link href="/" className="text-sm text-primary-600 hover:text-primary-700 transition-colors">
+            <Link href="/" className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
               ← Quay lại trang chủ
             </Link>
           </div>
         </div>
 
         {/* Demo credentials */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-xl text-sm">
-          <p className="font-medium text-gray-700 mb-1">Tài khoản mặc định:</p>
-          <p className="text-gray-600">Username: <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">admin</code></p>
-          <p className="text-gray-600">Password: <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">admin123</code></p>
+        <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl text-sm transition-colors">
+          <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">Tài khoản mặc định:</p>
+          <p className="text-gray-600 dark:text-gray-400">Username: <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-xs">admin</code></p>
+          <p className="text-gray-600 dark:text-gray-400">Password: <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-xs">admin123</code></p>
         </div>
       </motion.div>
     </div>

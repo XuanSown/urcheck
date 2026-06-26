@@ -3,6 +3,7 @@ import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Preloader } from "@/components/Preloader";
 import { I18nProvider } from "@/components/I18nProvider";
+import { ThemeProvider, ThemeScript } from "@/components/ThemeProvider";
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
@@ -42,11 +43,17 @@ export default function RootLayout({
       className={`${jetbrainsMono.variable} h-full`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-white text-gray-900">
-        <I18nProvider>
-          <Preloader />
-          {children}
-        </I18nProvider>
+      <head>
+        {/* Apply theme class before page renders to prevent flash. */}
+        <ThemeScript />
+      </head>
+      <body className="min-h-full flex flex-col bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+        <ThemeProvider>
+          <I18nProvider>
+            <Preloader />
+            {children}
+          </I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -3,6 +3,7 @@
 import React from 'react';
 import { Logo } from '@/components/Logo';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
@@ -160,7 +161,8 @@ export function Footer() {
                 <span>Hệ thống đang hoạt động</span>
               </div>
             </div>
-            <div className="flex items-center gap-3 text-xs text-gray-600">
+            <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
+              <ThemeToggle variant="iconOnly" />
               <LanguageSwitcher />
               <div className="flex items-center gap-2">
                 <span>Phát triển tại</span>

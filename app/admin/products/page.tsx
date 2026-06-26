@@ -12,8 +12,6 @@ interface Product {
   id: string;
   name: string;
   description?: string;
-  sku: string;
-  batchNumber: string;
   manufactureDate: string;
   expiryDate: string;
   skinType?: string;
@@ -25,9 +23,8 @@ interface Product {
   companyName: string;
   verified: boolean;
   createdAt: string;
-  images: Array<{ id: string; url: string; isPrimary: boolean }>;
-  barcodeCount: number;
   versionCount: number;
+  images: { id: string; url: string; isPrimary: boolean }[];
 }
 
 export default function AdminProductsPage() {
@@ -207,7 +204,7 @@ function AdminProductsInner() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Tìm kiếm theo tên, SKU, mã lô, công ty..."
+                placeholder="Tìm kiếm theo tên, công ty..."
                 className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -376,11 +373,8 @@ function AdminProductsInner() {
                   {/* Content */}
                   <div className="p-4 flex-1 flex flex-col">
                     <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1 line-clamp-2">{product.name}</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">SKU: {product.sku}</p>
 
                     <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
-                      <span>{product.barcodeCount} mã QR</span>
-                      <span>•</span>
                       <span>{product.versionCount} phiên bản</span>
                     </div>
 

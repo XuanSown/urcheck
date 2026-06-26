@@ -14,8 +14,6 @@ export interface Database {
           id: string;
           name: string;
           description: string | null;
-          sku: string;
-          batchNumber: string;
           manufactureDate: Date;
           expiryDate: Date;
           imageUrl: string | null;
@@ -29,8 +27,6 @@ export interface Database {
           id?: string;
           name: string;
           description?: string | null;
-          sku: string;
-          batchNumber: string;
           manufactureDate: Date;
           expiryDate: Date;
           imageUrl?: string | null;
@@ -44,8 +40,6 @@ export interface Database {
           id?: string;
           name?: string;
           description?: string | null;
-          sku?: string;
-          batchNumber?: string;
           manufactureDate?: Date;
           expiryDate?: Date;
           imageUrl?: string | null;
@@ -56,50 +50,24 @@ export interface Database {
           updatedAt?: Date;
         };
       };
-      barcodes: {
-        Row: {
-          id: string;
-          code: string;
-          productId: string;
-          scanCount: number;
-          lastScannedAt: Date | null;
-          createdAt: Date;
-        };
-        Insert: {
-          id?: string;
-          code: string;
-          productId: string;
-          scanCount?: number;
-          lastScannedAt?: Date | null;
-          createdAt?: Date;
-        };
-        Update: {
-          id?: string;
-          code?: string;
-          productId?: string;
-          scanCount?: number;
-          lastScannedAt?: Date | null;
-          createdAt?: Date;
-        };
-      };
       scan_logs: {
         Row: {
           id: string;
-          barcode: string;
+          qrCode: string;
           ipAddress: string | null;
           userAgent: string | null;
           scannedAt: Date;
         };
         Insert: {
           id?: string;
-          barcode: string;
+          qrCode: string;
           ipAddress?: string | null;
           userAgent?: string | null;
           scannedAt?: Date;
         };
         Update: {
           id?: string;
-          barcode?: string;
+          qrCode?: string;
           ipAddress?: string | null;
           userAgent?: string | null;
           scannedAt?: Date;

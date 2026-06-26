@@ -68,8 +68,7 @@ export async function POST(
         data: {
           name: snapshot.name,
           description: snapshot.description,
-          sku: snapshot.sku,
-          batchNumber: snapshot.batchNumber,
+
           manufactureDate: new Date(snapshot.manufactureDate),
           expiryDate: new Date(snapshot.expiryDate),
           skinType: snapshot.skinType,
@@ -86,19 +85,7 @@ export async function POST(
         },
       });
 
-      // Recreate barcodes from snapshot
-      await tx.barcode.deleteMany({
-        where: { productId: id },
-      });
 
-      if (snapshot.barcodes && Array.isArray(snapshot.barcodes) && snapshot.barcodes.length > 0) {
-        await tx.barcode.createMany({
-          data: snapshot.barcodes.map((code: string) => ({
-            code,
-            productId: id,
-          })),
-        });
-      }
 
       // Create version record for the rollback action
       await tx.productVersion.create({

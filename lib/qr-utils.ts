@@ -30,32 +30,6 @@ export function buildQrUrl(code: string, baseUrl?: string): string {
 }
 
 /**
- * Auto-generate an order code if admin leaves it blank.
- * Format: ORD-YYMMDD-XXXX (e.g. ORD-260625-A3F2).
- */
-export function generateOrderCode(): string {
-  const d = new Date();
-  const yy = String(d.getFullYear()).slice(-2);
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  const rand = createHash('sha256').update(randomBytes(4)).digest('hex').substring(0, 4).toUpperCase();
-  return `ORD-${yy}${mm}${dd}-${rand}`;
-}
-
-/**
- * Auto-generate a batch code if admin leaves it blank.
- * Format: BATCH-YYMMDD-XXXX.
- */
-export function generateBatchCode(): string {
-  const d = new Date();
-  const yy = String(d.getFullYear()).slice(-2);
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  const rand = createHash('sha256').update(randomBytes(4)).digest('hex').substring(0, 4).toUpperCase();
-  return `BATCH-${yy}${mm}${dd}-${rand}`;
-}
-
-/**
  * Extract a QR code from raw user input.
  * Accepts either a raw code ("AB12CD") or a full URL
  * ("https://urcheck.vercel.app/?q=AB12CD" or "https://urcheck.vercel.app/?q=AB12CD").

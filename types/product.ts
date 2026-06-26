@@ -2,8 +2,6 @@ export interface Product {
   id: string;
   name: string;
   description?: string;
-  sku: string;
-  batchNumber: string;
   manufactureDate: string | Date;
   expiryDate: string | Date;
   skinType?: string;
@@ -46,8 +44,6 @@ export interface ProductVersion {
 export interface ProductFormData {
   name: string;
   description?: string;
-  sku: string;
-  batchNumber: string;
   manufactureDate: string;
   expiryDate: string;
   skinType?: string;
@@ -63,23 +59,10 @@ export interface ProductFormData {
   verified: boolean;
 }
 
-export interface Barcode {
-  id: string;
-  code: string;
-  productId: string;
-  scanCount: number;
-  lastScannedAt?: string | Date;
-  createdAt: string | Date;
-}
-
 export interface VerificationResult {
   valid: boolean;
   product?: Product;
   message?: string;
-}
-
-export interface ScanRequest {
-  barcode: string;
 }
 
 export interface ApiResponse<T = unknown> {

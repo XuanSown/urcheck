@@ -3,8 +3,6 @@ import { z } from 'zod';
 export const productSchema = z.object({
   name: z.string().min(1, 'Tên sản phẩm là bắt buộc').max(255),
   description: z.string().optional(),
-  sku: z.string().min(1, 'Mã SKU là bắt buộc').max(100),
-  batchNumber: z.string().min(1, 'Số lô là bắt buộc').max(100),
   manufactureDate: z.string().refine(
     (val) => !isNaN(Date.parse(val)),
     { message: 'Ngày sản xuất không hợp lệ' }
@@ -32,9 +30,6 @@ export const productSchema = z.object({
   companyName: z.string().min(1, 'Tên công ty là bắt buộc').max(255),
   companyAddress: z.string().optional(),
   verified: z.boolean().optional().default(true),
-  barcodes: z.array(z.string()).max(10).optional().default([]),
-  orderCode: z.string().max(100).optional(),
-  batchCode: z.string().max(100).optional(),
 }).refine(
   (data) => {
     const manufactureDate = new Date(data.manufactureDate);
@@ -48,11 +43,3 @@ export const productSchema = z.object({
 );
 
 export type ProductFormData = z.infer<typeof productSchema>;
-
-export const barcodeScanSchema = z.object({
-  barcode: z.string().min(1, 'Barcode is required'),
-});
-
-export const verifySchema = barcodeScanSchema;
-
-export type VerifyInput = z.infer<typeof verifySchema>;

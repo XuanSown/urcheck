@@ -3,15 +3,6 @@
 // After modifying env vars, restart the dev server.
 
 /**
- * Toggle the legacy barcode scanning pipeline.
- * Default: false (barcode UI/API hidden).
- * Set ENABLE_BARCODE=true in .env to bring it back later.
- */
-export const isBarcodeEnabled = (): boolean => {
-  return process.env.ENABLE_BARCODE === 'true';
-};
-
-/**
  * Toggle the new QR code pipeline.
  * Default: true (QR is the active feature).
  * Set ENABLE_QR=false in .env to disable.

@@ -41,8 +41,7 @@ export async function GET(
             id: true,
             name: true,
             description: true,
-            sku: true,
-            batchNumber: true,
+
             manufactureDate: true,
             expiryDate: true,
             imageUrl: true,
@@ -90,11 +89,9 @@ export async function GET(
           },
         }),
       ]);
-      // The ScanLog model only accepts the legacy "barcode" column, so we
-      // route QR scans through it as well to keep history consistent.
       await prisma.scanLog.create({
         data: {
-          barcode: `QR:${qrCode.code}`,
+          qrCode: `QR:${qrCode.code}`,
           ipAddress: ipAddress ?? null,
           userAgent: userAgent ?? null,
         },
@@ -114,8 +111,7 @@ export async function GET(
         id: qrCode.id,
         code: qrCode.code,
         url: qrCode.url,
-        orderCode: qrCode.orderCode,
-        batchCode: qrCode.batchCode,
+
         scanCount: qrCode.scanCount,
         lastScannedAt: qrCode.lastScannedAt?.toISOString() ?? null,
         isActive: qrCode.isActive,
@@ -124,8 +120,7 @@ export async function GET(
         id: product.id,
         name: product.name,
         description: product.description,
-        sku: product.sku,
-        batchNumber: product.batchNumber,
+
         manufactureDate: product.manufactureDate.toISOString(),
         expiryDate: product.expiryDate.toISOString(),
         imageUrl: product.imageUrl,

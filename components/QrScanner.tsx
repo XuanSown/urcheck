@@ -178,20 +178,20 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+          className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
         >
           {/* Header */}
-          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-gray-900">Quét mã QR</h3>
-              <p className="text-sm text-gray-500">Đưa mã QR vào khung hình để xác minh</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white">Quét mã QR</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Đưa mã QR vào khung hình để xác minh</p>
             </div>
             <button
               onClick={() => {
                 stopScanner();
                 onClose();
               }}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
               aria-label="Đóng"
             >
               <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -290,7 +290,7 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
           </div>
 
           {/* Controls */}
-          <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-between">
+          <div className="p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex justify-between">
             <Button
               variant="ghost"
               onClick={() => {

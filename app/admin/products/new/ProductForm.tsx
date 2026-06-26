@@ -5,16 +5,13 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import BarcodeScannerDialog from '@/components/admin/BarcodeScannerDialog';
+
 import { QrCodeDialog } from '@/components/admin/QrCodeDialog';
 import { useLocale } from '@/components/I18nProvider';
-import { isBarcodeEnabled } from '@/lib/feature-flags';
 
 export interface ProductFormData {
   name: string;
   description?: string;
-  sku: string;
-  batchNumber: string;
   manufactureDate: string;
   expiryDate: string;
   skinType?: string;
@@ -28,10 +25,6 @@ export interface ProductFormData {
   companyName: string;
   companyAddress?: string;
   verified: boolean;
-  barcodes: string[];
-  orderCode?: string;
-  batchCode?: string;
-  existingBarcodes?: string[];
   existingImages?: Array<{ id: string; url: string; isPrimary: boolean; altText?: string }>;
   companyWebsite?: string;
   companyContact?: string;
@@ -43,7 +36,6 @@ interface ProductFormProps {
   onSubmit?: (formData: ProductFormData, asDraft: boolean) => void | Promise<void>;
   onPreview?: (formData: ProductFormData) => void;
   submitting?: boolean;
-  existingBarcodes?: string[];
 }
 
 const skinTypeOptions = [
@@ -79,7 +71,6 @@ export default function ProductForm({
   onSubmit,
   onPreview,
   submitting = false,
-  existingBarcodes = [],
 }: ProductFormProps) {
   const router = useRouter();
   const isEditing = !!productId;
@@ -87,8 +78,6 @@ export default function ProductForm({
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     description: '',
-    sku: '',
-    batchNumber: '',
     manufactureDate: '',
     expiryDate: '',
     skinType: '',
@@ -102,15 +91,11 @@ export default function ProductForm({
     companyName: '',
     companyAddress: '',
     verified: true,
-    barcodes: [],
-    orderCode: '',
-    batchCode: '',
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [showScanner, setShowScanner] = useState(false);
   const [previewData, setPreviewData] = useState<ProductFormData | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [tagInput, setTagInput] = useState('');
@@ -118,20 +103,15 @@ export default function ProductForm({
   const [generatedQr, setGeneratedQr] = useState<{
     code: string;
     url: string;
-    orderCode?: string | null;
-    batchCode?: string | null;
   } | null>(null);
   const [showQrDialog, setShowQrDialog] = useState(false);
   const { t } = useLocale();
-  const barcodeAllowed = isBarcodeEnabled();
 
   useEffect(() => {
     if (initialData) {
       setFormData({
         name: initialData.name || '',
         description: initialData.description || '',
-        sku: initialData.sku || '',
-        batchNumber: initialData.batchNumber || '',
         manufactureDate: initialData.manufactureDate ? formatDateInput(initialData.manufactureDate) : '',
         expiryDate: initialData.expiryDate ? formatDateInput(initialData.expiryDate) : '',
         skinType: initialData.skinType || '',
@@ -147,10 +127,6 @@ export default function ProductForm({
         companyName: initialData.companyName || '',
         companyAddress: initialData.companyAddress || '',
         verified: initialData.verified ?? true,
-        barcodes: initialData.barcodes || [],
-        orderCode: initialData.orderCode || '',
-        batchCode: initialData.batchCode || '',
-        existingBarcodes: initialData.existingBarcodes || [],
         existingImages: initialData.existingImages || [],
         companyWebsite: initialData.companyWebsite,
         companyContact: initialData.companyContact,
@@ -191,24 +167,6 @@ export default function ProductForm({
     setFormData(prev => ({
       ...prev,
       [field]: prev[field].filter((_, i) => i !== index),
-    }));
-  };
-
-  const handleBarcodeDetected = (barcode: string) => {
-    setFormData(prev => {
-      const allBarcodes = [...(prev.barcodes || []), ...(prev.existingBarcodes || [])];
-      if (allBarcodes.includes(barcode)) return prev;
-      return {
-        ...prev,
-        barcodes: [...prev.barcodes, barcode],
-      };
-    });
-  };
-
-  const removeBarcode = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      barcodes: prev.barcodes.filter((_, i) => i !== index),
     }));
   };
 
@@ -307,14 +265,6 @@ export default function ProductForm({
       setError('Vui lòng nhập tên sản phẩm');
       return false;
     }
-    if (!formData.sku.trim()) {
-      setError('Vui lòng nhập mã SKU');
-      return false;
-    }
-    if (!formData.batchNumber.trim()) {
-      setError('Vui lòng nhập số lô');
-      return false;
-    }
     if (!formData.manufactureDate) {
       setError('Vui lòng chọn ngày sản xuất');
       return false;
@@ -364,8 +314,6 @@ export default function ProductForm({
         ...data,
         manufactureDate: new Date(data.manufactureDate).toISOString(),
         expiryDate: new Date(data.expiryDate).toISOString(),
-        orderCode: data.orderCode?.trim() || undefined,
-        batchCode: data.batchCode?.trim() || undefined,
       };
 
       const response = await fetch('/api/admin/products', {
@@ -387,8 +335,6 @@ export default function ProductForm({
         setGeneratedQr({
           code: result.qrCode.code,
           url: result.qrCode.url,
-          orderCode: result.qrCode.orderCode,
-          batchCode: result.qrCode.batchCode,
         });
         setShowQrDialog(true);
       }
@@ -453,32 +399,6 @@ export default function ProductForm({
                 type="text"
                 name="name"
                 value={formData.name}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Mã SKU <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="sku"
-                value={formData.sku}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Số lô / Batch <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="batchNumber"
-                value={formData.batchNumber}
                 onChange={handleChange}
                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
                 required
@@ -567,121 +487,6 @@ export default function ProductForm({
                 rows={3}
                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
               />
-            </div>
-          </div>
-        </Card>
-
-        {/* Barcodes - only shown when ENABLE_BARCODE=true */}
-        {barcodeAllowed && (
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Mã QR</h2>
-          <div className="space-y-3">
-            {/* Existing barcodes (in edit mode) */}
-            {formData.existingBarcodes && formData.existingBarcodes.length > 0 && (
-              <div className="mb-3">
-                <p className="text-xs text-gray-500 mb-2">Mã QR hiện tại:</p>
-                <div className="flex flex-wrap gap-2">
-                  {formData.existingBarcodes.map((barcode, idx) => (
-                    <span
-                      key={`existing-${idx}`}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-mono rounded-lg"
-                    >
-                      {barcode}
-                    </span>
-                  ))}
-                </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Khi lưu, các mã mới bên dưới sẽ thay thế toàn bộ mã hiện tại.
-                </p>
-              </div>
-            )}
-            {formData.barcodes.map((barcode, index) => (
-              <div key={`new-${index}`} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={barcode}
-                  onChange={(e) => {
-                    const newBarcodes = [...formData.barcodes];
-                    newBarcodes[index] = e.target.value;
-                    setFormData(prev => ({ ...prev, barcodes: newBarcodes }));
-                  }}
-                  className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
-                  placeholder="Nhập mã QR"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowScanner(true)}
-                >
-                  <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                  </svg>
-                  Quét
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => removeBarcode(index)}
-                  className="text-red-600"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </Button>
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setFormData(prev => ({ ...prev, barcodes: [...prev.barcodes, ''] }))}
-            >
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Thêm mã QR
-            </Button>
-          </div>
-        </Card>
-        )}
-
-        {/* Order code / Batch code */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">
-            {t('form_order_code')} & {t('form_batch_code')}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                {t('form_order_code')}
-              </label>
-              <input
-                type="text"
-                name="orderCode"
-                value={formData.orderCode || ''}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
-                placeholder={t('form_order_code_hint')}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                {t('form_order_code_hint')}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                {t('form_batch_code')}
-              </label>
-              <input
-                type="text"
-                name="batchCode"
-                value={formData.batchCode || ''}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
-                placeholder={t('form_batch_code_hint')}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                {t('form_batch_code_hint')}
-              </p>
             </div>
           </div>
         </Card>
@@ -930,16 +735,6 @@ export default function ProductForm({
         </div>
       </form>
 
-      {/* Barcode Scanner Dialog - only when barcode feature is enabled */}
-      {barcodeAllowed && (
-      <BarcodeScannerDialog
-        isOpen={showScanner}
-        onClose={() => setShowScanner(false)}
-        onBarcodeDetected={handleBarcodeDetected}
-        existingBarcodes={[...(formData.barcodes || []), ...(formData.existingBarcodes || [])]}
-      />
-      )}
-
       {/* QR Code Dialog - shown after successful save */}
       {generatedQr && (
         <QrCodeDialog
@@ -948,8 +743,6 @@ export default function ProductForm({
           code={generatedQr.code}
           url={generatedQr.url}
           productName={formData.name}
-          orderCode={generatedQr.orderCode}
-          batchCode={generatedQr.batchCode}
         />
       )}
 
@@ -990,20 +783,6 @@ export default function ProductForm({
                     )}
                   </div>
 
-                  {/* Barcodes */}
-                  {(previewData.existingBarcodes?.length || previewData.barcodes?.length) ? (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Mã QR</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {[...(previewData.existingBarcodes || []), ...(previewData.barcodes || [])].map((barcode: string, idx: number) => (
-                          <span key={`${barcode}-${idx}`} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-mono rounded">
-                            {barcode}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-
                   {/* Tags */}
                   {previewData.tags && previewData.tags.length > 0 && (
                     <div>
@@ -1023,8 +802,6 @@ export default function ProductForm({
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-2xl font-bold text-gray-900">{previewData.name}</h3>
-                    <p className="text-sm text-gray-500 mt-1">SKU: {previewData.sku}</p>
-                    <p className="text-xs text-gray-400">Lô: {previewData.batchNumber}</p>
                   </div>
 
                   {previewData.description && (

@@ -7,15 +7,12 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatDate } from '@/lib/format-utils';
-import BarcodeScannerDialog from '@/components/admin/BarcodeScannerDialog';
 import ProductForm, { ProductFormData } from '../new/ProductForm';
 
 interface Product {
   id: string;
   name: string;
   description?: string;
-  sku: string;
-  batchNumber: string;
   manufactureDate: string;
   expiryDate: string;
   skinType?: string;
@@ -32,7 +29,6 @@ interface Product {
     url: string;
   }>;
   images: Array<{ id: string; url: string; sortOrder: number; isPrimary: boolean }>;
-  barcodes: Array<{ id: string; code: string }>;
 }
 
 export default function EditProductPage() {
@@ -44,7 +40,6 @@ export default function EditProductPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [showScanner, setShowScanner] = useState(false);
   const [previewData, setPreviewData] = useState<ProductFormData | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -73,17 +68,6 @@ export default function EditProductPage() {
       fetchProduct();
     }
   }, [productId, fetchProduct]);
-
-  const handleBarcodeDetected = (barcode: string) => {
-    if (product) {
-      // Check if barcode already exists
-      const exists = product.barcodes.some(b => b.code === barcode);
-      if (!exists) {
-        // This would be handled in the form component
-        console.log('New barcode detected:', barcode);
-      }
-    }
-  };
 
   const handleSubmit = async (formData: ProductFormData, asDraft: boolean) => {
     setSubmitting(true);
@@ -196,7 +180,6 @@ export default function EditProductPage() {
                 {product.status === 'DRAFT' ? 'Bản nháp' : product.status === 'PUBLISHED' ? 'Đã xuất bản' : 'Đã lưu trữ'}
               </span>
             </div>
-            <p className="text-gray-500 mt-1">{product.sku}</p>
           </div>
         </div>
 
@@ -217,8 +200,6 @@ export default function EditProductPage() {
         initialData={{
           name: product.name,
           description: product.description,
-          sku: product.sku,
-          batchNumber: product.batchNumber,
           manufactureDate: product.manufactureDate,
           expiryDate: product.expiryDate,
           skinType: product.skinType,
@@ -232,12 +213,10 @@ export default function EditProductPage() {
           companyContact: product.companyContact,
           purchaseLinks: product.purchaseLinks,
           existingImages: product.images,
-          existingBarcodes: product.barcodes.map(b => b.code),
         }}
         onSubmit={handleSubmit}
         onPreview={handlePreview}
         submitting={submitting}
-        existingBarcodes={product.barcodes.map(b => b.code)}
       />
 
       {/* Preview Modal */}
@@ -277,20 +256,6 @@ export default function EditProductPage() {
                     )}
                   </div>
 
-                  {/* Barcodes */}
-                  {previewData.existingBarcodes && previewData.existingBarcodes.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Mã QR ({previewData.existingBarcodes.length})</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {previewData.existingBarcodes.map(barcode => (
-                          <span key={barcode} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-mono rounded">
-                            {barcode}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
                   {/* Tags */}
                   {previewData.tags && previewData.tags.length > 0 && (
                     <div>
@@ -310,8 +275,6 @@ export default function EditProductPage() {
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-2xl font-bold text-gray-900">{previewData.name}</h3>
-                    <p className="text-sm text-gray-500 mt-1">SKU: {previewData.sku}</p>
-                    <p className="text-xs text-gray-400">Lô: {previewData.batchNumber}</p>
                   </div>
 
                   {previewData.description && (

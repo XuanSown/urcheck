@@ -10,7 +10,6 @@ import { formatNumber, formatDate, formatPercent } from '@/lib/format-utils';
 async function getDashboardData() {
   const [
     totalProducts,
-    totalBarcodes,
     totalQrCodes,
     totalQrScans,
     recentScans,
@@ -19,7 +18,6 @@ async function getDashboardData() {
     topQrCodes,
   ] = await Promise.all([
     prisma.product.count(),
-    prisma.barcode.count(),
     prisma.qrCode.count({ where: { isActive: true } }),
     prisma.qrCode.aggregate({ _sum: { scanCount: true } }),
     prisma.scanLog.count({
@@ -46,7 +44,7 @@ async function getDashboardData() {
       take: 5,
       include: {
         product: {
-          select: { id: true, name: true, sku: true },
+          select: { id: true, name: true },
         },
       },
     }),
@@ -69,17 +67,16 @@ async function getDashboardData() {
   const topScannedProducts = await prisma.product.findMany({
     take: 5,
     orderBy: {
-      barcodes: {
+      qrCodes: {
         _count: 'desc',
       },
     },
     select: {
       id: true,
       name: true,
-      sku: true,
       _count: {
         select: {
-          barcodes: true,
+          qrCodes: true,
         },
       },
     },
@@ -87,7 +84,6 @@ async function getDashboardData() {
 
   return {
     totalProducts,
-    totalBarcodes,
     totalQrCodes,
     totalQrScans: totalQrScans._sum.scanCount || 0,
     recentScans,
@@ -152,19 +148,6 @@ export async function AdminDashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">{formatNumber(data.totalProducts)}</div>
             <p className="text-xs text-gray-500 mt-1">Sản phẩm trong hệ thống</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Mã QR</CardTitle>
-            <svg className="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{formatNumber(data.totalBarcodes)}</div>
-            <p className="text-xs text-gray-500 mt-1">Mã duy nhất</p>
           </CardContent>
         </Card>
 
@@ -288,10 +271,9 @@ export async function AdminDashboardPage() {
                   <span className="text-sm font-bold text-gray-400 w-5">#{idx + 1}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
-                    <p className="text-xs text-gray-500">SKU: {product.sku}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-primary-600">{product._count.barcodes}</p>
+                    <p className="text-sm font-semibold text-primary-600">{product._count.qrCodes}</p>
                     <p className="text-xs text-gray-500">lượt quét</p>
                   </div>
                 </div>

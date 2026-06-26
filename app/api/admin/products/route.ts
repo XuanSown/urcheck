@@ -5,8 +5,6 @@ import prisma from '@/lib/db';
 import { productSchema } from '@/lib/validators';
 import {
   buildQrUrl,
-  generateBatchCode,
-  generateOrderCode,
   generateQrCode,
 } from '@/lib/qr-utils';
 
@@ -34,8 +32,6 @@ export async function GET(request: NextRequest) {
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
-        { sku: { contains: search, mode: 'insensitive' } },
-        { batchNumber: { contains: search, mode: 'insensitive' } },
         { companyName: { contains: search, mode: 'insensitive' } },
       ];
     }
@@ -55,7 +51,6 @@ export async function GET(request: NextRequest) {
           },
           _count: {
             select: {
-              barcodes: true,
               versions: true,
             },
           },
@@ -69,8 +64,7 @@ export async function GET(request: NextRequest) {
       id: p.id,
       name: p.name,
       description: p.description,
-      sku: p.sku,
-      batchNumber: p.batchNumber,
+
       manufactureDate: p.manufactureDate.toISOString(),
       expiryDate: p.expiryDate.toISOString(),
       skinType: p.skinType,
@@ -89,7 +83,6 @@ export async function GET(request: NextRequest) {
       updatedAt: p.updatedAt.toISOString(),
       imageUrl: p.imageUrl,
       images: p.images,
-      barcodeCount: p._count.barcodes,
       versionCount: p._count.versions,
     }));
 
@@ -121,45 +114,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = productSchema.parse(body);
 
-    // Check for duplicate SKU
-    const existingProduct = await prisma.product.findFirst({
-      where: { sku: validatedData.sku },
-    });
 
-    if (existingProduct) {
-      return NextResponse.json(
-        { success: false, error: `Sản phẩm với SKU "${validatedData.sku}" đã tồn tại` },
-        { status: 409 }
-      );
-    }
 
-    // Check for duplicate barcodes across other products
-    if (validatedData.barcodes && validatedData.barcodes.length > 0) {
-      const existingBarcodes = await prisma.barcode.findMany({
-        where: {
-          code: { in: validatedData.barcodes },
-        },
-        select: { code: true, product: { select: { name: true } } },
-      });
-
-      if (existingBarcodes.length > 0) {
-        const duplicates = existingBarcodes.map(b => `${b.code} (${b.product.name})`).join(', ');
-        return NextResponse.json(
-          { success: false, error: `Mã QR đã tồn tại trong sản phẩm khác: ${duplicates}` },
-          { status: 409 }
-        );
-      }
-    }
-
-    // Create product with images, barcodes and QR code in transaction
+    // Create product with images and QR code in transaction
     const result = await prisma.$transaction(async (tx) => {
       // Create product
       const product = await tx.product.create({
         data: {
           name: validatedData.name,
           description: validatedData.description,
-          sku: validatedData.sku,
-          batchNumber: validatedData.batchNumber,
+
           manufactureDate: new Date(validatedData.manufactureDate),
           expiryDate: new Date(validatedData.expiryDate),
           skinType: validatedData.skinType,
@@ -177,27 +141,13 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Create barcodes if provided (legacy pipeline, hidden behind flag)
-      if (validatedData.barcodes && validatedData.barcodes.length > 0) {
-        await tx.barcode.createMany({
-          data: validatedData.barcodes.map(code => ({
-            code,
-            productId: product.id,
-          })),
-        });
-      }
-
       // Auto-create QR code for this product (one product = one QR)
       const qrCodeValue = generateQrCode(product.name);
-      const qrOrderCode = validatedData.orderCode?.trim() || generateOrderCode();
-      const qrBatchCode = validatedData.batchCode?.trim() || generateBatchCode();
       const qrCode = await tx.qrCode.create({
         data: {
           code: qrCodeValue,
           url: buildQrUrl(qrCodeValue),
           productId: product.id,
-          orderCode: qrOrderCode,
-          batchCode: qrBatchCode,
         },
       });
 
@@ -205,8 +155,7 @@ export async function POST(request: NextRequest) {
       const productSnapshot = {
         name: product.name,
         description: product.description,
-        sku: product.sku,
-        batchNumber: product.batchNumber,
+
         manufactureDate: product.manufactureDate,
         expiryDate: product.expiryDate,
         skinType: product.skinType,
@@ -221,8 +170,7 @@ export async function POST(request: NextRequest) {
         companyAddress: product.companyAddress,
         verified: product.verified,
         qrCode: qrCodeValue,
-        orderCode: qrOrderCode,
-        batchCode: qrBatchCode,
+
       };
 
       await tx.productVersion.create({
@@ -239,11 +187,10 @@ export async function POST(request: NextRequest) {
         where: { id: product.id },
         include: {
           images: { orderBy: { sortOrder: 'asc' } },
-          barcodes: true,
+
           qrCodes: { orderBy: { createdAt: 'desc' } },
           _count: {
             select: {
-              barcodes: true,
               versions: true,
               qrCodes: true,
             },
@@ -263,8 +210,7 @@ export async function POST(request: NextRequest) {
             id: result.qrCodes[0].id,
             code: result.qrCodes[0].code,
             url: result.qrCodes[0].url,
-            orderCode: result.qrCodes[0].orderCode,
-            batchCode: result.qrCodes[0].batchCode,
+
           }
         : null,
     }, { status: 201 });
@@ -278,12 +224,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2002') {
-      return NextResponse.json(
-        { success: false, error: 'Dữ liệu trùng lặp (SKU đã tồn tại)' },
-        { status: 409 }
-      );
-    }
+
 
     return NextResponse.json(
       { success: false, error: 'Đã xảy ra lỗi, vui lòng thử lại' },
@@ -297,8 +238,7 @@ function formatProductResponse(product: any) {
     id: product.id,
     name: product.name,
     description: product.description,
-    sku: product.sku,
-    batchNumber: product.batchNumber,
+
     manufactureDate: product.manufactureDate.toISOString(),
     expiryDate: product.expiryDate.toISOString(),
     skinType: product.skinType,
@@ -316,8 +256,7 @@ function formatProductResponse(product: any) {
     createdAt: product.createdAt.toISOString(),
     updatedAt: product.updatedAt.toISOString(),
     images: product.images,
-    barcodeCount: product._count.barcodes,
-    barcodes: product.barcodes,
+
     versionCount: product._count.versions,
   };
 }

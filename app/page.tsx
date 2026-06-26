@@ -20,8 +20,6 @@ interface VerifyResponse {
   valid: boolean;
   qrCode?: {
     code: string;
-    orderCode?: string | null;
-    batchCode?: string | null;
     scanCount: number;
   };
   product?: Product;
@@ -147,7 +145,7 @@ function HomeInner() {
                           value={codeInput}
                           onChange={(e) => setCodeInput(e.target.value)}
                           placeholder={t('verify_input_placeholder')}
-                          className="flex-1 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-base"
+                          className="flex-1 px-4 py-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-base placeholder:text-gray-400 dark:placeholder:text-gray-500"
                           autoComplete="off"
                           autoFocus
                         />

@@ -15,8 +15,6 @@ model Product {
   id              String    @id @default(cuid())
   name            String
   description     String?
-  sku             String    @unique
-  batchNumber     String
   manufactureDate DateTime
   expiryDate      DateTime
   skinType        String?   // e.g., "da dầu", "da khô", "da nhạy cảm"
@@ -35,13 +33,10 @@ model Product {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  barcodes Barcode[]
-  qrCodes QrCode[]
+  qrCodes  QrCode[]
   images   ProductImage[]
   versions ProductVersion[]
 
-  @@index([sku])
-  @@index([batchNumber])
   @@index([companyName])
   @@index([status])
   @@index([publishedAt])
@@ -89,29 +84,14 @@ model AdminUser {
   updatedAt DateTime @updatedAt
 }
 
-model Barcode {
-  id             String    @id @default(cuid())
-  code           String    @unique
-  productId      String
-  scanCount      Int       @default(0)
-  lastScannedAt  DateTime?
-  createdAt      DateTime  @default(now())
-
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@index([code])
-  @@index([productId])
-  @@map("barcodes")
-}
-
 model ScanLog {
   id         String    @id @default(cuid())
-  barcode    String
+  qrCode     String
   ipAddress  String?
   userAgent  String?
   scannedAt  DateTime  @default(now())
 
-  @@index([barcode])
+  @@index([qrCode])
   @@index([scannedAt])
   @@map("scan_logs")
 }
@@ -121,8 +101,6 @@ model QrCode {
   code          String    @unique                // 6 ký tự hash (vd "AB12CD")
   url           String                          // URL đầy đủ, vd "https://urcheck.vercel.app/?q=AB12CD"
   productId     String
-  orderCode     String?                         // Mã đơn hàng (admin nhập hoặc tự sinh)
-  batchCode     String?                         // Mã lô (admin nhập hoặc tự sinh)
   scanCount     Int       @default(0)
   lastScannedAt DateTime?
   isActive      Boolean   @default(true)        // Có thể tắt QR cũ khi cần

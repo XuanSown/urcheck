@@ -125,8 +125,6 @@ export default function VersionHistoryPage() {
     const labels: Record<string, string> = {
       name: 'Tên sản phẩm',
       description: 'Mô tả',
-      sku: 'Mã SKU',
-      batchNumber: 'Số lô',
       manufactureDate: 'Ngày sản xuất',
       expiryDate: 'Ngày hết hạn',
       skinType: 'Loại da',
@@ -140,7 +138,6 @@ export default function VersionHistoryPage() {
       companyWebsite: 'Website công ty',
       purchaseLinks: 'Link mua hàng',
       images: 'Hình ảnh',
-      barcodes: 'Mã QR',
     };
     return labels[field] || field;
   };

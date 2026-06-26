@@ -104,27 +104,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
             <p className="text-gray-600 dark:text-gray-400 mb-4 sm:mb-6 leading-relaxed text-sm sm:text-base">{product.description}</p>
           )}
 
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            {/* Batch Number */}
-            <motion.div
-              className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700 transition-colors"
-              whileHover={{ y: -2 }}
-              transition={{ duration: 0.2 }}
-            >
-              <p className="text-[10px] sm:text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 sm:mb-2">Số lô / Batch</p>
-              <p className="font-semibold text-primary-600 dark:text-primary-500 text-sm sm:text-lg break-all">{product.batchNumber}</p>
-            </motion.div>
-
-            {/* SKU */}
-            <motion.div
-              className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700 transition-colors"
-              whileHover={{ y: -2 }}
-              transition={{ duration: 0.2 }}
-            >
-              <p className="text-[10px] sm:text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 sm:mb-2">Mã SP (SKU)</p>
-              <p className="font-semibold text-primary-600 dark:text-primary-500 text-sm sm:text-lg break-all">{product.sku}</p>
-            </motion.div>
-
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
             {/* Manufacture Date */}
             <motion.div
               className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700 transition-colors"

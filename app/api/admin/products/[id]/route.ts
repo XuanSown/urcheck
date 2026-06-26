@@ -19,14 +19,13 @@ export async function GET(
         images: {
           orderBy: { sortOrder: 'asc' },
         },
-        barcodes: true,
+
         versions: {
           orderBy: { createdAt: 'desc' },
           take: 10,
         },
         _count: {
           select: {
-            barcodes: true,
             versions: true,
           },
         },
@@ -78,52 +77,15 @@ export async function PUT(
       );
     }
 
-    // Check for duplicate SKU (excluding current product)
-    if (validatedData.sku !== existingProduct.sku) {
-      const duplicateSku = await prisma.product.findFirst({
-        where: {
-          sku: validatedData.sku,
-          id: { not: id },
-        },
-      });
 
-      if (duplicateSku) {
-        return NextResponse.json(
-          { success: false, error: `SKU "${validatedData.sku}" đã được sử dụng bởi sản phẩm khác` },
-          { status: 409 }
-        );
-      }
-    }
-
-    // Check for duplicate barcodes
-    if (validatedData.barcodes && validatedData.barcodes.length > 0) {
-      const existingBarcodes = await prisma.barcode.findMany({
-        where: {
-          code: { in: validatedData.barcodes },
-          productId: { not: id },
-        },
-        select: { code: true, product: { select: { name: true } } },
-      });
-
-      if (existingBarcodes.length > 0) {
-        const duplicates = existingBarcodes.map(b => `${b.code} (${b.product.name})`).join(', ');
-        return NextResponse.json(
-          { success: false, error: `Mã QR đã tồn tại trong sản phẩm khác: ${duplicates}` },
-          { status: 409 }
-        );
-      }
-    }
 
     const result = await prisma.$transaction(async (tx) => {
-      // Get current product AND barcodes for version snapshot
+      // Get current product for version snapshot
       const oldData = await tx.product.findUnique({
         where: { id },
       });
 
-      const currentBarcodes = await tx.barcode.findMany({
-        where: { productId: id },
-        select: { code: true },
-      });
+
 
       if (!oldData) {
         throw new Error('Product not found');
@@ -135,8 +97,7 @@ export async function PUT(
         data: {
           name: validatedData.name,
           description: validatedData.description,
-          sku: validatedData.sku,
-          batchNumber: validatedData.batchNumber,
+
           manufactureDate: new Date(validatedData.manufactureDate),
           expiryDate: new Date(validatedData.expiryDate),
           skinType: validatedData.skinType,
@@ -154,26 +115,13 @@ export async function PUT(
         },
       });
 
-      // Handle barcodes: delete old and create new
-      await tx.barcode.deleteMany({
-        where: { productId: id },
-      });
 
-      if (validatedData.barcodes && validatedData.barcodes.length > 0) {
-        await tx.barcode.createMany({
-          data: validatedData.barcodes.map(code => ({
-            code,
-            productId: id,
-          })),
-        });
-      }
 
-      // Create version record with barcodes included
+      // Create version record
       const productSnapshot = {
         name: product.name,
         description: product.description,
-        sku: product.sku,
-        batchNumber: product.batchNumber,
+
         manufactureDate: product.manufactureDate,
         expiryDate: product.expiryDate,
         skinType: product.skinType,
@@ -187,22 +135,15 @@ export async function PUT(
         companyName: product.companyName,
         companyAddress: product.companyAddress,
         verified: product.verified,
-        barcodes: currentBarcodes.map(b => b.code),
+
       };
 
       // Build diff
       const changedFields: string[] = [];
-      const oldBarcodes = currentBarcodes.map(b => b.code).sort();
-      const newBarcodes = (validatedData.barcodes || []).sort();
-
-      if (JSON.stringify(oldBarcodes) !== JSON.stringify(newBarcodes)) {
-        changedFields.push('barcodes');
-      }
 
       if (oldData.name !== product.name) changedFields.push('name');
       if (oldData.description !== product.description) changedFields.push('description');
-      if (oldData.sku !== product.sku) changedFields.push('sku');
-      if (oldData.batchNumber !== product.batchNumber) changedFields.push('batchNumber');
+
       if (oldData.manufactureDate.getTime() !== product.manufactureDate.getTime()) changedFields.push('manufactureDate');
       if (oldData.expiryDate.getTime() !== product.expiryDate.getTime()) changedFields.push('expiryDate');
       if (oldData.skinType !== product.skinType) changedFields.push('skinType');
@@ -233,10 +174,9 @@ export async function PUT(
           images: {
             orderBy: { sortOrder: 'asc' },
           },
-          barcodes: true,
+
           _count: {
             select: {
-              barcodes: true,
               versions: true,
             },
           },
@@ -296,7 +236,7 @@ export async function DELETE(
       );
     }
 
-    // Delete product (cascade will delete images, barcodes, versions)
+    // Delete product (cascade will delete images, versions)
     await prisma.product.delete({
       where: { id },
     });
@@ -319,8 +259,7 @@ function formatProductResponse(product: any) {
     id: product.id,
     name: product.name,
     description: product.description,
-    sku: product.sku,
-    batchNumber: product.batchNumber,
+
     manufactureDate: product.manufactureDate.toISOString(),
     expiryDate: product.expiryDate.toISOString(),
     skinType: product.skinType,
@@ -338,8 +277,7 @@ function formatProductResponse(product: any) {
     createdAt: product.createdAt.toISOString(),
     updatedAt: product.updatedAt.toISOString(),
     images: product.images,
-    barcodeCount: product._count?.barcodes || product.barcodes?.length || 0,
-    barcodes: product.barcodes,
+
     versionCount: product._count?.versions || product.versions?.length || 0,
   };
 }

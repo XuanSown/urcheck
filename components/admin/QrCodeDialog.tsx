@@ -18,8 +18,6 @@ interface QrCodeDialogProps {
   code: string;
   url: string;
   productName: string;
-  orderCode?: string | null;
-  batchCode?: string | null;
   logoUrl?: string;
 }
 
@@ -33,8 +31,6 @@ export function QrCodeDialog({
   code,
   url,
   productName,
-  orderCode,
-  batchCode,
   logoUrl = '/logo-qr.svg',
 }: QrCodeDialogProps) {
   const { t } = useLocale();
@@ -132,8 +128,6 @@ export function QrCodeDialog({
     <div class="meta">
       <div><strong>${escapeHtml(productName)}</strong></div>
       <div class="row"><span>${escapeHtml(t('qr_dialog_code_label'))}:</span><span class="code">${escapeHtml(code)}</span></div>
-      ${orderCode ? `<div class="row"><span>${escapeHtml(t('qr_dialog_order_label'))}:</span><span class="code">${escapeHtml(orderCode)}</span></div>` : ''}
-      ${batchCode ? `<div class="row"><span>${escapeHtml(t('qr_dialog_batch_label'))}:</span><span class="code">${escapeHtml(batchCode)}</span></div>` : ''}
     </div>
   </div>
   <script>
@@ -217,18 +211,7 @@ export function QrCodeDialog({
                 {url}
               </a>
             </div>
-            {orderCode ? (
-              <div className="flex justify-between gap-2">
-                <span className="text-gray-500">{t('qr_dialog_order_label')}:</span>
-                <span className="font-mono text-gray-900">{orderCode}</span>
-              </div>
-            ) : null}
-            {batchCode ? (
-              <div className="flex justify-between gap-2">
-                <span className="text-gray-500">{t('qr_dialog_batch_label')}:</span>
-                <span className="font-mono text-gray-900">{batchCode}</span>
-              </div>
-            ) : null}
+
           </div>
 
           {/* Size picker */}

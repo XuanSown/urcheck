@@ -1,214 +1,398 @@
-# Database Setup Guide for UrCheck
+# UrCheck - Database Setup Guide
 
-## Prerequisites
-- Docker Desktop installed and running
-- Node.js 18+ installed
+Hướng dẫn đầy đủ setup database cho dự án **UrCheck** — hỗ trợ cả 2 môi trường:
+- **Local development** (Docker Postgres trên máy)
+- **Production** (Supabase Postgres trên cloud)
 
 ---
 
-## Step 1: Start PostgreSQL Container
+## 📋 Mục lục
 
-From the `D:\Docker Compose` directory:
+1. [Tổng quan kiến trúc](#1-tổng-quan-kiến-trúc)
+2. [Local Development (Docker)](#2-local-development-docker)
+3. [Production (Supabase)](#3-production-supabase)
+4. [Setup lần đầu cho production](#4-setup-lần-đầu-cho-production)
+5. [Cấu trúc file env](#5-cấu-trúc-file-env)
+6. [Các lệnh Prisma thường dùng](#6-các-lệnh-prisma-thường-dùng)
+7. [Troubleshooting](#7-troubleshooting)
 
+---
+
+## 1. Tổng quan kiến trúc
+
+### 3 môi trường, 2 file env
+
+| Môi trường | DB | Đọc env từ |
+|------------|-----|-----------|
+| **Local dev** (`npm run dev`) | Docker Postgres | `.env.local` |
+| **Local migration/seed** (`npx prisma migrate deploy`) | Supabase hoặc Docker | `.env` |
+| **Vercel production** | Supabase | Dashboard Environment Variables |
+
+### Quan trọng: 2 file env độc lập
+
+| File | Đọc bởi | Mục đích |
+|------|---------|---------|
+| `.env` | Prisma CLI (migrate, seed, studio) | Chạy lệnh admin DB |
+| `.env.local` | Next.js dev | Chạy `npm run dev` |
+
+> ⚠️ **Prisma CLI KHÔNG đọc `.env.local`**, chỉ đọc `.env`. Đây là lý do phổ biến gây lỗi "Can't reach database" khi migrate.
+
+### Schema tổng quan
+
+7 bảng trong DB:
+
+```
+AdminUser ─┬─ Product ─┬─ ProductImage
+           │           ├─ ProductVersion
+           │           ├─ Barcode (table: barcodes) — DEPRECATED, hidden by flag
+           │           └─ QrCode (table: qr_codes) — ACTIVE
+           │
+           └─ ScanLog (table: scan_logs)
+
+UserRole: ADMIN, CUSTOMER
+ProductStatus: DRAFT, PUBLISHED, ARCHIVED
+```
+
+---
+
+## 2. Local Development (Docker)
+
+### Yêu cầu
+- Docker Desktop đang chạy
+- Port `5432` chưa bị chiếm
+
+### Bước 1: Khởi động Postgres container
 ```bash
-cd "D:\Docker Compose"
+cd "D:\Docker Compose"  # hoặc folder chứa docker-compose.yml của anh
 docker-compose up -d
 ```
 
-This will start a PostgreSQL container with:
-- **Host:** localhost
-- **Port:** 5432
-- **Database:** prismadb
-- **Username:** admin
-- **Password:** adminpassword
-
-Verify it's running:
+Verify container đang chạy:
 ```bash
-docker-compose ps
+docker ps | findstr postgres
 ```
 
-You should see `prisma-postgres` with status "Up".
+Mong đợi thấy: `prisma-postgres Up About ...`
 
----
-
-## Step 2: Generate Prisma Client (Already Done)
-
-```bash
-npx prisma generate
+### Bước 2: Cấu hình `.env.local` (dev)
+```ini
+NEXT_PUBLIC_SUPABASE_URL="https://xsaaxmcejqygsdmewlmc.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon-jwt-token>"
+UPLOAD_SECRET_KEY="<supabase-storage-secret>"
+DATABASE_URL="postgresql://admin:***@localhost:5432/prismadb?schema=public"
+DIRECT_URL="postgresql://admin:***@localhost:5432/prismadb?schema=public"
+SUPABASE_SERVICE_ROLE_KEY="<service-role-jwt-token>"
 ```
 
-✅ Already completed - Prisma client is ready at `node_modules/@prisma/client`
+> ⚠️ Thay `***` bằng password thật trong Docker Postgres (mặc định trong docker-compose.yml).
 
----
-
-## Step 3: Run Database Migrations
-
-From the project root (`D:\Thực tập\urcheck\urcheck`):
-
+### Bước 3: Chạy dev server
 ```bash
-npx prisma migrate dev --name init
-```
-
-This will:
-- Create the database tables based on `prisma/schema.prisma`
-- Apply the migration to your PostgreSQL database
-
----
-
-## Step 4: Seed the Database
-
-```bash
-npm run seed
-```
-
-This will create:
-- 4 sample products (3 valid, 1 expired)
-- Barcodes (EAN-13/EAN-8) for each product
-- You'll see console output with the generated barcodes
-
-**Example barcode format:** `8934012345670`
-
----
-
-## Step 5: Verify Setup
-
-Test the health endpoint:
-```bash
-curl http://localhost:3000/api/health
-```
-
-Expected response:
-```json
-{
-  "status": "ok",
-  "timestamp": "...",
-  "service": "urcheck API",
-  "version": "1.0.0"
-}
-```
-
----
-
-## Step 6: Start Development Server
-
-```bash
+cd "D:\Thực tập\urcheck\urcheck"
 npm run dev
 ```
 
-Open http://localhost:3000 in your browser.
+Mở http://localhost:3000 — Next.js sẽ đọc `.env.local` → kết nối Docker Postgres.
 
 ---
 
-## Testing the Barcode Scanner
+## 3. Production (Supabase)
 
-1. Open the app in browser
-2. Click "Mở camera" to start camera scanning
-3. Or click "Upload ảnh mã vạch" to upload a barcode image
+### Kiến trúc Supabase
+Project: `xsaaxmcejqygsdmewlmc` (region: `aws-1-ap-northeast-1`)
 
-**Test barcodes** (from seed output):
-- Use any barcode printed from the seed output
-- Format: `EAN-13` or `EAN-8`
+### 2 connection string cần biết
 
-**Expected results:**
-- ✅ Valid products: Show green "Hợp lệ" badge with full product info
-- ❌ Expired product (Torriden collagen): Shows "Hết hạn" in red
-- ❌ Invalid barcode: Shows "Mã vạch không tồn tại trong hệ thống"
+| Type | Host | Port | Dùng cho |
+|------|------|------|----------|
+| **Transaction pooler** | `aws-1-ap-northeast-1.pooler.supabase.com` | `6543` | ✅ Production runtime + Migration từ xa |
+| **Direct connection** (internal) | `db.xsaaxmcejqygsdmewlmc.supabase.co` | `5432` | Chỉ trong cùng region Supabase |
 
----
+> 💡 **Tại sao dùng pooler?**
+> - Direct connection (`db.xxx.supabase.co`) chỉ chấp nhận IPv6, cần Supabase Pro trở lên mới có IPv4
+> - Pooler (`pooler.supabase.com`) hoạt động từ mọi nơi (IPv4 + IPv6), free tier OK
 
-## Database Connection Info
+### Cấu hình trên Vercel (Environment Variables)
 
-**Connection string** (already in `.env.local`):
-```
-postgresql://admin:adminpassword@localhost:5432/prismadb?schema=public
-```
+Vào https://vercel.com/dashboard → project `urcheck` → Settings → Environment Variables, thêm 4 biến:
 
-**Direct URL** (for migrations):
-```
-postgresql://admin:adminpassword@localhost:5432/prismadb?schema=public
-```
+| Name | Value |
+|------|-------|
+| `DATABASE_URL` | `postgresql://postgres.xsaaxmcejqygsdmewlmc:<PASSWORD>@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres` |
+| `DIRECT_URL` | `postgresql://postgres.xsaaxmcejqygsdmewlmc:<PASSWORD>@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true` |
+| `NEXT_PUBLIC_BASE_URL` | `https://urcheck.vercel.app` |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://xsaaxmcejqygsdmewlmc.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `<anon-jwt-token>` |
+| `SUPABASE_SERVICE_ROLE_KEY` | `<service-role-jwt-token>` |
+| `UPLOAD_SECRET_KEY` | `<storage-secret>` |
 
----
-
-## Troubleshooting
-
-### "Connection refused" error
-- Check if PostgreSQL container is running: `docker-compose ps`
-- Start it: `docker-compose up -d`
-- Wait a few seconds for PostgreSQL to be ready
-
-### "Database does not exist" error
-The database `prismadb` is auto-created by the PostgreSQL container on first start.
-
-### Port 5432 already in use
-Change the port mapping in `docker-compose.yml`:
-```yaml
-ports:
-  - "5433:5432"  # Use host port 5433
-```
-
-Then update `.env.local`:
-```
-DATABASE_URL="postgresql://admin:adminpassword@localhost:5433/prismadb?schema=public"
-```
-
-### Prisma migration fails
-Make sure PostgreSQL is fully started:
-```bash
-docker-compose logs postgres
-```
-
-Wait for logs showing: "database system is ready to accept connections"
+⚠️ **Quan trọng:**
+- Tick cả 3 environment: Production, Preview, Development
+- `<PASSWORD>` = password của Postgres user `postgres` (đặt trong Supabase Dashboard → Settings → Database → Database password)
+- `<PASSWORD>` trong URL **không cần** URL-encode nếu chỉ chứa chữ thường + số + gạch ngang
 
 ---
 
-## Project Structure
+## 4. Setup lần đầu cho production
 
+Làm 1 lần duy nhất khi:
+- Lần đầu deploy project
+- Sau khi thay đổi schema (cần re-migrate)
+
+### Bước 1: Backup `.env` cũ
+```powershell
+cd "D:\Thực tập\urcheck\urcheck"
+Copy-Item .env .env.backup -Force
 ```
-urcheck/
-├── app/
-│   ├── api/
-│   │   ├── verify/route.ts      # POST - Verify barcode
-│   │   ├── product/[sku]/route.ts  # GET - Product by SKU
-│   │   └── health/route.ts      # GET - Health check
-│   ├── layout.tsx
-│   ├── page.tsx                 # Main page with barcode scanner
-│   └── globals.css
-├── components/
-│   ├── BarcodeScanner.tsx      # Barcode scanner component
-│   ├── ProductInfo.tsx         # Product display
-│   ├── Header.tsx
-│   ├── Hero.tsx
-│   ├── Footer.tsx
-│   └── ui/
-│       ├── Button.tsx
-│       ├── Card.tsx
-│       ├── Badge.tsx
-│       └── LoadingSpinner.tsx
-├── lib/
-│   ├── db.ts                   # Prisma client
-│   ├── supabase.ts             # Supabase client (optional)
-│   └── validators.ts           # Zod schemas
-├── prisma/
-│   ├── schema.prisma           # Database schema
-│   ├── seed.ts                 # Sample data
-│   └── migrations/
-├── types/
-│   ├── product.ts
-│   └── database.ts             # Generated from Prisma
-├── .env.local                  # Your environment variables
-├── .env.example                # Template
-├── TASKS_PLAN.md               # Full task plan
-└── package.json
+
+### Bước 2: Sửa `.env` tạm thời trỏ vào Supabase
+```powershell
+notepad .env
+```
+
+Sửa 2 dòng `DATABASE_URL` và `DIRECT_URL` thành:
+
+```ini
+DATABASE_URL="postgresql://postgres.xsaaxmcejqygsdmewlmc:***@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres"
+DIRECT_URL="postgresql://postgres.xsaaxmcejqygsdmewlmc:***@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+```
+
+⚠️ Thay `***` bằng `urcheck-prod-dtp-2026` (password anh đã đặt).
+
+Save.
+
+### Bước 3: Test kết nối (optional)
+```powershell
+npx prisma db pull --print
+```
+
+Mong đợi: in ra schema Prisma (không lỗi).
+
+### Bước 4: Chạy migration (tạo tables)
+```powershell
+npx prisma migrate deploy
+```
+
+**Mong đợi output:**
+```
+Datasource "db": PostgreSQL database "postgres", schema "public"
+at "aws-1-ap-northeast-1.pooler.supabase.com:6543"
+
+4 migrations found in prisma/migrations
+Applying migration `20260619155014_extend_schema`
+All migrations have been successfully applied.
+```
+
+**Nếu lỗi "prepared statement s0 already exists":** → đã có `?pgbouncer=true` trong DIRECT_URL (Bước 2), chạy lại.
+
+### Bước 5: Verify tables trên Supabase
+1. Vào https://supabase.com/dashboard/project/xsaaxmcejqygsdmewlmc/editor
+2. Click **Table Editor** (sidebar trái)
+3. Mong đợi thấy 7 tables: `AdminUser`, `Product`, `ProductImage`, `ProductVersion`, `barcodes`, `qr_codes`, `scan_logs`
+
+### Bước 6: Seed data (admin + 4 sản phẩm mẫu)
+```powershell
+npm run seed
+```
+
+**Mong đợi output:**
+```
+✅ Created admin user: admin / admin123
+
+Created product: Serum Vitamin C 10% - The Ordinary
+  barcode: 8934012345670 | status: ✅ VALID
+  QR:      XXXXXX  →  http://localhost:3000/?q=XXXXXX
+
+[3 sản phẩm khác]
+
+✅ Seed completed successfully!
+Total products: 4
+```
+
+### Bước 7: Restore `.env` về localhost
+```powershell
+notepad .env
+```
+
+Sửa 2 dòng `DATABASE_URL` và `DIRECT_URL` về:
+
+```ini
+DATABASE_URL="postgresql://admin:***@localhost:5432/prismadb?schema=public"
+DIRECT_URL="postgresql://admin:***@localhost:5432/prismadb?schema=public"
+```
+
+(Thay `***` bằng password Docker Postgres)
+
+Save.
+
+### Bước 8: Test production
+```powershell
+# Health check
+curl https://urcheck.vercel.app/api/health
+# Mong đợi: {"status":"ok","database":{"status":"ok"}}
+
+# Login test
+curl -X POST "https://urcheck.vercel.app/api/admin/login" `
+  -H "Content-Type: application/json" `
+  -d '{"username":"admin","password": "***"}'
+# Mong đợi: {"success":true,"message":"Đăng nhập thành công",...}
 ```
 
 ---
 
-## Next Steps After Setup
+## 5. Cấu trúc file env
 
-Check `TASKS_PLAN.md` for remaining tasks:
-- UI/UX improvements
-- Testing setup
-- Security features (rate limiting, security headers)
-- Documentation
-- Deployment configuration
+### `.env` (Prisma CLI — KHÔNG commit)
+
+```ini
+# Supabase (cũng dùng cho Vercel nếu deploy)
+NEXT_PUBLIC_SUPABASE_URL="https://xsaaxmcejqygsdmewlmc.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon-jwt>"
+UPLOAD_SECRET_KEY="<storage-secret>"
+SUPABASE_SERVICE_ROLE_KEY="<service-role-jwt>"
+
+# Database — LOCAL cho dev, swap sang Supabase khi migrate
+DATABASE_URL="postgresql://admin:***@localhost:5432/prismadb?schema=public"
+DIRECT_URL="postgresql://admin:***@localhost:5432/prismadb?schema=public"
+```
+
+### `.env.local` (Next.js dev — KHÔNG commit)
+
+```ini
+# Supabase client + Storage
+NEXT_PUBLIC_SUPABASE_URL="https://xsaaxmcejqygsdmewlmc.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon-jwt>"
+UPLOAD_SECRET_KEY="<storage-secret>"
+SUPABASE_SERVICE_ROLE_KEY="<service-role-jwt>"
+
+# Database — LOCAL (Docker Postgres)
+DATABASE_URL="postgresql://admin:***@localhost:5432/prismadb?schema=public"
+DIRECT_URL="postgresql://admin:***@localhost:5432/prismadb?schema=public"
+```
+
+### Vercel Environment Variables (Dashboard)
+
+| Name | Value |
+|------|-------|
+| `DATABASE_URL` | `postgresql://postgres.xsaaxmcejqygsdmewlmc:***@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres` |
+| `DIRECT_URL` | `postgresql://postgres.xsaaxmcejqygsdmewlmc:***@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true` |
+| `NEXT_PUBLIC_BASE_URL` | `https://urcheck.vercel.app` |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://xsaaxmcejqygsdmewlmc.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `<anon-jwt>` |
+| `SUPABASE_SERVICE_ROLE_KEY` | `<service-role-jwt>` |
+| `UPLOAD_SECRET_KEY` | `<storage-secret>` |
+
+⚠️ **`NEXT_PUBLIC_BASE_URL` rất quan trọng** — QR code sinh ra sẽ embed URL này. Nếu thiếu/sai → QR code trỏ về localhost.
+
+---
+
+## 6. Các lệnh Prisma thường dùng
+
+### Mở Prisma Studio (GUI xem/sửa DB)
+```powershell
+npx prisma studio
+```
+Mở http://localhost:5555
+
+### Xem schema hiện tại của DB
+```powershell
+npx prisma db pull --print
+```
+
+### Tạo migration mới (khi sửa `prisma/schema.prisma`)
+```powershell
+# 1. Sửa schema.prisma
+# 2. Chạy:
+npx prisma migrate dev --name ten_migration_moi
+
+# Prisma sẽ tự động:
+# - Tạo file SQL trong prisma/migrations/
+# - Apply migration vào DB
+# - Generate Prisma Client
+```
+
+### Apply migration lên DB (production / staging)
+```powershell
+npx prisma migrate deploy
+```
+
+> ⚠️ `migrate deploy` chỉ chạy migrations đã commit, KHÔNG tạo migration mới. An toàn cho production.
+
+### Re-seed DB (xóa + insert lại data)
+```powershell
+npm run seed
+```
+
+> Script `prisma/seed.ts` sẽ tự `deleteMany()` toàn bộ rồi insert mới.
+
+### Generate Prisma Client (sau khi sửa schema)
+```powershell
+npx prisma generate
+```
+
+---
+
+## 7. Troubleshooting
+
+### ❌ "Can't reach database server"
+- Check `.env` có đúng host/port/password không
+- Với Supabase: phải dùng `pooler.supabase.com:6543`, không phải `db.xxx.supabase.co:5432`
+- Với Docker: chạy `docker ps` xem container đang chạy không
+
+### ❌ "prepared statement s0 already exists"
+- Lỗi này chỉ xảy ra khi migrate qua PgBouncer (Supabase pooler)
+- **Fix:** thêm `?pgbouncer=true` vào `DIRECT_URL`:
+  ```ini
+  DIRECT_URL="postgresql://postgres:***@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+  ```
+
+### ❌ "table scan_logs does not exist"
+- Migration chưa chạy thành công
+- Chạy lại `npx prisma migrate deploy`
+
+### ❌ "Environment variables loaded from .env" (khi chạy Prisma)
+- Prisma CLI chỉ đọc `.env`, KHÔNG đọc `.env.local`
+- Sửa `.env` chứ không phải `.env.local`
+
+### ❌ Login admin trên Vercel trả "Không kết nối được cơ sở dữ liệu"
+- Check Vercel Dashboard → Environment Variables → đã có `DATABASE_URL` chưa
+- Check `DATABASE_URL` trên Vercel có trỏ đúng Supabase pooler không
+- Check `/api/health` → nếu `database.status: "down"` thì DB connection fail
+
+### ❌ Camera QR scanner không hoạt động trên production
+- Camera cần HTTPS → Vercel đã có sẵn
+- Browser cần cho phép camera → check permission icon trên address bar
+- Nếu vẫn fail → dùng "Upload ảnh" thay thế
+
+### ❌ QR code in ra URL `localhost:3000`
+- `NEXT_PUBLIC_BASE_URL` chưa set trên Vercel Dashboard
+- Add env `NEXT_PUBLIC_BASE_URL=https://urcheck.vercel.app` → Save → Vercel tự redeploy
+
+### ❌ Build fail vì "Module not found @/lib/db"
+- Chạy `npm install` để cài lại Prisma Client
+- Hoặc `npx prisma generate` để regenerate client
+
+---
+
+## 📞 Liên hệ hỗ trợ
+
+Nếu gặp lỗi không có trong danh sách trên:
+1. Copy full error message + screenshot
+2. Note lại command đang chạy
+3. Check Vercel logs (Deployments → click deployment → Logs)
+4. Paste cho em để debug
+
+---
+
+## 🔗 Links hữu ích
+
+- **Supabase Dashboard:** https://supabase.com/dashboard/project/xsaaxmcejqygsdmewlmc
+- **Supabase SQL Editor:** https://supabase.com/dashboard/project/xsaaxmcejqygsdmewlmc/sql
+- **Vercel Dashboard:** https://vercel.com/dashboard
+- **Production URL:** https://urcheck.vercel.app
+- **Admin login:** https://urcheck.vercel.app/admin/login (admin / admin123)
+- **Prisma Docs:** https://www.prisma.io/docs
+
+---
+
+**Last updated:** 2026-06-26 (verified working with Supabase + Vercel)

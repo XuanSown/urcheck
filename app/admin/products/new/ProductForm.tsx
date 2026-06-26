@@ -220,22 +220,37 @@ export default function ProductForm({
       return;
     }
 
-    const formDataUpload = new FormData();
-    formDataUpload.append('file', files[0]);
+    if (images.length >= 3) {
+      alert('Chỉ được phép tải lên tối đa 3 hình ảnh.');
+      return;
+    }
+
+    const availableSlots = 3 - images.length;
+    const filesToUpload = Array.from(files).slice(0, availableSlots);
+
+    if (files.length > availableSlots) {
+      alert(`Đã chọn quá nhiều ảnh. Chỉ ${availableSlots} ảnh đầu tiên được tải lên.`);
+    }
 
     try {
-      const response = await fetch(`/api/admin/products/${productId}/images`, {
-        method: 'POST',
-        body: formDataUpload,
+      const uploadPromises = filesToUpload.map(async (file) => {
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', file);
+        
+        const response = await fetch(`/api/admin/products/${productId}/images`, {
+          method: 'POST',
+          body: formDataUpload,
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Upload failed');
+        }
+        return data.data;
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Upload failed');
-      }
-
-      setImages(prev => [...prev, data.data]);
+      const uploadedImages = await Promise.all(uploadPromises);
+      setImages(prev => [...prev, ...uploadedImages]);
     } catch (err: any) {
       alert('Upload ảnh thất bại: ' + err.message);
     }
@@ -667,27 +682,38 @@ export default function ProductForm({
         {/* Images */}
         {isEditing && (
           <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Hình ảnh sản phẩm</h2>
-            <div className="mb-4">
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={(e) => handleImageUpload(e.target.files)}
-                className="hidden"
-                id="image-upload"
-              />
-              <label
-                htmlFor="image-upload"
-                className="inline-flex items-center justify-center px-4 py-2.5 bg-primary-600 text-white rounded-lg cursor-pointer hover:bg-primary-700 transition-colors"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Upload ảnh
-              </label>
-              <p className="text-sm text-gray-500 mt-2">JPEG, PNG, WebP. Tối đa 10MB mỗi ảnh</p>
-            </div>
+            <h2 className="text-lg font-semibold mb-4">Hình ảnh sản phẩm (Tối đa 3 ảnh)</h2>
+            {images.length < 3 ? (
+              <div className="mb-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => {
+                    handleImageUpload(e.target.files);
+                    e.target.value = '';
+                  }}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label
+                  htmlFor="image-upload"
+                  className="inline-flex items-center justify-center px-4 py-2.5 bg-primary-600 text-white rounded-lg cursor-pointer hover:bg-primary-700 transition-colors"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Upload ảnh
+                </label>
+                <p className="text-sm text-gray-500 mt-2">JPEG, PNG, WebP. Tối đa 10MB mỗi ảnh</p>
+              </div>
+            ) : (
+              <div className="mb-4">
+                <p className="text-sm text-orange-600 bg-orange-50 p-3 rounded-lg border border-orange-200">
+                  Đã đạt giới hạn tối đa 3 ảnh. Vui lòng xóa bớt ảnh trước khi tải lên ảnh mới.
+                </p>
+              </div>
+            )}
 
             {images.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

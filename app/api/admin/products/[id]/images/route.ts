@@ -101,10 +101,17 @@ export async function POST(
     });
     const nextSortOrder = (lastImage?.sortOrder ?? -1) + 1;
 
-    // Check if this is the first image → mark as primary
     const existingCount = await prisma.productImage.count({
       where: { productId: id },
     });
+
+    if (existingCount >= 3) {
+      return NextResponse.json(
+        { success: false, error: 'Đã đạt giới hạn tối đa 3 ảnh cho sản phẩm này' },
+        { status: 400 }
+      );
+    }
+
     const isPrimary = existingCount === 0;
 
     // Upload: prefer Supabase, fallback to data URL

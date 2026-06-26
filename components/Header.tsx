@@ -57,7 +57,7 @@ export function Header({ className }: HeaderProps) {
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)]',
+        'sticky top-0 left-0 right-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)]',
         isScrolled ? 'py-2 sm:py-3' : 'py-3 sm:py-4',
         isHidden ? '-translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100 pointer-events-auto',
         className
@@ -105,9 +105,6 @@ export function Header({ className }: HeaderProps) {
               </motion.div>
             ))}
           </nav>
-
-          {/* Theme toggle (light/dark/system) */}
-          <ThemeToggle variant="iconOnly" />
 
           {/* Mobile Menu Button */}
           <button

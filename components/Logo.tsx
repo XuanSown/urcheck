@@ -32,12 +32,10 @@ export function Logo({ className = '', size = 'md', variant = 'dark' }: LogoProp
         alt="ur check"
         width={width}
         height={height}
-        className={`object-contain ${imgClass}`}
+        className={`object-contain dark:invert ${imgClass}`}
         style={{
           width: 'auto',
           height: 'auto',
-          mixBlendMode: isDark ? 'multiply' : 'screen',
-          filter: isDark ? 'none' : 'invert(1)',
         }}
         priority
       />

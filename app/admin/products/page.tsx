@@ -41,10 +41,10 @@ export default function AdminProductsPage() {
 function ProductsSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="animate-pulse h-8 w-48 bg-gray-200 rounded" />
+      <div className="animate-pulse h-8 w-48 bg-gray-200 dark:bg-gray-800 rounded" />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[1,2,3,4,5,6].map(i => (
-          <div key={i} className="h-64 bg-gray-200 rounded-2xl animate-pulse" />
+          <div key={i} className="h-64 bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse" />
         ))}
       </div>
     </div>
@@ -168,11 +168,11 @@ function AdminProductsInner() {
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      DRAFT: 'bg-yellow-100 text-yellow-800',
-      PUBLISHED: 'bg-green-100 text-green-800',
-      ARCHIVED: 'bg-gray-100 text-gray-800',
+      DRAFT: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400',
+      PUBLISHED: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400',
+      ARCHIVED: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200',
     };
-    return styles[status] || 'bg-gray-100 text-gray-800';
+    return styles[status] || 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200';
   };
 
   const statusCounts = products.reduce((acc, p) => {
@@ -185,8 +185,8 @@ function AdminProductsInner() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý sản phẩm</h1>
-          <p className="text-gray-500 mt-1">Quản lý tất cả sản phẩm trong hệ thống</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Quản lý sản phẩm</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Quản lý tất cả sản phẩm trong hệ thống</p>
         </div>
         <Link href="/admin/products/new">
           <Button size="lg">
@@ -208,9 +208,9 @@ function AdminProductsInner() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Tìm kiếm theo tên, SKU, mã lô, công ty..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -219,7 +219,7 @@ function AdminProductsInner() {
           <select
             value={statusFilter}
             onChange={handleStatusChange}
-            className="px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+            className="px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-950"
           >
             <option value="">Tất cả trạng thái</option>
             <option value="DRAFT">Bản nháp</option>
@@ -232,7 +232,7 @@ function AdminProductsInner() {
         <div className="flex gap-2 mt-3 flex-wrap">
           <button
             onClick={() => updateFilters(search, '', 1)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${!statusFilter ? 'bg-primary-100 text-primary-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${!statusFilter ? 'bg-primary-100 text-primary-800' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-800'}`}
           >
             Tất cả ({total})
           </button>
@@ -244,7 +244,7 @@ function AdminProductsInner() {
             <button
               key={key}
               onClick={() => updateFilters(search, key, 1)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${statusFilter === key ? 'bg-primary-100 text-primary-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${statusFilter === key ? 'bg-primary-100 text-primary-800' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-800'}`}
             >
               {label} ({statusCounts[key] || 0})
             </button>
@@ -290,8 +290,8 @@ function AdminProductsInner() {
 
       {/* Error state */}
       {error && (
-        <Card className="p-6 bg-red-50 border-red-200">
-          <div className="text-red-700">{error}</div>
+        <Card className="p-6 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/30">
+          <div className="text-red-700 dark:text-red-400">{error}</div>
         </Card>
       )}
 
@@ -300,24 +300,24 @@ function AdminProductsInner() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <Card key={i} className="animate-pulse">
-              <div className="aspect-video bg-gray-200" />
+              <div className="aspect-video bg-gray-200 dark:bg-gray-800" />
               <div className="p-4 space-y-3">
-                <div className="h-4 bg-gray-200 rounded w-3/4" />
-                <div className="h-3 bg-gray-200 rounded w-1/2" />
-                <div className="h-3 bg-gray-200 rounded w-2/3" />
+                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4" />
+                <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-1/2" />
+                <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-2/3" />
               </div>
             </Card>
           ))}
         </div>
       ) : products.length === 0 ? (
         <Card className="p-12 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có sản phẩm</h3>
-          <p className="text-gray-500 mb-4">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Chưa có sản phẩm</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
             {search || statusFilter ? 'Không tìm thấy sản phẩm phù hợp với bộ lọc' : 'Hãy thêm sản phẩm đầu tiên'}
           </p>
           <Link href="/admin/products/new">
@@ -336,7 +336,7 @@ function AdminProductsInner() {
               >
                 <Card className="overflow-hidden group hover:shadow-lg transition-all h-full flex flex-col">
                   {/* Image */}
-                  <div className="relative aspect-[4/3] bg-gray-100">
+                  <div className="relative aspect-[4/3] bg-gray-100 dark:bg-gray-800">
                     {product.images.find(img => img.isPrimary) ? (
                       <img
                         src={product.images.find(img => img.isPrimary)!.url}
@@ -345,7 +345,7 @@ function AdminProductsInner() {
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100">
-                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-12 h-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                       </div>
@@ -366,7 +366,7 @@ function AdminProductsInner() {
                     </div>
                     {!product.verified && (
                       <div className="absolute bottom-2 left-2 right-2">
-                        <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">
+                        <span className="bg-red-50 dark:bg-red-900/200 text-white text-xs px-2 py-1 rounded">
                           Chưa xác minh
                         </span>
                       </div>
@@ -375,17 +375,17 @@ function AdminProductsInner() {
 
                   {/* Content */}
                   <div className="p-4 flex-1 flex flex-col">
-                    <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">{product.name}</h3>
-                    <p className="text-xs text-gray-500 mb-2">SKU: {product.sku}</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1 line-clamp-2">{product.name}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">SKU: {product.sku}</p>
 
-                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
                       <span>{product.barcodeCount} mã QR</span>
                       <span>•</span>
                       <span>{product.versionCount} phiên bản</span>
                     </div>
 
-                    <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between">
-                      <span className="text-xs text-gray-500">
+                    <div className="mt-auto pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         {formatDate(product.createdAt)}
                       </span>
                       <div className="flex gap-2">
@@ -415,7 +415,7 @@ function AdminProductsInner() {
               >
                 Trước
               </Button>
-              <span className="flex items-center px-3 text-sm text-gray-600">
+              <span className="flex items-center px-3 text-sm text-gray-600 dark:text-gray-400">
                 Trang {page} / {totalPages}
               </span>
               <Button

@@ -92,13 +92,13 @@ function HomeInner() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-950">
       <Header />
 
       <main className="flex-1">
         <Hero />
 
-        <section id="verify" className="py-10 sm:py-14 lg:py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <section id="verify" className="py-10 sm:py-14 lg:py-16 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
           <div className="max-w-4xl mx-auto">
             <motion.div
               className="text-center mb-8 sm:mb-12"
@@ -107,10 +107,10 @@ function HomeInner() {
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary-900 mb-3 sm:mb-4">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary-900 dark:text-primary-400 mb-3 sm:mb-4">
                 {t('verify_title')}
               </h2>
-              <p className="text-gray-600 max-w-xl sm:max-w-2xl mx-auto text-sm sm:text-base">
+              <p className="text-gray-600 dark:text-gray-400 max-w-xl sm:max-w-2xl mx-auto text-sm sm:text-base">
                 {t('verify_subtitle')}
               </p>
             </motion.div>
@@ -124,7 +124,7 @@ function HomeInner() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.4 }}
-                  className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sm:p-8"
+                  className="bg-white dark:bg-gray-950 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-6 sm:p-8"
                 >
                   <form
                     onSubmit={(e) => {
@@ -136,7 +136,7 @@ function HomeInner() {
                     <div>
                       <label
                         htmlFor="qr-input"
-                        className="block text-sm font-medium text-gray-700 mb-2"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                       >
                         {locale === 'vi' ? 'Mã QR hoặc URL' : 'QR code or URL'}
                       </label>
@@ -147,7 +147,7 @@ function HomeInner() {
                           value={codeInput}
                           onChange={(e) => setCodeInput(e.target.value)}
                           placeholder={t('verify_input_placeholder')}
-                          className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-base"
+                          className="flex-1 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-base"
                           autoComplete="off"
                           autoFocus
                         />
@@ -185,7 +185,7 @@ function HomeInner() {
                         initial={{ opacity: 0, y: -20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                        className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3"
+                        className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded-xl flex items-start gap-3"
                         role="alert"
                       >
                         <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -196,10 +196,10 @@ function HomeInner() {
                           />
                         </svg>
                         <div>
-                          <h4 className="font-medium text-red-800">
+                          <h4 className="font-medium text-red-800 dark:text-red-400">
                             {locale === 'vi' ? 'Lỗi' : 'Error'}
                           </h4>
-                          <p className="text-red-700 text-sm mt-1">{error}</p>
+                          <p className="text-red-700 dark:text-red-400 text-sm mt-1">{error}</p>
                         </div>
                       </motion.div>
                     )}
@@ -212,10 +212,10 @@ function HomeInner() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="mt-6 p-6 bg-primary-50/50 border border-primary-200 rounded-xl backdrop-blur-sm flex items-center justify-center gap-3"
+                        className="mt-6 p-6 bg-primary-50/50 border border-primary-200 dark:border-primary-800/30 rounded-xl backdrop-blur-sm flex items-center justify-center gap-3"
                       >
                         <LoadingSpinner size="md" />
-                        <span className="text-primary-700 font-medium text-sm sm:text-base">
+                        <span className="text-primary-700 dark:text-primary-400 font-medium text-sm sm:text-base">
                           {t('verify_loading')}
                         </span>
                       </motion.div>
@@ -270,7 +270,7 @@ export default function Home() {
 
 function HomeSkeleton() {
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-950">
       <Header />
       <main className="flex-1 grid place-items-center">
         <LoadingSpinner size="lg" />

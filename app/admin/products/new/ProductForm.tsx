@@ -318,17 +318,11 @@ export default function ProductForm({
         return false;
       }
     } else {
-      if (!formData.manufactureDate) {
-        setError('Vui lòng chọn ngày sản xuất');
-        return false;
-      }
-      if (!formData.expiryDate) {
-        setError('Vui lòng chọn ngày hết hạn');
-        return false;
-      }
-      if (new Date(formData.expiryDate) <= new Date(formData.manufactureDate)) {
-        setError('Ngày hết hạn phải sau ngày sản xuất');
-        return false;
+      if (formData.manufactureDate && formData.expiryDate) {
+        if (new Date(formData.expiryDate) <= new Date(formData.manufactureDate)) {
+          setError('Ngày hết hạn phải sau ngày sản xuất');
+          return false;
+        }
       }
     }
 
@@ -501,7 +495,7 @@ export default function ProductForm({
               />
             </div>
             <div className="md:col-span-2 space-y-3">
-              <label className="block text-sm font-medium text-gray-700">Hạn sử dụng <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700">Hạn sử dụng</label>
               
               <div className="flex flex-col sm:flex-row gap-4 mb-4">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -531,25 +525,23 @@ export default function ProductForm({
               {formData.expiryType === 'dates' ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Ngày sản xuất <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Ngày sản xuất</label>
                     <input
                       type="date"
                       name="manufactureDate"
                       value={formData.manufactureDate}
                       onChange={handleChange}
                       className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
-                      required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Ngày hết hạn <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Ngày hết hạn</label>
                     <input
                       type="date"
                       name="expiryDate"
                       value={formData.expiryDate}
                       onChange={handleChange}
                       className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
-                      required
                     />
                   </div>
                 </div>

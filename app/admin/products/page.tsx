@@ -31,6 +31,7 @@ interface Product {
     url: string;
   } | null;
   images: { id: string; url: string; isPrimary: boolean }[];
+  imageUrl?: string | null;
 }
 
 export default function AdminProductsPage() {

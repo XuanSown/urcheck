@@ -30,6 +30,7 @@ interface Product {
     url: string;
   }>;
   images: Array<{ id: string; url: string; sortOrder: number; isPrimary: boolean }>;
+  qrCode?: any;
 }
 
 export default function EditProductPage() {

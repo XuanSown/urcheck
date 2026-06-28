@@ -14,7 +14,7 @@ function isAdminRoute(path: string): boolean {
   return adminRoutes.some(route => path === route || path.startsWith(route + '/'));
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const sessionCookie = request.cookies.get('admin_session');
   const hasSession = sessionCookie && sessionCookie.value;

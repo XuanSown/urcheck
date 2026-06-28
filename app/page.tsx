@@ -243,7 +243,7 @@ function HomeInner() {
                     <div className="p-0 sm:p-4 pt-10 sm:pt-4">
                       <ProductInfo product={verifyResult.product!} />
                       <div className="text-center pb-6">
-                        <Button variant="default" size="lg" onClick={handleReset} className="px-8 rounded-full">
+                        <Button variant="primary" size="lg" onClick={handleReset} className="px-8 rounded-full">
                           {t('verify_another')}
                         </Button>
                       </div>

@@ -13,7 +13,7 @@ export async function DELETE(
     const { id } = await params;
 
     // Prevent deleting the currently logged-in user
-    if (authResult.user.id === id) {
+    if (authResult.user?.id === id) {
       return NextResponse.json(
         { success: false, error: 'Không thể tự xóa tài khoản của chính mình' },
         { status: 403 }
@@ -59,7 +59,7 @@ export async function PUT(
     const { email, password, isActive } = body;
 
     // Optional: Prevent disabling own account to avoid getting locked out
-    if (authResult.user.id === id && isActive === false) {
+    if (authResult.user?.id === id && isActive === false) {
       return NextResponse.json(
         { success: false, error: 'Không thể tự khóa tài khoản của chính mình' },
         { status: 403 }

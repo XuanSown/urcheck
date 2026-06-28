@@ -486,6 +486,20 @@ export default function ProductForm({
                 required
               />
             </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Tên thương hiệu <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="brandName"
+                value={formData.brandName}
+                onChange={handleChange}
+                placeholder="VD: CeraVe, La Roche-Posay..."
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
+                required
+              />
+            </div>
             <div className="md:col-span-2 space-y-3">
               <label className="block text-sm font-medium text-gray-700">Hạn sử dụng <span className="text-red-500">*</span></label>
               

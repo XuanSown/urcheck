@@ -108,15 +108,14 @@ export async function PUT(
           expiresInMonths: validatedData.expiresInMonths || null,
           skinType: validatedData.skinType,
           suitableFor: validatedData.suitableFor,
-          pros: validatedData.pros,
-          cons: validatedData.cons,
+          usages: validatedData.usages,
+          usageInstructions: validatedData.usageInstructions,
           ingredientAnalysis: validatedData.ingredientAnalysis,
           tags: validatedData.tags,
           status: validatedData.status,
           publishedAt: validatedData.status === 'PUBLISHED' ? new Date() : null,
           purchaseLinks: validatedData.purchaseLinks,
-          companyName: validatedData.companyName,
-          companyAddress: validatedData.companyAddress,
+          brandName: validatedData.brandName,
           verified: validatedData.verified,
         },
       });
@@ -133,14 +132,13 @@ export async function PUT(
         expiresInMonths: product.expiresInMonths,
         skinType: product.skinType,
         suitableFor: product.suitableFor,
-        pros: product.pros,
-        cons: product.cons,
+        usages: product.usages,
+        usageInstructions: product.usageInstructions,
         ingredientAnalysis: product.ingredientAnalysis,
         tags: product.tags,
         status: product.status,
         purchaseLinks: product.purchaseLinks,
-        companyName: product.companyName,
-        companyAddress: product.companyAddress,
+        brandName: product.brandName,
         verified: product.verified,
 
       };
@@ -156,14 +154,13 @@ export async function PUT(
       if (oldData.expiresInMonths !== product.expiresInMonths) changedFields.push('expiresInMonths');
       if (oldData.skinType !== product.skinType) changedFields.push('skinType');
       if (oldData.suitableFor !== product.suitableFor) changedFields.push('suitableFor');
-      if (JSON.stringify(oldData.pros) !== JSON.stringify(product.pros)) changedFields.push('pros');
-      if (JSON.stringify(oldData.cons) !== JSON.stringify(product.cons)) changedFields.push('cons');
+      if (JSON.stringify(oldData.usages) !== JSON.stringify(product.usages)) changedFields.push('usages');
+      if (JSON.stringify(oldData.usageInstructions) !== JSON.stringify(product.usageInstructions)) changedFields.push('usageInstructions');
       if (oldData.ingredientAnalysis !== product.ingredientAnalysis) changedFields.push('ingredientAnalysis');
       if (JSON.stringify(oldData.tags) !== JSON.stringify(product.tags)) changedFields.push('tags');
       if (oldData.status !== product.status) changedFields.push('status');
       if (JSON.stringify(oldData.purchaseLinks) !== JSON.stringify(product.purchaseLinks)) changedFields.push('purchaseLinks');
-      if (oldData.companyName !== product.companyName) changedFields.push('companyName');
-      if (oldData.companyAddress !== product.companyAddress) changedFields.push('companyAddress');
+      if (oldData.brandName !== product.brandName) changedFields.push('brandName');
       if (oldData.verified !== product.verified) changedFields.push('verified');
 
       await tx.productVersion.create({
@@ -291,15 +288,14 @@ function formatProductResponse(product: any) {
     expiresInMonths: product.expiresInMonths,
     skinType: product.skinType,
     suitableFor: product.suitableFor,
-    pros: product.pros,
-    cons: product.cons,
+    usages: product.usages,
+    usageInstructions: product.usageInstructions,
     ingredientAnalysis: product.ingredientAnalysis,
     tags: product.tags,
     status: product.status,
-    publishedAt: product.publishedAt?.toISOString(),
+    publishedAt: product.publishedAt?.toISOString() ?? null,
     purchaseLinks: product.purchaseLinks,
-    companyName: product.companyName,
-    companyAddress: product.companyAddress,
+    brandName: product.brandName,
     verified: product.verified,
     createdAt: product.createdAt.toISOString(),
     updatedAt: product.updatedAt.toISOString(),

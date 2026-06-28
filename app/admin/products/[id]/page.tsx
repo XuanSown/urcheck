@@ -18,11 +18,11 @@ interface Product {
   expiresInMonths?: number | null;
   skinType?: string;
   suitableFor?: string;
-  pros: string[];
-  cons: string[];
+  usages: string[];
+  usageInstructions: string[];
   tags: string[];
   status: string;
-  companyName: string;
+  brandName: string;
   companyWebsite?: string;
   companyContact?: string;
   purchaseLinks: Array<{
@@ -87,8 +87,8 @@ export default function EditProductPage() {
           status: asDraft ? 'DRAFT' : formData.status || 'PUBLISHED',
           changeReason: asDraft ? 'Đã lưu bản nháp' : 'Cập nhật thông tin sản phẩm',
           // Lọc bỏ các giá trị rỗng
-          pros: formData.pros.filter(p => p.trim() !== ''),
-          cons: formData.cons.filter(c => c.trim() !== ''),
+          usages: formData.usages.filter(u => u.trim() !== ''),
+          usageInstructions: formData.usageInstructions.filter(i => i.trim() !== ''),
           purchaseLinks: formData.purchaseLinks.filter(l => l.url.trim() !== '' && l.platform.trim() !== ''),
         }),
       });
@@ -210,11 +210,11 @@ export default function EditProductPage() {
           expiresInMonths: product.expiresInMonths || '',
           skinType: product.skinType,
           suitableFor: product.suitableFor,
-          pros: product.pros,
-          cons: product.cons,
+          usages: product.usages,
+          usageInstructions: product.usageInstructions,
           tags: product.tags,
           status: product.status as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED',
-          companyName: product.companyName,
+          brandName: product.brandName,
           companyWebsite: product.companyWebsite,
           companyContact: product.companyContact,
           purchaseLinks: product.purchaseLinks,

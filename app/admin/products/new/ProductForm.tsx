@@ -19,14 +19,13 @@ export interface ProductFormData {
   expiresInMonths?: number | string;
   skinType?: string;
   suitableFor?: string;
-  pros: string[];
-  cons: string[];
+  usages: string[];
+  usageInstructions: string[];
   ingredientAnalysis?: string;
   tags: string[];
   status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
   purchaseLinks: Array<{ platform: string; url: string }>;
-  companyName: string;
-  companyAddress?: string;
+  brandName: string;
   verified: boolean;
   existingImages?: Array<{ id: string; url: string; isPrimary: boolean; altText?: string }>;
   companyWebsite?: string;
@@ -89,14 +88,13 @@ export default function ProductForm({
     expiresInMonths: '',
     skinType: '',
     suitableFor: '',
-    pros: [''],
-    cons: [''],
+    usages: [''],
+    usageInstructions: [''],
     ingredientAnalysis: '',
     tags: [],
     status: 'DRAFT',
     purchaseLinks: [{ platform: '', url: '' }],
-    companyName: '',
-    companyAddress: '',
+    brandName: '',
     verified: true,
   });
 
@@ -129,17 +127,14 @@ export default function ProductForm({
         expiryDate: initialData.expiryDate ? formatDateInput(initialData.expiryDate) : '',
         skinType: initialData.skinType || '',
         suitableFor: initialData.suitableFor || '',
-        pros: initialData.pros?.length ? initialData.pros : [''],
-        cons: initialData.cons?.length ? initialData.cons : [''],
-        ingredientAnalysis: initialData.ingredientAnalysis || '',
-        tags: initialData.tags || [],
-        status: (initialData.status as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED') || 'DRAFT',
-        purchaseLinks: initialData.purchaseLinks?.length
-          ? initialData.purchaseLinks
-          : [{ platform: '', url: '' }],
-        companyName: initialData.companyName || '',
-        companyAddress: initialData.companyAddress || '',
-        verified: initialData.verified ?? true,
+        usages: initialData?.usages?.length ? initialData.usages : [''],
+        usageInstructions: initialData?.usageInstructions?.length ? initialData.usageInstructions : [''],
+        ingredientAnalysis: initialData?.ingredientAnalysis || '',
+        tags: initialData?.tags || [],
+        status: initialData?.status || 'PUBLISHED',
+        purchaseLinks: initialData?.purchaseLinks || [],
+        brandName: initialData?.brandName || '',
+        verified: initialData?.verified ?? true,
         existingImages: initialData.existingImages || [],
         companyWebsite: initialData.companyWebsite,
         companyContact: initialData.companyContact,
@@ -159,27 +154,6 @@ export default function ProductForm({
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
-    }));
-  };
-
-  const handleArrayChange = (field: 'pros' | 'cons', index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: prev[field].map((item, i) => (i === index ? value : item)),
-    }));
-  };
-
-  const addArrayItem = (field: 'pros' | 'cons') => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: [...prev[field], ''],
-    }));
-  };
-
-  const removeArrayItem = (field: 'pros' | 'cons', index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: prev[field].filter((_, i) => i !== index),
     }));
   };
 
@@ -358,14 +332,14 @@ export default function ProductForm({
       }
     }
 
-    if (!formData.companyName.trim()) {
-      setError('Vui lòng nhập tên công ty');
+    if (!formData.brandName.trim()) {
+      setError('Vui lòng nhập tên thương hiệu');
       return false;
     }
     return true;
   };
 
-  const handleSaveDraft = () => {
+  const handleDraftClick = () => {
     setFormData(prev => ({ ...prev, status: 'DRAFT' }));
   };
 
@@ -405,15 +379,18 @@ export default function ProductForm({
     setLoading(true);
 
     try {
+      const cleanFormData = {
+        ...formData,
+        usages: formData.usages.filter((u) => u.trim() !== ''),
+        usageInstructions: formData.usageInstructions.filter((c) => c.trim() !== ''),
+        purchaseLinks: formData.purchaseLinks.filter((l) => l.url.trim() !== '' && l.platform.trim() !== ''),
+      };
+
       const payload = {
-        ...data,
+        ...cleanFormData,
         manufactureDate: data.expiryType === 'dates' && data.manufactureDate ? new Date(data.manufactureDate).toISOString() : null,
         expiryDate: data.expiryType === 'dates' && data.expiryDate ? new Date(data.expiryDate).toISOString() : null,
         expiresInMonths: data.expiryType === 'months' && data.expiresInMonths ? Number(data.expiresInMonths) : null,
-        // Lọc bỏ các giá trị rỗng trước khi gửi lên server
-        pros: data.pros.filter(p => p.trim() !== ''),
-        cons: data.cons.filter(c => c.trim() !== ''),
-        purchaseLinks: data.purchaseLinks.filter(l => l.url.trim() !== '' && l.platform.trim() !== ''),
       };
 
       const response = await fetch('/api/admin/products', {
@@ -470,7 +447,7 @@ export default function ProductForm({
           <Button variant="outline" onClick={() => router.back()}>
             Hủy
           </Button>
-          <Button variant="secondary" onClick={handleSaveDraft} disabled={loading}>
+          <Button variant="secondary" onClick={handleDraftClick} disabled={loading}>
             Lưu nháp
           </Button>
           <Button onClick={handleFormSubmit} loading={loading}>
@@ -642,56 +619,90 @@ export default function ProductForm({
           </div>
         </Card>
 
-        {/* Pros & Cons */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Ưu & Nhược điểm</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Ưu điểm</label>
-              {formData.pros.map((pro, index) => (
-                <div key={`pro-${index}`} className="flex gap-2 mb-2">
+        {/* Usages & Instructions */}
+        <Card className="p-6 shadow-sm border-gray-100">
+          <div className="flex items-center gap-3 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900">Công dụng & Hướng dẫn</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700">Công dụng</label>
+              {formData.usages.map((usage, index) => (
+                <div key={`usage-${index}`} className="flex gap-2">
                   <input
                     type="text"
-                    value={pro}
-                    onChange={(e) => handleArrayChange('pros', index, e.target.value)}
-                    className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500"
-                    placeholder={`Ưu điểm ${index + 1}`}
+                    value={usage}
+                    onChange={(e) => {
+                      const newUsages = [...formData.usages];
+                      newUsages[index] = e.target.value;
+                      setFormData({ ...formData, usages: newUsages });
+                    }}
+                    placeholder={`Công dụng ${index + 1}`}
+                    className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                   />
-                  {formData.pros.length > 1 && (
-                    <Button type="button" variant="ghost" onClick={() => removeArrayItem('pros', index)}>
-                      <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </Button>
+                  {formData.usages.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newUsages = formData.usages.filter((_, i) => i !== index);
+                        setFormData({ ...formData, usages: newUsages });
+                      }}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
                   )}
                 </div>
               ))}
-              <Button type="button" variant="outline" size="sm" onClick={() => addArrayItem('pros')}>
-                + Thêm ưu điểm
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setFormData({ ...formData, usages: [...formData.usages, ''] })}
+                className="text-primary-600 border-primary-200 hover:bg-primary-50 rounded-xl"
+              >
+                + Thêm công dụng
               </Button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Nhược điểm</label>
-              {formData.cons.map((con, index) => (
-                <div key={`con-${index}`} className="flex gap-2 mb-2">
+
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700">Hướng dẫn sử dụng</label>
+              {formData.usageInstructions.map((instruction, index) => (
+                <div key={`instruction-${index}`} className="flex gap-2">
                   <input
                     type="text"
-                    value={con}
-                    onChange={(e) => handleArrayChange('cons', index, e.target.value)}
-                    className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-500"
-                    placeholder={`Nhược điểm ${index + 1}`}
+                    value={instruction}
+                    onChange={(e) => {
+                      const newInstructions = [...formData.usageInstructions];
+                      newInstructions[index] = e.target.value;
+                      setFormData({ ...formData, usageInstructions: newInstructions });
+                    }}
+                    placeholder={`Bước ${index + 1}`}
+                    className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                   />
-                  {formData.cons.length > 1 && (
-                    <Button type="button" variant="ghost" onClick={() => removeArrayItem('cons', index)}>
-                      <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </Button>
+                  {formData.usageInstructions.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newInstructions = formData.usageInstructions.filter((_, i) => i !== index);
+                        setFormData({ ...formData, usageInstructions: newInstructions });
+                      }}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
                   )}
                 </div>
               ))}
-              <Button type="button" variant="outline" size="sm" onClick={() => addArrayItem('cons')}>
-                + Thêm nhược điểm
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setFormData({ ...formData, usageInstructions: [...formData.usageInstructions, ''] })}
+                className="text-orange-600 border-orange-200 hover:bg-orange-50 rounded-xl"
+              >
+                + Thêm hướng dẫn
               </Button>
             </div>
           </div>
@@ -783,37 +794,6 @@ export default function ProductForm({
           </div>
         </Card>
 
-        {/* Company Info */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Thông tin nhà sản xuất</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Tên công ty <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="companyName"
-                value={formData.companyName}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
-                required
-              />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Địa chỉ công ty
-              </label>
-              <input
-                type="text"
-                name="companyAddress"
-                value={formData.companyAddress || ''}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
-              />
-            </div>
-          </div>
-        </Card>
 
         {/* Images */}
         <Card className="p-6">
@@ -1113,42 +1093,42 @@ export default function ProductForm({
 
                   {previewData.description && (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-1">Mô tả</h4>
-                      <p className="text-gray-600 text-sm">{previewData.description}</p>
+                      <h4 className="text-sm font-medium text-gray-700 mb-1">Tên thương hiệu</h4>
+                      <p className="text-gray-600 text-sm">{previewData.brandName}</p>
                     </div>
                   )}
 
-                  {/* Pros & Cons */}
+                  {/* Usages & Instructions */}
                   <div className="grid grid-cols-2 gap-4">
-                    {previewData.pros && previewData.pros.filter(p => p).length > 0 && (
+                    {previewData.usages && previewData.usages.filter((u: string) => u).length > 0 && (
                       <div className="bg-green-50 rounded-lg p-4">
                         <h4 className="text-sm font-medium text-green-700 mb-2 flex items-center">
                           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
-                          Ưu điểm
+                          Công dụng
                         </h4>
                         <ul className="space-y-1">
-                          {previewData.pros.filter(p => p).map((pro: string, i: number) => (
+                          {previewData.usages.filter((u: string) => u).map((usage: string, i: number) => (
                             <li key={i} className="text-sm text-green-700 flex items-start">
                               <span className="mr-2">•</span>
-                              <span>{pro}</span>
+                              <span>{usage}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
                     )}
-                    {previewData.cons && previewData.cons.filter(c => c).length > 0 && (
-                      <div className="bg-red-50 rounded-lg p-4">
-                        <h4 className="text-sm font-medium text-red-700 mb-2 flex items-center">
+                    {previewData.usageInstructions && previewData.usageInstructions.filter((c: string) => c).length > 0 && (
+                      <div className="bg-blue-50 rounded-lg p-4">
+                        <h4 className="text-sm font-medium text-blue-700 mb-2 flex items-center">
                           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          Nhược điểm
+                          Hướng dẫn sử dụng
                         </h4>
                         <ul className="space-y-1">
-                          {previewData.cons.filter(c => c).map((con: string, i: number) => (
-                            <li key={i} className="text-sm text-red-700 flex items-start">
+                          {previewData.usageInstructions.filter((c: string) => c).map((con: string, i: number) => (
+                            <li key={i} className="text-sm text-blue-700 flex items-start">
                               <span className="mr-2">•</span>
                               <span>{con}</span>
                             </li>
@@ -1198,8 +1178,7 @@ export default function ProductForm({
 
                   {/* Company info */}
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Thông tin công ty</h4>
-                    <p className="font-medium text-gray-900">{previewData.companyName}</p>
+                    <p className="font-medium text-gray-900">{previewData.brandName}</p>
                     {previewData.companyWebsite && (
                       <a href={previewData.companyWebsite} target="_blank" rel="noopener noreferrer" className="text-primary-600 text-sm hover:underline">
                         {previewData.companyWebsite}

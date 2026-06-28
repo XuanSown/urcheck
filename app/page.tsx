@@ -75,7 +75,7 @@ function HomeInner() {
       }
     } catch (err) {
       console.error('Verify error:', err);
-      setError('Lỗi kết nối, vui lòng thử lại');
+      setError(t('verify_conn_error') || 'Lỗi kết nối, vui lòng thử lại');
     } finally {
       setIsLoading(false);
     }

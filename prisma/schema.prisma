@@ -20,16 +20,15 @@ model Product {
   expiresInMonths Int?
   skinType        String?   // e.g., "da dầu", "da khô", "da nhạy cảm"
   suitableFor     String?   // e.g., "nam/nữ", "trẻ em", "người lớn"
-  pros            String[]  // ưu điểm
-  cons            String[]  // nhược điểm
+  usages            String[]  // công dụng
+  usageInstructions String[]  // hướng dẫn sử dụng
   ingredientAnalysis String? // phân tích thành phần chi tiết
   tags            String[]  // tags để tìm kiếm
   status          ProductStatus @default(PUBLISHED)
   publishedAt     DateTime?
   purchaseLinks   Json?     // [{ platform: 'Shopee', url: '...' }, { platform: 'Tiki', url: '...' }]
   imageUrl        String?   // deprecated - sử dụng ProductImage thay thế
-  companyName     String
-  companyAddress  String?
+  brandName       String
   verified        Boolean   @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -38,7 +37,7 @@ model Product {
   images   ProductImage[]
   versions ProductVersion[]
 
-  @@index([companyName])
+  @@index([brandName])
   @@index([status])
   @@index([publishedAt])
 }

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/components/I18nProvider';
 
 interface QrScannerProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ type ScanMode = 'camera' | 'upload' | 'idle';
  *     the active flow for QR verification.
  */
 export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
+  const { t } = useLocale();
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [mode, setMode] = useState<ScanMode>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -87,13 +89,13 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
         stream.getTracks().forEach(track => track.stop());
       } catch (mediaError: any) {
         if (mediaError?.name === 'NotAllowedError') {
-          throw new Error('Bạn chưa cấp quyền camera. Nhấn vào biểu tượng ổ khóa 🔒 trên thanh địa chỉ trình duyệt để Cho phép (Allow).');
+          throw new Error(t('qr_scanner_err_no_cam_perm'));
         } else if (mediaError?.name === 'NotFoundError') {
-          throw new Error('Không tìm thấy camera trên thiết bị của bạn.');
+          throw new Error(t('qr_scanner_err_no_cam'));
         } else if (mediaError?.name === 'NotReadableError') {
-          throw new Error('Camera đang được sử dụng bởi một ứng dụng khác (Zalo, Meet, Zoom...).');
+          throw new Error(t('qr_scanner_err_cam_in_use'));
         } else {
-          throw new Error('Không thể mở camera. Vui lòng kiểm tra lại kết nối thiết bị.');
+          throw new Error(t('qr_scanner_err_cam_fail'));
         }
       }
 
@@ -125,11 +127,11 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
 
       setIsScanning(true);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Không thể truy cập camera. Vui lòng cấp quyền!';
+      const message = err instanceof Error ? err.message : t('qr_scanner_err_generic');
       setError(message);
       setMode('idle');
     }
-  }, [onScanSuccess, stopScanner]);
+  }, [onScanSuccess, stopScanner, t]);
 
   const handleFileUpload = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -145,7 +147,7 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
         onScanSuccess(decoded);
         setMode('idle');
       } catch {
-        setError('Không tìm thấy mã QR hợp lệ trong ảnh');
+        setError(t('qr_scanner_err_no_qr_found'));
         setMode('idle');
       } finally {
         // Reset the input so the same file can be re-selected.
@@ -183,8 +185,8 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
           {/* Header */}
           <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white">Quét mã QR</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Đưa mã QR vào khung hình để xác minh</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white">{t('qr_scanner_title')}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('qr_scanner_subtitle')}</p>
             </div>
             <button
               onClick={() => {
@@ -192,7 +194,7 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
                 onClose();
               }}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-              aria-label="Đóng"
+              aria-label={t('qr_scanner_close')}
             >
               <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -224,20 +226,20 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
                     <path d="M14 14h3v3h-3z" />
                     <path d="M20 14v3M14 20h3" strokeLinecap="round" />
                   </svg>
-                  <p className="text-gray-400 mb-6">Chọn phương thức quét mã QR</p>
+                  <p className="text-gray-400 mb-6">{t('qr_scanner_choose_method')}</p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Button onClick={startCamera} size="lg">
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 001.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      Mở camera
+                      {t('qr_scanner_open_camera')}
                     </Button>
                     <Button variant="secondary" onClick={triggerFileUpload} size="lg">
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      Upload ảnh
+                      {t('qr_scanner_upload_image')}
                     </Button>
                   </div>
                 </div>
@@ -248,7 +250,7 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
               <div className="h-[320px] flex items-center justify-center bg-gray-900">
                 <div className="text-center">
                   <LoadingSpinner size="lg" />
-                  <p className="text-gray-400 mt-4">Đang xử lý ảnh...</p>
+                  <p className="text-gray-400 mt-4">{t('qr_scanner_processing')}</p>
                 </div>
               </div>
             )}
@@ -298,11 +300,11 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
                 onClose();
               }}
             >
-              Hủy
+              {t('qr_scanner_cancel')}
             </Button>
             {mode === 'camera' && (
               <Button variant="outline" onClick={stopScanner}>
-                Dừng camera
+                {t('qr_scanner_stop_camera')}
               </Button>
             )}
           </div>

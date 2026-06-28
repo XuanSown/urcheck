@@ -8,8 +8,8 @@ export const productSchema = z.object({
   expiresInMonths: z.number().int().positive().optional().nullable(),
   skinType: z.string().optional(),
   suitableFor: z.string().optional(),
-  pros: z.array(z.string()).max(10).optional().default([]),
-  cons: z.array(z.string()).max(10).optional().default([]),
+  usages: z.array(z.string()).max(10).optional().default([]),
+  usageInstructions: z.array(z.string()).max(10).optional().default([]),
   ingredientAnalysis: z.string().optional(),
   tags: z.array(z.string()).max(20).optional().default([]),
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']),
@@ -19,8 +19,7 @@ export const productSchema = z.object({
       url: z.string(),
     })
   ).max(5).optional().default([]),
-  companyName: z.string().min(1, 'Tên công ty là bắt buộc').max(255),
-  companyAddress: z.string().optional(),
+  brandName: z.string().min(1, 'Tên thương hiệu là bắt buộc').max(255),
   verified: z.boolean().optional().default(true),
 }).refine(
   (data) => {

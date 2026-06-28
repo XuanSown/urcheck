@@ -6,15 +6,14 @@ export interface Product {
   expiryDate: string | Date;
   skinType?: string;
   suitableFor?: string;
-  pros: string[];
-  cons: string[];
+  usages: string[];
+  usageInstructions: string[];
   ingredientAnalysis?: string;
   tags: string[];
   status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
   publishedAt?: string | Date;
   purchaseLinks?: Array<{ platform: string; url: string }>;
-  companyName: string;
-  companyAddress?: string;
+  brandName: string;
   imageUrl?: string | null;
   images?: ProductImage[];
   verified: boolean;
@@ -49,14 +48,13 @@ export interface ProductFormData {
   expiryDate: string;
   skinType?: string;
   suitableFor?: string;
-  pros: string[];
-  cons: string[];
+  usages: string[];
+  usageInstructions: string[];
   ingredientAnalysis?: string;
   tags: string[];
   status: 'DRAFT' | 'PUBLISHED';
   purchaseLinks?: Array<{ platform: string; url: string }>;
-  companyName: string;
-  companyAddress?: string;
+  brandName: string;
   verified: boolean;
 }
 

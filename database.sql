@@ -1,20 +1,21 @@
 -- =====================================================================
--- UrCheck — Complete Database Schema (Supabase Production)
+-- UrCheck — Consolidated Schema (Supabase Production)
 -- =====================================================================
--- File này gộp TẤT CẢ 4 Prisma migrations thành 1 script duy nhất.
+-- File này gộp 4 Prisma migrations thành 1 script duy nhất.
 -- An toàn để chạy nhiều lần (idempotent) — sẽ tự DROP tables cũ trước.
--- Verified chạy thành công trên Postgres 18.4.
 --
 -- Sử dụng:
 --   1. Vào https://supabase.com/dashboard/project/xsaaxmcejqygsdmewlmc/sql
 --   2. New query
---   3. Paste TOÀN BỘ nội dung file này (Ctrl+A, Ctrl+C, Ctrl+V)
+--   3. Paste TOÀN BỘ nội dung file này
 --   4. Click "Run" (hoặc Ctrl+Enter)
 --   5. Chờ "Success. No rows returned"
 --   6. Quay lại local, chạy: npm run seed
---   7. Login admin: https://urcheck.vercel.app/admin/login
---      Username: admin
---      Password: admin123
+--
+-- Sau khi seed xong, login admin tại:
+--   https://urcheck.vercel.app/admin/login
+--   Username: admin
+--   Password: admin123
 -- =====================================================================
 
 -- =====================================================================
@@ -68,7 +69,7 @@ CREATE TABLE "Product" (
     CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
 );
 
--- AdminUser (quản lý đăng nhập admin)
+-- AdminUser
 CREATE TABLE "AdminUser" (
     "id" TEXT NOT NULL,
     "username" TEXT NOT NULL,
@@ -223,8 +224,6 @@ ALTER TABLE "qr_codes"
 --   ✓ barcodes (legacy — hidden in UI)
 --   ✓ qr_codes (ACTIVE verification)
 --   ✓ scan_logs (verify logs)
---
--- 22 indexes + 4 foreign keys đã được tạo.
 --
 -- Bước tiếp theo:
 --   1. Quay lại terminal local

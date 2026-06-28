@@ -6,8 +6,10 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useLocale } from '@/components/I18nProvider';
 
 export function Footer() {
+  const { t } = useLocale();
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
@@ -75,12 +77,12 @@ export function Footer() {
               </div>
             </Link>
             <p className="text-gray-500 text-sm leading-relaxed max-w-xs">
-              Nền tảng xác minh nguồn gốc sản phẩm mỹ phẩm bằng công nghệ mã QR — nhanh chóng, chính xác và miễn phí.
+              {t('footer_desc')}
             </p>
 
             {/* Tech stack badges */}
             <div className="flex flex-wrap gap-2 pt-1">
-              {['QR Scan', 'Xác minh tức thì', 'Miễn phí'].map((tag) => (
+              {[t('footer_tag_1'), t('footer_tag_2'), t('footer_tag_3')].map((tag) => (
                 <span
                   key={tag}
                   className="inline-flex items-center px-2.5 py-1 text-[10px] sm:text-xs font-medium rounded-md bg-gray-900 text-gray-500 border border-gray-800 hover:border-gray-700 hover:text-gray-400 transition-colors duration-200"
@@ -94,7 +96,7 @@ export function Footer() {
           {/* Liên hệ */}
           <motion.div className="space-y-4" variants={itemVariants}>
             <h3 className="text-xs font-semibold text-white uppercase tracking-[0.2em]">
-              Liên hệ
+              {t('footer_contact')}
             </h3>
             <ul className="space-y-3">
               {footerLinks.contact.map((item) => (
@@ -152,20 +154,20 @@ export function Footer() {
         >
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
             <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-xs text-gray-600">
-              <p>&copy; {currentYear} ur check. Bảo lưu mọi quyền.</p>
+              <p>&copy; {currentYear} ur check. {t('footer_rights')}</p>
               <div className="flex items-center gap-2">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-500 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500" />
                 </span>
-                <span>Hệ thống đang hoạt động</span>
+                <span>{t('footer_status')}</span>
               </div>
             </div>
             <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
               <ThemeToggle variant="iconOnly" />
               <LanguageSwitcher />
               <div className="flex items-center gap-2">
-                <span>Phát triển tại</span>
+                <span>{t('footer_dev_by')}</span>
                 <span className="text-sm">🇻🇳</span>
                 <span>Việt Nam</span>
               </div>

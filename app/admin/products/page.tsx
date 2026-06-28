@@ -6,14 +6,16 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { QRCodeSVG } from 'qrcode.react';
 import { formatDate } from '@/lib/format-utils';
 
 interface Product {
   id: string;
   name: string;
   description?: string;
-  manufactureDate: string;
-  expiryDate: string;
+  manufactureDate?: string | null;
+  expiryDate?: string | null;
+  expiresInMonths?: number | null;
   skinType?: string;
   suitableFor?: string;
   pros: string[];
@@ -24,6 +26,10 @@ interface Product {
   verified: boolean;
   createdAt: string;
   versionCount: number;
+  qrCode: {
+    code: string;
+    url: string;
+  } | null;
   images: { id: string; url: string; isPrimary: boolean }[];
 }
 
@@ -138,6 +144,12 @@ function AdminProductsInner() {
   };
 
   const handleBulkDelete = async () => {
+    const nonArchivedCount = products.filter(p => selectedIds.includes(p.id) && p.status !== 'ARCHIVED').length;
+    if (nonArchivedCount > 0) {
+      alert(`Trong số ${selectedIds.length} sản phẩm đã chọn, có ${nonArchivedCount} sản phẩm chưa được lưu trữ.\n\nChỉ những sản phẩm có trạng thái Đã lưu trữ (ARCHIVED) mới có thể bị xóa. Vui lòng chuyển trạng thái trước khi xóa!`);
+      return;
+    }
+
     if (!confirm(`Xóa ${selectedIds.length} sản phẩm đã chọn? Hành động này không thể hoàn tác.`)) {
       return;
     }
@@ -251,7 +263,7 @@ function AdminProductsInner() {
 
       {/* Bulk actions bar */}
       <AnimatePresence>
-        {showBulkActions && selectedIds.length > 0 && (
+        {selectedIds.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -334,9 +346,15 @@ function AdminProductsInner() {
                 <Card className="overflow-hidden group hover:shadow-lg transition-all h-full flex flex-col">
                   {/* Image */}
                   <div className="relative aspect-[4/3] bg-gray-100 dark:bg-gray-800">
-                    {product.images.find(img => img.isPrimary) ? (
+                    {product.images && product.images.length > 0 ? (
                       <img
-                        src={product.images.find(img => img.isPrimary)!.url}
+                        src={product.images.find(img => img.isPrimary)?.url || product.images[0].url}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : product.imageUrl ? (
+                      <img
+                        src={product.imageUrl}
                         alt={product.name}
                         className="w-full h-full object-cover"
                       />
@@ -372,7 +390,16 @@ function AdminProductsInner() {
 
                   {/* Content */}
                   <div className="p-4 flex-1 flex flex-col">
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1 line-clamp-2">{product.name}</h3>
+                    <div className="flex justify-between items-start gap-3 mb-1">
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 line-clamp-2 flex-1 pt-1">{product.name}</h3>
+                      {product.qrCode && (
+                        <div className="flex-shrink-0" title={`Mã QR: ${product.qrCode.code}`}>
+                          <Link href={`/?q=${product.qrCode.code}`} target="_blank" className="block bg-white p-1 rounded-lg border border-gray-200 shadow-sm hover:shadow-md hover:border-primary-300 transition-all">
+                            <QRCodeSVG value={product.qrCode.url} size={44} />
+                          </Link>
+                        </div>
+                      )}
+                    </div>
 
                     <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
                       <span>{product.versionCount} phiên bản</span>

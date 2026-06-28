@@ -116,20 +116,16 @@ export async function POST(
 
     // Upload: prefer Supabase, fallback to data URL
     let url: string;
-    try {
-      if (isSupabaseAdminConfigured()) {
+    if (isSupabaseAdminConfigured()) {
+      try {
         const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         url = await uploadToSupabase(buffer, filename, file.type);
-      } else {
-        // Dev fallback - store as data URL so it can be displayed
+      } catch (uploadError: any) {
+        console.error('Upload to Supabase failed, falling back to data URL:', uploadError);
         url = bufferToDataUrl(buffer, file.type);
       }
-    } catch (uploadError: any) {
-      console.error('Upload error:', uploadError);
-      return NextResponse.json(
-        { success: false, error: `Upload thất bại: ${uploadError.message || 'unknown error'}` },
-        { status: 500 }
-      );
+    } else {
+      url = bufferToDataUrl(buffer, file.type);
     }
 
     // Save to DB

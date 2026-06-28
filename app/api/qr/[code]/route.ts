@@ -56,6 +56,15 @@ export async function GET(
             cons: true,
             ingredientAnalysis: true,
             tags: true,
+            status: true,
+            purchaseLinks: true,
+            images: {
+              orderBy: [
+                { isPrimary: 'desc' },
+                { sortOrder: 'asc' }
+              ],
+              select: { id: true, url: true, isPrimary: true, altText: true }
+            }
           },
         },
       },
@@ -67,6 +76,17 @@ export async function GET(
           success: false,
           valid: false,
           message: 'Mã QR không tồn tại trong hệ thống',
+        },
+        { status: 404 }
+      );
+    }
+
+    if (qrCode.product.status === 'ARCHIVED') {
+      return NextResponse.json(
+        {
+          success: false,
+          valid: false,
+          message: 'Sản phẩm không tồn tại hoặc đã bị ẩn',
         },
         { status: 404 }
       );
@@ -101,7 +121,7 @@ export async function GET(
     }
 
     const product = qrCode.product;
-    const isExpired = new Date(product.expiryDate) < new Date();
+    const isExpired = product.expiryDate ? new Date(product.expiryDate) < new Date() : false;
     const isValid = product.verified && !isExpired;
 
     return NextResponse.json({
@@ -121,9 +141,9 @@ export async function GET(
         name: product.name,
         description: product.description,
 
-        manufactureDate: product.manufactureDate.toISOString(),
-        expiryDate: product.expiryDate.toISOString(),
-        imageUrl: product.imageUrl,
+        manufactureDate: product.manufactureDate ? product.manufactureDate.toISOString() : null,
+        expiryDate: product.expiryDate ? product.expiryDate.toISOString() : null,
+        imageUrl: (product as any).images?.[0]?.url || product.imageUrl,
         companyName: product.companyName,
         companyAddress: product.companyAddress,
         verified: product.verified,
@@ -133,6 +153,8 @@ export async function GET(
         cons: product.cons,
         ingredientAnalysis: product.ingredientAnalysis,
         tags: product.tags,
+        purchaseLinks: product.purchaseLinks,
+        images: product.images,
         createdAt: product.createdAt.toISOString(),
         updatedAt: product.updatedAt.toISOString(),
       },

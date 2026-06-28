@@ -15,8 +15,9 @@ model Product {
   id              String    @id @default(cuid())
   name            String
   description     String?
-  manufactureDate DateTime
-  expiryDate      DateTime
+  manufactureDate DateTime?
+  expiryDate      DateTime?
+  expiresInMonths Int?
   skinType        String?   // e.g., "da dầu", "da khô", "da nhạy cảm"
   suitableFor     String?   // e.g., "nam/nữ", "trẻ em", "người lớn"
   pros            String[]  // ưu điểm
@@ -124,4 +125,15 @@ enum ProductStatus {
 enum UserRole {
   ADMIN
   CUSTOMER
+}
+
+model OtpVerification {
+  id        String   @id @default(cuid())
+  email     String
+  otp       String
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
 }

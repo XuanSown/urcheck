@@ -8,19 +8,22 @@ import { Card } from '@/components/ui/Card';
 
 import { QrCodeDialog } from '@/components/admin/QrCodeDialog';
 import { useLocale } from '@/components/I18nProvider';
+import { QRCodeSVG } from 'qrcode.react';
 
 export interface ProductFormData {
   name: string;
   description?: string;
   manufactureDate: string;
   expiryDate: string;
+  expiryType?: 'dates' | 'months';
+  expiresInMonths?: number | string;
   skinType?: string;
   suitableFor?: string;
   pros: string[];
   cons: string[];
   ingredientAnalysis?: string;
   tags: string[];
-  status: 'DRAFT' | 'PUBLISHED';
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
   purchaseLinks: Array<{ platform: string; url: string }>;
   companyName: string;
   companyAddress?: string;
@@ -33,6 +36,7 @@ export interface ProductFormData {
 interface ProductFormProps {
   productId?: string;
   initialData?: Partial<ProductFormData> | null;
+  qrCode?: { code: string; url: string } | null;
   onSubmit?: (formData: ProductFormData, asDraft: boolean) => void | Promise<void>;
   onPreview?: (formData: ProductFormData) => void;
   submitting?: boolean;
@@ -71,6 +75,7 @@ export default function ProductForm({
   onSubmit,
   onPreview,
   submitting = false,
+  qrCode,
 }: ProductFormProps) {
   const router = useRouter();
   const isEditing = !!productId;
@@ -80,6 +85,8 @@ export default function ProductForm({
     description: '',
     manufactureDate: '',
     expiryDate: '',
+    expiryType: 'dates',
+    expiresInMonths: '',
     skinType: '',
     suitableFor: '',
     pros: [''],
@@ -100,6 +107,10 @@ export default function ProductForm({
   const [showPreview, setShowPreview] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [images, setImages] = useState<any[]>([]);
+  // Pending files (khi tạo mới, chưa có productId để upload ngay)
+  const [pendingFiles, setPendingFiles] = useState<{ file: File; previewUrl: string }[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [generatedQr, setGeneratedQr] = useState<{
     code: string;
     url: string;
@@ -112,6 +123,8 @@ export default function ProductForm({
       setFormData({
         name: initialData.name || '',
         description: initialData.description || '',
+        expiryType: initialData.expiresInMonths ? 'months' : 'dates',
+        expiresInMonths: initialData.expiresInMonths || '',
         manufactureDate: initialData.manufactureDate ? formatDateInput(initialData.manufactureDate) : '',
         expiryDate: initialData.expiryDate ? formatDateInput(initialData.expiryDate) : '',
         skinType: initialData.skinType || '',
@@ -120,7 +133,7 @@ export default function ProductForm({
         cons: initialData.cons?.length ? initialData.cons : [''],
         ingredientAnalysis: initialData.ingredientAnalysis || '',
         tags: initialData.tags || [],
-        status: (initialData.status as 'DRAFT' | 'PUBLISHED') || 'DRAFT',
+        status: (initialData.status as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED') || 'DRAFT',
         purchaseLinks: initialData.purchaseLinks?.length
           ? initialData.purchaseLinks
           : [{ platform: '', url: '' }],
@@ -213,85 +226,138 @@ export default function ProductForm({
     }));
   };
 
-  const handleImageUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    if (!productId) {
-      setError('Vui lòng lưu sản phẩm trước khi upload ảnh');
+  const totalImageCount = isEditing ? images.length : pendingFiles.length;
+
+  const handleFilesSelected = (files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    const available = 3 - totalImageCount;
+    if (available <= 0) {
+      alert('Đã đạt giới hạn tối đa 3 hình ảnh.');
       return;
     }
-
-    if (images.length >= 3) {
-      alert('Chỉ được phép tải lên tối đa 3 hình ảnh.');
-      return;
+    const toAdd = fileArray.slice(0, available);
+    if (fileArray.length > available) {
+      alert(`Chỉ ${available} ảnh đầu tiên được thêm vào.`);
     }
 
-    const availableSlots = 3 - images.length;
-    const filesToUpload = Array.from(files).slice(0, availableSlots);
-
-    if (files.length > availableSlots) {
-      alert(`Đã chọn quá nhiều ảnh. Chỉ ${availableSlots} ảnh đầu tiên được tải lên.`);
+    if (isEditing) {
+      // Upload ngay lên server
+      handleImageUpload(toAdd);
+    } else {
+      // Lưu tạm, hiển thị preview
+      const newPending = toAdd.map((file) => ({
+        file,
+        previewUrl: URL.createObjectURL(file),
+      }));
+      setPendingFiles(prev => [...prev, ...newPending]);
     }
+  };
 
+  const handleImageUpload = async (files: File[]) => {
+    if (!files.length || !productId) return;
+    setUploadingImages(true);
     try {
-      const uploadPromises = filesToUpload.map(async (file) => {
+      const uploadPromises = files.map(async (file) => {
         const formDataUpload = new FormData();
         formDataUpload.append('file', file);
-        
         const response = await fetch(`/api/admin/products/${productId}/images`, {
           method: 'POST',
           body: formDataUpload,
         });
-
         const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || 'Upload failed');
-        }
+        if (!response.ok) throw new Error(data.error || 'Upload failed');
         return data.data;
       });
-
       const uploadedImages = await Promise.all(uploadPromises);
       setImages(prev => [...prev, ...uploadedImages]);
     } catch (err: any) {
       alert('Upload ảnh thất bại: ' + err.message);
+    } finally {
+      setUploadingImages(false);
     }
+  };
+
+  // Upload tất cả pending files sau khi tạo sản phẩm thành công
+  const uploadPendingImages = async (newProductId: string) => {
+    if (pendingFiles.length === 0) return;
+    setUploadingImages(true);
+    try {
+      for (const { file } of pendingFiles) {
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', file);
+        await fetch(`/api/admin/products/${newProductId}/images`, {
+          method: 'POST',
+          body: formDataUpload,
+        });
+      }
+    } catch (err) {
+      console.error('Upload pending images error:', err);
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
+  const removePendingFile = (index: number) => {
+    setPendingFiles(prev => {
+      URL.revokeObjectURL(prev[index].previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const deleteImage = async (imageId: string) => {
     if (!productId) return;
     if (!confirm('Xóa ảnh này?')) return;
-
     try {
       const response = await fetch(`/api/admin/products/${productId}/images?imageId=${imageId}`, {
         method: 'DELETE',
       });
-
-      if (!response.ok) {
-        throw new Error('Delete failed');
-      }
-
+      if (!response.ok) throw new Error('Delete failed');
       setImages(prev => prev.filter(img => img.id !== imageId));
     } catch (error) {
       alert('Xóa ảnh thất bại');
     }
   };
 
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = e.dataTransfer.files;
+    if (files.length > 0) handleFilesSelected(files);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = () => setIsDragOver(false);
+
   const validate = (): boolean => {
     if (!formData.name.trim()) {
       setError('Vui lòng nhập tên sản phẩm');
       return false;
     }
-    if (!formData.manufactureDate) {
-      setError('Vui lòng chọn ngày sản xuất');
-      return false;
+    
+    if (formData.expiryType === 'months') {
+      if (formData.expiresInMonths && Number(formData.expiresInMonths) <= 0) {
+        setError('Vui lòng nhập số tháng hợp lệ hoặc để trống');
+        return false;
+      }
+    } else {
+      if (!formData.manufactureDate) {
+        setError('Vui lòng chọn ngày sản xuất');
+        return false;
+      }
+      if (!formData.expiryDate) {
+        setError('Vui lòng chọn ngày hết hạn');
+        return false;
+      }
+      if (new Date(formData.expiryDate) <= new Date(formData.manufactureDate)) {
+        setError('Ngày hết hạn phải sau ngày sản xuất');
+        return false;
+      }
     }
-    if (!formData.expiryDate) {
-      setError('Vui lòng chọn ngày hết hạn');
-      return false;
-    }
-    if (new Date(formData.expiryDate) <= new Date(formData.manufactureDate)) {
-      setError('Ngày hết hạn phải sau ngày sản xuất');
-      return false;
-    }
+
     if (!formData.companyName.trim()) {
       setError('Vui lòng nhập tên công ty');
       return false;
@@ -304,8 +370,22 @@ export default function ProductForm({
   };
 
   const handlePreviewClick = () => {
-    setPreviewData(formData);
+    const pendingImages = pendingFiles.map((item, index) => ({
+      id: `pending-${index}`,
+      url: item.previewUrl,
+      isPrimary: index === 0 && images.length === 0,
+      altText: item.file.name
+    }));
+
+    setPreviewData({
+      ...formData,
+      existingImages: [...images, ...pendingImages]
+    });
     setShowPreview(true);
+  };
+
+  const handleClosePreview = () => {
+    setShowPreview(false);
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -327,8 +407,13 @@ export default function ProductForm({
     try {
       const payload = {
         ...data,
-        manufactureDate: new Date(data.manufactureDate).toISOString(),
-        expiryDate: new Date(data.expiryDate).toISOString(),
+        manufactureDate: data.expiryType === 'dates' && data.manufactureDate ? new Date(data.manufactureDate).toISOString() : null,
+        expiryDate: data.expiryType === 'dates' && data.expiryDate ? new Date(data.expiryDate).toISOString() : null,
+        expiresInMonths: data.expiryType === 'months' && data.expiresInMonths ? Number(data.expiresInMonths) : null,
+        // Lọc bỏ các giá trị rỗng trước khi gửi lên server
+        pros: data.pros.filter(p => p.trim() !== ''),
+        cons: data.cons.filter(c => c.trim() !== ''),
+        purchaseLinks: data.purchaseLinks.filter(l => l.url.trim() !== '' && l.platform.trim() !== ''),
       };
 
       const response = await fetch('/api/admin/products', {
@@ -343,6 +428,11 @@ export default function ProductForm({
         throw new Error(result.error || 'Lưu thất bại');
       }
 
+      // Upload pending images (selected before product was created)
+      if (pendingFiles.length > 0 && result.data?.id) {
+        await uploadPendingImages(result.data.id);
+      }
+
       setSuccess('Lưu sản phẩm thành công!');
 
       // Show QR dialog (auto-generated by the server) so admin can print.
@@ -352,11 +442,11 @@ export default function ProductForm({
           url: result.qrCode.url,
         });
         setShowQrDialog(true);
+      } else {
+        setTimeout(() => {
+          router.push('/admin/products');
+        }, 1500);
       }
-
-      setTimeout(() => {
-        router.push('/admin/products');
-      }, 2500);
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -419,31 +509,76 @@ export default function ProductForm({
                 required
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Ngày sản xuất <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                name="manufactureDate"
-                value={formData.manufactureDate}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Ngày hết hạn <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                name="expiryDate"
-                value={formData.expiryDate}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
-                required
-              />
+            <div className="md:col-span-2 space-y-3">
+              <label className="block text-sm font-medium text-gray-700">Hạn sử dụng <span className="text-red-500">*</span></label>
+              
+              <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="expiryType"
+                    value="dates"
+                    checked={formData.expiryType === 'dates'}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Chọn ngày cụ thể</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="expiryType"
+                    value="months"
+                    checked={formData.expiryType === 'months'}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Nhập số tháng hết hạn</span>
+                </label>
+              </div>
+
+              {formData.expiryType === 'dates' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Ngày sản xuất <span className="text-red-500">*</span></label>
+                    <input
+                      type="date"
+                      name="manufactureDate"
+                      value={formData.manufactureDate}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Ngày hết hạn <span className="text-red-500">*</span></label>
+                    <input
+                      type="date"
+                      name="expiryDate"
+                      value={formData.expiryDate}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500"
+                      required
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Số tháng hết hạn (kể từ NSX)</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      name="expiresInMonths"
+                      value={formData.expiresInMonths || ''}
+                      onChange={handleChange}
+                      min="1"
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 pr-16"
+                      placeholder="Ví dụ: 36 (Hoặc để trống)"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">tháng</span>
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -457,6 +592,7 @@ export default function ProductForm({
               >
                 <option value="DRAFT">Bản nháp</option>
                 <option value="PUBLISHED">Xuất bản</option>
+                <option value="ARCHIVED">Đã lưu trữ</option>
               </select>
             </div>
             <div>
@@ -680,70 +816,209 @@ export default function ProductForm({
         </Card>
 
         {/* Images */}
-        {isEditing && (
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Hình ảnh sản phẩm (Tối đa 3 ảnh)</h2>
-            {images.length < 3 ? (
-              <div className="mb-4">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={(e) => {
-                    handleImageUpload(e.target.files);
-                    e.target.value = '';
-                  }}
-                  className="hidden"
-                  id="image-upload"
-                />
-                <label
-                  htmlFor="image-upload"
-                  className="inline-flex items-center justify-center px-4 py-2.5 bg-primary-600 text-white rounded-lg cursor-pointer hover:bg-primary-700 transition-colors"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Upload ảnh
-                </label>
-                <p className="text-sm text-gray-500 mt-2">JPEG, PNG, WebP. Tối đa 10MB mỗi ảnh</p>
-              </div>
-            ) : (
-              <div className="mb-4">
-                <p className="text-sm text-orange-600 bg-orange-50 p-3 rounded-lg border border-orange-200">
-                  Đã đạt giới hạn tối đa 3 ảnh. Vui lòng xóa bớt ảnh trước khi tải lên ảnh mới.
-                </p>
-              </div>
-            )}
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold">Hình ảnh sản phẩm</h2>
+              <p className="text-sm text-gray-500 mt-0.5">Tối đa 3 ảnh • JPEG, PNG, WebP • Mỗi ảnh tối đa 10MB</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Badge đếm ảnh */}
+              <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
+                totalImageCount >= 3
+                  ? 'bg-orange-100 text-orange-700'
+                  : 'bg-primary-100 text-primary-700'
+              }`}>
+                {totalImageCount}/3 ảnh
+              </span>
+            </div>
+          </div>
 
-            {images.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {images.map((image) => (
-                  <div key={image.id} className="relative group">
-                    <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
-                      <img
-                        src={image.url}
-                        alt={image.altText || ''}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    {image.isPrimary && (
-                      <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded">
-                        Chính
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => deleteImage(image.id)}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
+          {/* Khu vực upload – ẩn khi đã đủ 3 ảnh */}
+          {totalImageCount < 3 && (
+            <div
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 mb-5 ${
+                isDragOver
+                  ? 'border-primary-500 bg-primary-50 scale-[1.01]'
+                  : 'border-gray-300 bg-gray-50 hover:border-primary-400 hover:bg-primary-50/40'
+              }`}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => {
+                  if (e.target.files) handleFilesSelected(e.target.files);
+                  e.target.value = '';
+                }}
+                className="hidden"
+                id="image-upload"
+              />
+              <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center gap-3">
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
+                  isDragOver ? 'bg-primary-100' : 'bg-white shadow-sm border border-gray-200'
+                }`}>
+                  <svg className="w-7 h-7 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">
+                    {isDragOver ? 'Thả ảnh vào đây' : 'Kéo thả ảnh hoặc click để chọn'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Còn {3 - totalImageCount} vị trí trống
+                  </p>
+                </div>
+              </label>
+            </div>
+          )}
+
+          {totalImageCount >= 3 && (
+            <div className="mb-5 flex items-center gap-2 text-sm text-orange-600 bg-orange-50 p-3 rounded-lg border border-orange-200">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Đã đạt giới hạn 3 ảnh. Xóa bớt để tải ảnh mới.
+            </div>
+          )}
+
+          {/* Upload progress */}
+          {uploadingImages && (
+            <div className="mb-4 flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <svg className="w-4 h-4 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              <span className="text-sm text-blue-700">Đang tải ảnh lên...</span>
+            </div>
+          )}
+
+          {/* Grid ảnh – khi tạo mới: hiển thị pendingFiles */}
+          {!isEditing && pendingFiles.length > 0 && (
+            <div className="grid grid-cols-3 gap-4">
+              {pendingFiles.map((item, index) => (
+                <div key={index} className="relative group">
+                  <div className="aspect-square rounded-xl overflow-hidden bg-gray-100 border-2 border-dashed border-gray-200">
+                    <img
+                      src={item.previewUrl}
+                      alt={item.file.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                ))}
+                  {index === 0 && (
+                    <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-0.5 rounded-md font-medium shadow">
+                      Chính
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 rounded-b-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p className="text-white text-xs truncate">{item.file.name}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removePendingFile(index)}
+                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              {/* Placeholder ô trống */}
+              {pendingFiles.length < 3 && Array.from({ length: 3 - pendingFiles.length }).map((_, i) => (
+                <label key={`placeholder-${i}`} htmlFor="image-upload" className="cursor-pointer">
+                  <div className="aspect-square rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center hover:border-primary-300 hover:bg-primary-50/40 transition-all">
+                    <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {/* Grid ảnh – khi chỉnh sửa: hiển thị images từ server */}
+          {isEditing && images.length > 0 && (
+            <div className="grid grid-cols-3 gap-4">
+              {images.map((image) => (
+                <div key={image.id} className="relative group">
+                  <div className="aspect-square rounded-xl overflow-hidden bg-gray-100">
+                    <img
+                      src={image.url}
+                      alt={image.altText || ''}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  {image.isPrimary && (
+                    <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-0.5 rounded-md font-medium shadow">
+                      Chính
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => deleteImage(image.id)}
+                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              {/* Placeholder ô trống khi đang chỉnh sửa */}
+              {images.length < 3 && Array.from({ length: 3 - images.length }).map((_, i) => (
+                <label key={`placeholder-edit-${i}`} htmlFor="image-upload" className="cursor-pointer">
+                  <div className="aspect-square rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center hover:border-primary-300 hover:bg-primary-50/40 transition-all">
+                    <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {/* Hướng dẫn khi chưa có ảnh nào và đang tạo mới */}
+          {!isEditing && pendingFiles.length === 0 && (
+            <div className="grid grid-cols-3 gap-4">
+              {[0, 1, 2].map((i) => (
+                <label key={i} htmlFor="image-upload" className="cursor-pointer">
+                  <div className="aspect-square rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex flex-col items-center justify-center gap-2 hover:border-primary-300 hover:bg-primary-50/40 transition-all">
+                    <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {i === 0 && <span className="text-xs text-gray-400">Ảnh chính</span>}
+                  </div>
+                </label>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* QR Code display (edit mode) */}
+        {isEditing && qrCode && (
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Mã QR Sản phẩm</h2>
+            <div className="flex items-center gap-4">
+              <div 
+                className="bg-white p-2 rounded-lg border border-gray-200 cursor-pointer hover:border-primary-400 hover:shadow-md transition-all"
+                onClick={() => {
+                  setGeneratedQr({ code: qrCode!.code, url: qrCode!.url });
+                  setShowQrDialog(true);
+                }}
+                title="Bấm để phóng to"
+              >
+                <QRCodeSVG value={qrCode.url} size={80} />
               </div>
-            )}
+              <div>
+                <p className="text-gray-900 dark:text-gray-100 font-medium">Mã code: <span className="text-primary-600 font-bold">{qrCode.code}</span></p>
+                <p className="text-sm text-gray-500 mt-1">Bấm vào mã QR để xem lớn, tải về hoặc in.</p>
+              </div>
+            </div>
           </Card>
         )}
 
@@ -765,7 +1040,12 @@ export default function ProductForm({
       {generatedQr && (
         <QrCodeDialog
           open={showQrDialog}
-          onClose={() => setShowQrDialog(false)}
+          onClose={() => {
+            setShowQrDialog(false);
+            if (!isEditing) {
+              router.push('/admin/products');
+            }
+          }}
           code={generatedQr.code}
           url={generatedQr.url}
           productName={formData.name}
@@ -783,7 +1063,8 @@ export default function ProductForm({
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">Xem trước sản phẩm</h2>
               <button
-                onClick={() => setShowPreview(false)}
+                type="button"
+                onClick={handleClosePreview}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
                 <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

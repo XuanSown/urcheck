@@ -29,6 +29,11 @@ export async function GET(
             versions: true,
           },
         },
+        qrCodes: {
+          take: 1,
+          orderBy: { createdAt: 'desc' },
+          select: { code: true, url: true }
+        },
       },
     });
 
@@ -98,8 +103,9 @@ export async function PUT(
           name: validatedData.name,
           description: validatedData.description,
 
-          manufactureDate: new Date(validatedData.manufactureDate),
-          expiryDate: new Date(validatedData.expiryDate),
+          manufactureDate: validatedData.manufactureDate ? new Date(validatedData.manufactureDate) : null,
+          expiryDate: validatedData.expiryDate ? new Date(validatedData.expiryDate) : null,
+          expiresInMonths: validatedData.expiresInMonths || null,
           skinType: validatedData.skinType,
           suitableFor: validatedData.suitableFor,
           pros: validatedData.pros,
@@ -124,6 +130,7 @@ export async function PUT(
 
         manufactureDate: product.manufactureDate,
         expiryDate: product.expiryDate,
+        expiresInMonths: product.expiresInMonths,
         skinType: product.skinType,
         suitableFor: product.suitableFor,
         pros: product.pros,
@@ -144,8 +151,9 @@ export async function PUT(
       if (oldData.name !== product.name) changedFields.push('name');
       if (oldData.description !== product.description) changedFields.push('description');
 
-      if (oldData.manufactureDate.getTime() !== product.manufactureDate.getTime()) changedFields.push('manufactureDate');
-      if (oldData.expiryDate.getTime() !== product.expiryDate.getTime()) changedFields.push('expiryDate');
+      if (oldData.manufactureDate?.getTime() !== product.manufactureDate?.getTime()) changedFields.push('manufactureDate');
+      if (oldData.expiryDate?.getTime() !== product.expiryDate?.getTime()) changedFields.push('expiryDate');
+      if (oldData.expiresInMonths !== product.expiresInMonths) changedFields.push('expiresInMonths');
       if (oldData.skinType !== product.skinType) changedFields.push('skinType');
       if (oldData.suitableFor !== product.suitableFor) changedFields.push('suitableFor');
       if (JSON.stringify(oldData.pros) !== JSON.stringify(product.pros)) changedFields.push('pros');
@@ -236,6 +244,13 @@ export async function DELETE(
       );
     }
 
+    if (product.status !== 'ARCHIVED') {
+      return NextResponse.json(
+        { success: false, error: 'Chỉ có thể xóa sản phẩm đã lưu trữ. Vui lòng chuyển trạng thái sang Đã lưu trữ trước khi xóa.' },
+        { status: 400 }
+      );
+    }
+
     // Delete product (cascade will delete images, versions)
     await prisma.product.delete({
       where: { id },
@@ -255,13 +270,25 @@ export async function DELETE(
 }
 
 function formatProductResponse(product: any) {
+  // Fallback for old products that only have imageUrl
+  let existingImages = product.images || [];
+  if (existingImages.length === 0 && product.imageUrl) {
+    existingImages = [{
+      id: 'legacy-image-' + product.id,
+      url: product.imageUrl,
+      isPrimary: true,
+      sortOrder: 0
+    }];
+  }
+
   return {
     id: product.id,
     name: product.name,
     description: product.description,
 
-    manufactureDate: product.manufactureDate.toISOString(),
-    expiryDate: product.expiryDate.toISOString(),
+    manufactureDate: product.manufactureDate ? product.manufactureDate.toISOString() : null,
+    expiryDate: product.expiryDate ? product.expiryDate.toISOString() : null,
+    expiresInMonths: product.expiresInMonths,
     skinType: product.skinType,
     suitableFor: product.suitableFor,
     pros: product.pros,
@@ -276,8 +303,9 @@ function formatProductResponse(product: any) {
     verified: product.verified,
     createdAt: product.createdAt.toISOString(),
     updatedAt: product.updatedAt.toISOString(),
-    images: product.images,
-
-    versionCount: product._count?.versions || product.versions?.length || 0,
+    images: existingImages,
+    versionCount: product._count?.versions || 0,
+    versions: product.versions,
+    qrCode: product.qrCodes?.[0] || null,
   };
 }

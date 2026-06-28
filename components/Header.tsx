@@ -5,6 +5,7 @@ import { Logo } from '@/components/Logo';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocale } from '@/components/I18nProvider';
 
 interface HeaderProps {
   className?: string;
@@ -14,6 +15,7 @@ export function Header({ className }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { t } = useLocale();
   
   // Use ref to track scroll position without triggering re-renders
   const lastScrollY = React.useRef(0);
@@ -48,9 +50,9 @@ export function Header({ className }: HeaderProps) {
   }, []);
 
   const navLinks = [
-    { href: '#how-it-works', label: 'Cách hoạt động' },
-    { href: '#support', label: 'Hỗ trợ' },
-    { href: '#contact', label: 'Liên hệ' },
+    { href: '#how-it-works', label: t('nav_how_it_works') },
+    { href: '#support', label: t('nav_support') },
+    { href: '#contact', label: t('nav_contact') },
   ];
 
   return (

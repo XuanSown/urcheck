@@ -132,7 +132,7 @@ export async function AdminDashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
         <p className="text-gray-500 mt-1">Tổng quan hệ thống</p>
       </div>
 
@@ -146,7 +146,7 @@ export async function AdminDashboardPage() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{formatNumber(data.totalProducts)}</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(data.totalProducts)}</div>
             <p className="text-xs text-gray-500 mt-1">Sản phẩm trong hệ thống</p>
           </CardContent>
         </Card>
@@ -160,7 +160,7 @@ export async function AdminDashboardPage() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{formatNumber(data.recentScans)}</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(data.recentScans)}</div>
             <p className="text-xs text-gray-500 mt-1">Quét trong 7 ngày qua</p>
           </CardContent>
         </Card>
@@ -186,7 +186,7 @@ export async function AdminDashboardPage() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{formatNumber(data.totalQrCodes)}</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(data.totalQrCodes)}</div>
             <p className="text-xs text-gray-500 mt-1">Mã QR đang hoạt động</p>
           </CardContent>
         </Card>
@@ -249,7 +249,7 @@ export async function AdminDashboardPage() {
                       />
                     </div>
                   </div>
-                  <span className="text-sm font-medium text-gray-900 w-12 text-right">{count}</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100 w-12 text-right">{count}</span>
                 </div>
               ))}
             </div>
@@ -267,10 +267,10 @@ export async function AdminDashboardPage() {
           <CardContent>
             <div className="space-y-3">
               {data.topScannedProducts.map((product, idx) => (
-                <div key={product.id} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div key={product.id} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                   <span className="text-sm font-bold text-gray-400 w-5">#{idx + 1}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{product.name}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold text-primary-600">{product._count.qrCodes}</p>
@@ -293,10 +293,10 @@ export async function AdminDashboardPage() {
           <CardContent>
             <div className="space-y-3">
               {data.topQrCodes.map((qr, idx) => (
-                <div key={qr.id} className="flex items-center gap-3 p-3 rounded-lg bg-primary-50/50 hover:bg-primary-50 transition-colors border border-primary-100/50">
+                <div key={qr.id} className="flex items-center gap-3 p-3 rounded-lg bg-primary-50/50 dark:bg-primary-900/20 hover:bg-primary-50 dark:hover:bg-primary-900/40 transition-colors border border-primary-100/50 dark:border-primary-800/50">
                   <span className="text-sm font-bold text-primary-300 w-5">#{idx + 1}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                       {qr.product?.name ?? 'Sản phẩm đã xoá'}
                     </p>
                     <p className="text-xs font-mono text-primary-700">{qr.code}</p>

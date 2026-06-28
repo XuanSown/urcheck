@@ -13,8 +13,9 @@ interface Product {
   id: string;
   name: string;
   description?: string;
-  manufactureDate: string;
-  expiryDate: string;
+  manufactureDate?: string | null;
+  expiryDate?: string | null;
+  expiresInMonths?: number | null;
   skinType?: string;
   suitableFor?: string;
   pros: string[];
@@ -79,8 +80,15 @@ export default function EditProductPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          manufactureDate: formData.expiryType === 'dates' && formData.manufactureDate ? new Date(formData.manufactureDate).toISOString() : null,
+          expiryDate: formData.expiryType === 'dates' && formData.expiryDate ? new Date(formData.expiryDate).toISOString() : null,
+          expiresInMonths: formData.expiryType === 'months' && formData.expiresInMonths ? Number(formData.expiresInMonths) : null,
           status: asDraft ? 'DRAFT' : formData.status || 'PUBLISHED',
           changeReason: asDraft ? 'Đã lưu bản nháp' : 'Cập nhật thông tin sản phẩm',
+          // Lọc bỏ các giá trị rỗng
+          pros: formData.pros.filter(p => p.trim() !== ''),
+          cons: formData.cons.filter(c => c.trim() !== ''),
+          purchaseLinks: formData.purchaseLinks.filter(l => l.url.trim() !== '' && l.platform.trim() !== ''),
         }),
       });
 
@@ -102,11 +110,6 @@ export default function EditProductPage() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handlePreview = (formData: ProductFormData) => {
-    setPreviewData(formData);
-    setShowPreview(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -197,225 +200,29 @@ export default function EditProductPage() {
 
       {/* Product Form */}
       <ProductForm
+        productId={productId}
         initialData={{
           name: product.name,
           description: product.description,
-          manufactureDate: product.manufactureDate,
-          expiryDate: product.expiryDate,
+          manufactureDate: product.manufactureDate || '',
+          expiryDate: product.expiryDate || '',
+          expiresInMonths: product.expiresInMonths || '',
           skinType: product.skinType,
           suitableFor: product.suitableFor,
           pros: product.pros,
           cons: product.cons,
           tags: product.tags,
-          status: (product.status === 'PUBLISHED' ? 'PUBLISHED' : 'DRAFT') as 'DRAFT' | 'PUBLISHED',
+          status: product.status as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED',
           companyName: product.companyName,
           companyWebsite: product.companyWebsite,
           companyContact: product.companyContact,
           purchaseLinks: product.purchaseLinks,
           existingImages: product.images,
         }}
+        qrCode={product.qrCode}
         onSubmit={handleSubmit}
-        onPreview={handlePreview}
         submitting={submitting}
       />
-
-      {/* Preview Modal */}
-      {showPreview && previewData && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
-          >
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">Xem trước sản phẩm</h2>
-              <button
-                onClick={() => setShowPreview(false)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-              <div className="grid md:grid-cols-2 gap-8">
-                {/* Left column - Preview */}
-                <div className="space-y-6">
-                  <div className="aspect-square rounded-xl bg-gray-100 flex items-center justify-center">
-                    {previewData.existingImages && previewData.existingImages.length > 0 ? (
-                      <img
-                        src={previewData.existingImages[0].url}
-                        alt={previewData.name}
-                        className="w-full h-full object-cover rounded-xl"
-                      />
-                    ) : (
-                      <svg className="w-20 h-20 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    )}
-                  </div>
-
-                  {/* Tags */}
-                  {previewData.tags && previewData.tags.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Tags</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {previewData.tags.map(tag => (
-                          <span key={tag} className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right column - Details */}
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">{previewData.name}</h3>
-                  </div>
-
-                  {previewData.description && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-1">Mô tả</h4>
-                      <p className="text-gray-600 text-sm">{previewData.description}</p>
-                    </div>
-                  )}
-
-                  {/* Pros & Cons */}
-                  <div className="grid grid-cols-2 gap-4">
-                    {previewData.pros && previewData.pros.length > 0 && (
-                      <div className="bg-green-50 rounded-lg p-4">
-                        <h4 className="text-sm font-medium text-green-700 mb-2 flex items-center">
-                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Ưu điểm
-                        </h4>
-                        <ul className="space-y-1">
-                          {previewData.pros.map((pro, i) => (
-                            <li key={i} className="text-sm text-green-700 flex items-start">
-                              <span className="mr-2">•</span>
-                              <span>{pro}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {previewData.cons && previewData.cons.length > 0 && (
-                      <div className="bg-red-50 rounded-lg p-4">
-                        <h4 className="text-sm font-medium text-red-700 mb-2 flex items-center">
-                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                          Nhược điểm
-                        </h4>
-                        <ul className="space-y-1">
-                          {previewData.cons.map((con, i) => (
-                            <li key={i} className="text-sm text-red-700 flex items-start">
-                              <span className="mr-2">•</span>
-                              <span>{con}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Dates */}
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500">Ngày sản xuất:</span>
-                      <p className="font-medium">{previewData.manufactureDate}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Hạn sử dụng:</span>
-                      <p className="font-medium">{previewData.expiryDate}</p>
-                    </div>
-                  </div>
-
-                  {/* Suitable for */}
-                  {previewData.suitableFor && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-1">Phù hợp cho</h4>
-                      <p className="text-gray-600 text-sm bg-blue-50 inline-block px-3 py-1 rounded-full">
-                        {previewData.suitableFor}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Skin type */}
-                  {previewData.skinType && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-1">Loại da phù hợp</h4>
-                      <p className="text-gray-600 text-sm">{previewData.skinType}</p>
-                    </div>
-                  )}
-
-                  {/* Ingredient analysis */}
-                  {previewData.ingredientAnalysis && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-1">Phân tích thành phần</h4>
-                      <p className="text-gray-600 text-sm">{previewData.ingredientAnalysis}</p>
-                    </div>
-                  )}
-
-                  {/* Company info */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Thông tin công ty</h4>
-                    <p className="font-medium text-gray-900">{previewData.companyName}</p>
-                    {previewData.companyWebsite && (
-                      <a href={previewData.companyWebsite} target="_blank" rel="noopener noreferrer" className="text-primary-600 text-sm hover:underline">
-                        {previewData.companyWebsite}
-                      </a>
-                    )}
-                  </div>
-
-                  {/* Purchase links */}
-                  {previewData.purchaseLinks && previewData.purchaseLinks.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Liên kết mua hàng</h4>
-                      <div className="space-y-2">
-                        {previewData.purchaseLinks.map((link, i) => (
-                          <a
-                            key={i}
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-sm text-primary-600 hover:underline"
-                          >
-                            {link.platform === 'shopee' ? (
-                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-                              </svg>
-                            ) : link.platform === 'tiki' ? (
-                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-                              </svg>
-                            ) : (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                              </svg>
-                            )}
-                            <span>{link.platform === 'shopee' ? 'Shopee' : link.platform === 'tiki' ? 'Tiki' : 'Custom URL'}</span>
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowPreview(false)}>
-                Đóng
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 }

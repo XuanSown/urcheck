@@ -5,8 +5,11 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Logo } from '@/components/Logo';
 import Link from 'next/link';
+import { useLocale } from '@/components/I18nProvider';
 
 export function Hero() {
+  const { t } = useLocale();
+
   return (
     <section className="relative min-h-[90vh] sm:min-h-[85vh] flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden bg-gradient-to-b from-gray-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 grain-overlay">
       {/* Sophisticated animated background elements */}
@@ -108,7 +111,7 @@ export function Hero() {
             }}
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 leading-[1.1] tracking-tight"
           >
-            <span className="block">Kiểm tra nguồn gốc</span>
+            <span className="block">{t('hero_headline_1')}</span>
             <motion.span
               className="block text-transparent bg-clip-text bg-gradient-to-r from-primary-600 via-primary-500 to-primary-400"
               animate={{
@@ -117,7 +120,7 @@ export function Hero() {
               transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
               style={{ backgroundSize: '200% auto' }}
             >
-              sản phẩm mỹ phẩm
+              {t('hero_headline_2')}
             </motion.span>
           </motion.h1>
 
@@ -135,8 +138,8 @@ export function Hero() {
             }}
             className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-8 sm:mb-12 max-w-xl sm:max-w-2xl mx-auto leading-relaxed px-2"
           >
-            Quét mã QR để xác minh tính hợp lệ, ngày sản xuất, hạn sử dụng và thông tin nhà sản xuất.
-            <span className="hidden sm:inline"> Nhanh chóng, miễn phí, không cần đăng ký.</span>
+            {t('hero_subtitle')}
+            <span className="hidden sm:inline">{t('hero_subtitle_highlight')}</span>
           </motion.p>
 
           <motion.div
@@ -177,7 +180,7 @@ export function Hero() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 001.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <span className="relative z-10">Quét mã QR ngay</span>
+                <span className="relative z-10">{t('hero_cta')}</span>
               </Button>
             </Link>
           </motion.div>
@@ -191,9 +194,9 @@ export function Hero() {
           className="mt-10 sm:mt-16 flex flex-wrap justify-center gap-4 sm:gap-8 lg:gap-10 text-xs sm:text-sm text-gray-500 dark:text-gray-400"
         >
           {[
-            { icon: '✓', text: 'Không cần đăng ký' },
-            { icon: '⚡', text: 'Quét nhanh 2s' },
-            { icon: '🔒', text: '100% miễn phí' },
+            { icon: '✓', text: t('hero_trust_1') },
+            { icon: '⚡', text: t('hero_trust_2') },
+            { icon: '🔒', text: t('hero_trust_3') },
           ].map((item, index) => (
             <motion.div
               key={index}

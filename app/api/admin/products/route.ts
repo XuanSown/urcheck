@@ -44,15 +44,22 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
         include: {
           images: {
-            where: { isPrimary: true },
-            take: 1,
-            orderBy: { sortOrder: 'asc' },
+            orderBy: [
+              { isPrimary: 'desc' },
+              { sortOrder: 'asc' },
+            ],
+            take: 3,
             select: { id: true, url: true, isPrimary: true, altText: true },
           },
           _count: {
             select: {
               versions: true,
             },
+          },
+          qrCodes: {
+            take: 1,
+            orderBy: { createdAt: 'desc' },
+            select: { code: true, url: true }
           },
         },
       }),
@@ -65,8 +72,9 @@ export async function GET(request: NextRequest) {
       name: p.name,
       description: p.description,
 
-      manufactureDate: p.manufactureDate.toISOString(),
-      expiryDate: p.expiryDate.toISOString(),
+      manufactureDate: p.manufactureDate ? p.manufactureDate.toISOString() : null,
+      expiryDate: p.expiryDate ? p.expiryDate.toISOString() : null,
+      expiresInMonths: p.expiresInMonths,
       skinType: p.skinType,
       suitableFor: p.suitableFor,
       pros: p.pros,
@@ -84,6 +92,7 @@ export async function GET(request: NextRequest) {
       imageUrl: p.imageUrl,
       images: p.images,
       versionCount: p._count.versions,
+      qrCode: p.qrCodes?.[0] || null,
     }));
 
     return NextResponse.json({
@@ -124,8 +133,9 @@ export async function POST(request: NextRequest) {
           name: validatedData.name,
           description: validatedData.description,
 
-          manufactureDate: new Date(validatedData.manufactureDate),
-          expiryDate: new Date(validatedData.expiryDate),
+          manufactureDate: validatedData.manufactureDate ? new Date(validatedData.manufactureDate) : null,
+          expiryDate: validatedData.expiryDate ? new Date(validatedData.expiryDate) : null,
+          expiresInMonths: validatedData.expiresInMonths || null,
           skinType: validatedData.skinType,
           suitableFor: validatedData.suitableFor,
           pros: validatedData.pros,
@@ -158,6 +168,7 @@ export async function POST(request: NextRequest) {
 
         manufactureDate: product.manufactureDate,
         expiryDate: product.expiryDate,
+        expiresInMonths: product.expiresInMonths,
         skinType: product.skinType,
         suitableFor: product.suitableFor,
         pros: product.pros,
@@ -226,8 +237,9 @@ export async function POST(request: NextRequest) {
 
 
 
+    const errMsg = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { success: false, error: 'Đã xảy ra lỗi, vui lòng thử lại' },
+      { success: false, error: errMsg },
       { status: 500 }
     );
   }
@@ -239,8 +251,9 @@ function formatProductResponse(product: any) {
     name: product.name,
     description: product.description,
 
-    manufactureDate: product.manufactureDate.toISOString(),
-    expiryDate: product.expiryDate.toISOString(),
+    manufactureDate: product.manufactureDate ? product.manufactureDate.toISOString() : null,
+    expiryDate: product.expiryDate ? product.expiryDate.toISOString() : null,
+    expiresInMonths: product.expiresInMonths,
     skinType: product.skinType,
     suitableFor: product.suitableFor,
     pros: product.pros,

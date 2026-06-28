@@ -21,8 +21,7 @@ interface QrCodeDialogProps {
   logoUrl?: string;
 }
 
-// Internal pixel size for the canvas. We render at high DPI so the PNG
-// stays sharp even when admin picks a 4cm label.
+// Internal pixel size for the hidden canvas. High DPI for crisp PNG output.
 const RENDER_PX = 1024;
 
 export function QrCodeDialog({
@@ -31,7 +30,7 @@ export function QrCodeDialog({
   code,
   url,
   productName,
-  logoUrl = '/logo-qr.svg',
+  logoUrl = '/images/logo-main.png',
 }: QrCodeDialogProps) {
   const { t } = useLocale();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -40,10 +39,11 @@ export function QrCodeDialog({
 
   if (!open) return null;
 
-  // Logo overlay size as a fraction of the QR canvas. Keeps logo from
-  // covering too much of the QR even with high error correction (H = 30%).
+  // Logo overlay fraction of QR (keep ≤20% for H-level correction readability)
   const logoFraction = 0.18;
   const logoPx = Math.round(RENDER_PX * logoFraction);
+  const previewSize = 160;
+  const previewLogoPx = Math.round(previewSize * logoFraction);
 
   const handleDownload = async () => {
     const canvas = canvasRef.current;
@@ -58,14 +58,14 @@ export function QrCodeDialog({
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '');
-      const url = URL.createObjectURL(blob);
+      const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
+      a.href = blobUrl;
       a.download = `qr-${safeName || code}-${sizeCm}cm.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(blobUrl);
     } catch (err) {
       console.error('Download QR failed:', err);
       alert('Tải QR thất bại, vui lòng thử lại');
@@ -148,87 +148,91 @@ export function QrCodeDialog({
 
   return (
     <AnimateOverlay>
-      <Card className="w-full max-w-md bg-white">
-        <div className="p-6 space-y-5">
-          <header className="text-center space-y-1">
-            <h2 className="text-xl font-bold text-gray-900">
-              {t('qr_dialog_title')}
-            </h2>
-            <p className="text-sm text-gray-500">
-              {t('qr_dialog_subtitle')}
-            </p>
-          </header>
-
-          {/* Hidden canvas used to generate PNG download / print. */}
-          <div className="flex justify-center bg-gray-50 p-4 rounded-xl border border-gray-200">
-            <QRCodeCanvas
-              ref={canvasRef}
-              value={url}
-              size={RENDER_PX}
-              bgColor="#ffffff"
-              fgColor="#000000"
-              level="H"
-              includeMargin
-              imageSettings={{
-                src: logoUrl,
-                height: logoPx,
-                width: logoPx,
-                excavate: true,
-              }}
-            />
+      <Card className="w-full max-w-sm bg-white shadow-2xl rounded-2xl overflow-hidden">
+        {/* Header with gradient */}
+        <div className="bg-gradient-to-br from-primary-600 to-primary-700 px-6 pt-6 pb-8 text-center relative">
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-3 right-3 p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+          >
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/20 mb-3">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
           </div>
+          <h2 className="text-lg font-bold text-white">
+            {t('qr_dialog_title')}
+          </h2>
+          <p className="text-sm text-white/70 mt-1">
+            {productName}
+          </p>
+        </div>
 
-          {/* Smaller preview SVG so the dialog isn't dominated by 1024px. */}
-          <div className="flex justify-center -mt-2">
+        {/* QR Preview - centered, compact */}
+        <div className="px-6 mt-4">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-4 flex flex-col items-center">
+            {/* Visible SVG preview - compact size */}
             <QRCodeSVG
               value={url}
-              size={120}
+              size={previewSize}
               level="H"
-              includeMargin
+              includeMargin={false}
               imageSettings={{
                 src: logoUrl,
-                height: Math.round(120 * logoFraction),
-                width: Math.round(120 * logoFraction),
+                height: previewLogoPx,
+                width: previewLogoPx,
                 excavate: true,
               }}
             />
-          </div>
-
-          {/* Meta */}
-          <div className="text-sm space-y-2 bg-gray-50 p-3 rounded-lg">
-            <div className="flex justify-between gap-2">
-              <span className="text-gray-500">{t('qr_dialog_code_label')}:</span>
-              <span className="font-mono font-bold text-gray-900">{code}</span>
+            {/* Code badge */}
+            <div className="mt-3 flex items-center gap-2">
+              <span className="text-xs text-gray-400">{t('qr_dialog_code_label')}:</span>
+              <span className="font-mono text-sm font-bold text-gray-900 bg-gray-100 px-2.5 py-0.5 rounded-md">{code}</span>
             </div>
-            <div className="flex justify-between gap-2">
-              <span className="text-gray-500">URL:</span>
-              <a
-                href={url}
-                target="_blank"
-                rel="noreferrer"
-                className="font-mono text-xs text-primary-600 hover:underline truncate max-w-[260px]"
-              >
-                {url}
-              </a>
-            </div>
-
           </div>
+        </div>
 
+        {/* Hidden canvas for high-res PNG export */}
+        <div className="absolute -left-[9999px] top-0" aria-hidden="true">
+          <QRCodeCanvas
+            ref={canvasRef}
+            value={url}
+            size={RENDER_PX}
+            bgColor="#ffffff"
+            fgColor="#000000"
+            level="H"
+            includeMargin
+            imageSettings={{
+              src: logoUrl,
+              height: logoPx,
+              width: logoPx,
+              excavate: true,
+            }}
+          />
+        </div>
+
+        {/* Controls */}
+        <div className="px-6 pt-4 pb-6 space-y-4">
           {/* Size picker */}
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-medium text-gray-700">
-              {t('qr_dialog_size_label')}:
-            </span>
-            <div className="flex gap-1">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+              {t('qr_dialog_size_label')}
+            </label>
+            <div className="flex gap-2">
               {QR_ALLOWED_SIZES_CM.map((cm) => (
                 <button
                   key={cm}
                   type="button"
                   onClick={() => setSizeCm(cm)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                  className={`flex-1 py-2 rounded-lg text-sm font-semibold border-2 transition-all duration-200 ${
                     sizeCm === cm
-                      ? 'bg-primary-600 text-white border-primary-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      ? 'bg-primary-50 text-primary-700 border-primary-500 shadow-sm'
+                      : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-700'
                   }`}
                 >
                   {cm} {t('qr_dialog_size_unit')}
@@ -237,38 +241,49 @@ export function QrCodeDialog({
             </div>
           </div>
 
-          {/* Action buttons */}
+          {/* Action buttons - Download & Print */}
           <div className="grid grid-cols-2 gap-3">
-            <Button
+            <button
               type="button"
-              variant="outline"
               onClick={handleDownload}
-              loading={busy}
               disabled={busy}
+              className="flex flex-col items-center gap-2 py-4 px-3 rounded-xl border-2 border-primary-500 bg-primary-50 text-primary-700 hover:bg-primary-100 disabled:opacity-50 transition-all duration-200 group"
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              {t('qr_dialog_download')} ({sizeCm}cm)
-            </Button>
-            <Button
+              <div className="w-10 h-10 rounded-full bg-primary-500 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+              </div>
+              <span className="text-sm font-semibold">Download QR</span>
+              <span className="text-[10px] text-primary-500 font-medium">PNG • {sizeCm}cm</span>
+            </button>
+            <button
               type="button"
               onClick={handlePrint}
-              loading={busy}
               disabled={busy}
+              className="flex flex-col items-center gap-2 py-4 px-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 hover:border-gray-300 disabled:opacity-50 transition-all duration-200 group"
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-              </svg>
-              {t('qr_dialog_print')} ({sizeCm}cm)
-            </Button>
+              <div className="w-10 h-10 rounded-full bg-gray-700 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+              </div>
+              <span className="text-sm font-semibold">In QR</span>
+              <span className="text-[10px] text-gray-400 font-medium">{sizeCm}cm × {sizeCm}cm</span>
+            </button>
           </div>
 
-          <div className="text-center">
+          {/* Guide text */}
+          <p className="text-xs text-gray-400 text-center">
+            Chọn kích thước rồi bấm Download hoặc In mã QR
+          </p>
+
+          {/* Close button */}
+          <div className="text-center pt-1">
             <button
               type="button"
               onClick={onClose}
-              className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              className="text-sm text-gray-400 hover:text-gray-600 transition-colors underline underline-offset-2"
             >
               {t('qr_dialog_close')}
             </button>
@@ -291,7 +306,8 @@ function AnimateOverlay({ children }: { children: React.ReactNode }) {
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="w-full max-w-md"
+        transition={{ type: 'spring', duration: 0.4, bounce: 0.2 }}
+        className="w-full max-w-sm"
       >
         {children}
       </motion.div>

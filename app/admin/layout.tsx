@@ -23,6 +23,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{username?: string, role?: string, email?: string} | null>(null);
+
+  const isLoginPage = pathname === '/admin/login';
+
+  useEffect(() => {
+    if (!isLoginPage) {
+      fetch('/api/admin/verify')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.user) {
+            setCurrentUser(data.user);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [isLoginPage]);
 
   useEffect(() => {
     // Close sidebar when route changes on mobile
@@ -60,6 +76,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </svg>
       ),
     },
+    {
+      label: 'Quản lý tài khoản',
+      href: '/admin/accounts',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      ),
+    },
   ];
 
   const isActive = (href: string) => {
@@ -85,7 +110,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       </AnimatePresence>
 
       {/* Sidebar */}
-      <aside
+      {!isLoginPage && (
+        <aside
         className={`
           fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800
           transform transition-transform duration-300 ease-in-out
@@ -141,8 +167,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">Admin</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Administrator</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                {currentUser?.username || 'Admin'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {currentUser?.role === 'ADMIN' ? 'Administrator' : (currentUser?.role || 'Quản trị viên')}
+              </p>
             </div>
           </div>
           <Button
@@ -159,19 +189,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </Button>
         </div>
       </aside>
+      )}
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className={isLoginPage ? "" : "lg:pl-64"}>
         {/* Top bar */}
         <header className="h-16 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 flex items-center px-4 lg:px-8 sticky top-0 z-30 transition-colors">
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="lg:hidden p-2 -ml-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+          {!isLoginPage && (
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden p-2 -ml-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          )}
 
           <div className="flex-1" />
 

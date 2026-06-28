@@ -131,7 +131,7 @@ async function main() {
       },
     });
 
-    const expired = product.expiryDate < new Date();
+    const expired = product.expiryDate ? product.expiryDate < new Date() : false;
     console.log(
       `Created product: ${product.name}\n` +
       `  status: ${expired ? '❌ EXPIRED' : '✅ VALID'}\n` +

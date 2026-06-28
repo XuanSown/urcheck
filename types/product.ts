@@ -16,6 +16,7 @@ export interface Product {
   companyName: string;
   companyAddress?: string;
   imageUrl?: string | null;
+  images?: ProductImage[];
   verified: boolean;
   createdAt: string | Date;
   updatedAt: string | Date;

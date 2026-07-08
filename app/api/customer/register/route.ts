@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: parsed.error.flatten().fieldErrors },
+        { success: false, error: parsed.error.format() },
         { status: 400 }
       );
     }

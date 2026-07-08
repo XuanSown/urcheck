@@ -30,7 +30,9 @@ export async function GET() {
   const routines = await prisma.routine.findMany({
     where: { customerId: guard.session.customerId },
     include: {
-      items: { orderBy: { order: 'asc', createdAt: 'asc' } },
+      items: {
+        orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+      },
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -47,7 +49,7 @@ export async function POST(request: Request) {
 
   if (!parsed.success) {
     return NextResponse.json(
-      { success: false, error: parsed.error.flatten().fieldErrors },
+      { success: false, error: parsed.error.format() },
       { status: 400 }
     );
   }
@@ -72,7 +74,7 @@ export async function POST(request: Request) {
         })),
       },
     },
-    include: { items: { orderBy: { order: 'asc' } } },
+    include: { items: { orderBy: [{ order: 'asc' }] } },
   });
 
   return NextResponse.json({ success: true, routine }, { status: 201 });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { isQrEnabled } from '@/lib/feature-flags';
 import { extractQrCode } from '@/lib/qr-utils';
+import { verifySession } from '@/lib/customer-auth';
 
 export async function GET(
   request: NextRequest,
@@ -10,11 +11,7 @@ export async function GET(
   try {
     if (!isQrEnabled()) {
       return NextResponse.json(
-        {
-          success: false,
-          valid: false,
-          message: 'Tính năng QR đang tạm tắt',
-        },
+        { success: false, valid: false, message: 'Tính năng QR đang tạm tắt' },
         { status: 503 }
       );
     }
@@ -24,11 +21,7 @@ export async function GET(
 
     if (!code) {
       return NextResponse.json(
-        {
-          success: false,
-          valid: false,
-          message: 'Mã QR không hợp lệ',
-        },
+        { success: false, valid: false, message: 'Mã QR không hợp lệ' },
         { status: 400 }
       );
     }
@@ -41,7 +34,6 @@ export async function GET(
             id: true,
             name: true,
             description: true,
-
             manufactureDate: true,
             expiryDate: true,
             imageUrl: true,
@@ -58,12 +50,9 @@ export async function GET(
             status: true,
             purchaseLinks: true,
             images: {
-              orderBy: [
-                { isPrimary: 'desc' },
-                { sortOrder: 'asc' }
-              ],
-              select: { id: true, url: true, isPrimary: true, altText: true }
-            }
+              orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
+              select: { id: true, url: true, isPrimary: true, altText: true },
+            },
           },
         },
       },
@@ -71,22 +60,14 @@ export async function GET(
 
     if (!qrCode || !qrCode.isActive) {
       return NextResponse.json(
-        {
-          success: false,
-          valid: false,
-          message: 'Mã QR không tồn tại trong hệ thống',
-        },
+        { success: false, valid: false, message: 'Mã QR không tồn tại trong hệ thống' },
         { status: 404 }
       );
     }
 
     if (qrCode.product.status === 'ARCHIVED') {
       return NextResponse.json(
-        {
-          success: false,
-          valid: false,
-          message: 'Sản phẩm không tồn tại hoặc đã bị ẩn',
-        },
+        { success: false, valid: false, message: 'Sản phẩm không tồn tại hoặc đã bị ẩn' },
         { status: 404 }
       );
     }
@@ -99,22 +80,29 @@ export async function GET(
         request.headers.get('cf-connecting-ip') ||
         request.headers.get('x-real-ip');
 
-      await prisma.$transaction([
-        prisma.qrCode.update({
-          where: { id: qrCode.id },
-          data: {
-            scanCount: { increment: 1 },
-            lastScannedAt: new Date(),
-          },
-        }),
-      ]);
-      await prisma.scanLog.create({
+      const session = await verifySession();
+      const trackData: {
+        qrCode: string;
+        ipAddress: string | null;
+        userAgent: string | null;
+        customerId?: string;
+      } = {
+        qrCode: `QR:${qrCode.code}`,
+        ipAddress: ipAddress ?? null,
+        userAgent: userAgent ?? null,
+      };
+      if (session) {
+        trackData.customerId = session.customerId;
+      }
+
+      await prisma.qrCode.update({
+        where: { id: qrCode.id },
         data: {
-          qrCode: `QR:${qrCode.code}`,
-          ipAddress: ipAddress ?? null,
-          userAgent: userAgent ?? null,
+          scanCount: { increment: 1 },
+          lastScannedAt: new Date(),
         },
       });
+      await prisma.scanLog.create({ data: trackData });
     } catch (trackErr) {
       console.warn('QR scan tracking failed:', trackErr);
     }
@@ -123,6 +111,8 @@ export async function GET(
     const isExpired = product.expiryDate ? new Date(product.expiryDate) < new Date() : false;
     const isValid = product.verified && !isExpired;
 
+    const productImageUrl = product.images?.[0]?.url || product.imageUrl;
+
     return NextResponse.json({
       success: true,
       valid: isValid,
@@ -130,7 +120,6 @@ export async function GET(
         id: qrCode.id,
         code: qrCode.code,
         url: qrCode.url,
-
         scanCount: qrCode.scanCount,
         lastScannedAt: qrCode.lastScannedAt?.toISOString() ?? null,
         isActive: qrCode.isActive,
@@ -139,10 +128,9 @@ export async function GET(
         id: product.id,
         name: product.name,
         description: product.description,
-
         manufactureDate: product.manufactureDate ? product.manufactureDate.toISOString() : null,
         expiryDate: product.expiryDate ? product.expiryDate.toISOString() : null,
-        imageUrl: (product as any).images?.[0]?.url || product.imageUrl,
+        imageUrl: productImageUrl,
         brandName: product.brandName,
         verified: product.verified,
         skinType: product.skinType,
@@ -165,11 +153,7 @@ export async function GET(
   } catch (error) {
     console.error('GET /api/qr/[code] error:', error);
     return NextResponse.json(
-      {
-        success: false,
-        valid: false,
-        message: 'Đã xảy ra lỗi, vui lòng thử lại',
-      },
+      { success: false, valid: false, message: 'Đã xảy ra lỗi, vui lòng thử lại' },
       { status: 500 }
     );
   }

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocale } from '@/components/I18nProvider';
+import { useCustomerAuth } from '@/components/CustomerAuth';
 
 interface HeaderProps {
   className?: string;
@@ -15,32 +16,27 @@ export function Header({ className }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { customer, loading, logout } = useCustomerAuth();
   const { t } = useLocale();
-  
-  // Use ref to track scroll position without triggering re-renders
+
   const lastScrollY = React.useRef(0);
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
       setIsScrolled(currentScrollY > 10);
-      
-      // Hide when scrolling down past 100px, show when scrolling up
       if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
         setIsHidden(true);
         if (isMobileMenuOpen) setIsMobileMenuOpen(false);
       } else if (currentScrollY < lastScrollY.current) {
         setIsHidden(false);
       }
-      
       lastScrollY.current = currentScrollY;
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isMobileMenuOpen]);
 
-  // Close mobile menu on resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) setIsMobileMenuOpen(false);
@@ -49,31 +45,41 @@ export function Header({ className }: HeaderProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/';
+  };
+
   const navLinks = [
-    { href: '#how-it-works', label: t('nav_how_it_works') },
-    { href: '#support', label: t('nav_support') },
-    { href: '#contact', label: t('nav_contact') },
+    { href: '/discover', label: t('feed_title') },
   ];
+
+  const authLinks = customer
+    ? []
+    : [
+        { href: '/customer/login', label: t('auth_login_btn') || 'Đăng nhập', variant: 'ghost' as const },
+        { href: '/customer/register', label: t('auth_register_btn') || 'Đăng ký', variant: 'solid' as const },
+      ];
 
   return (
     <header
       className={cn(
-        'relative z-50 transition-all duration-500',
+        'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
         'py-3 sm:py-4',
+        isHidden ? '-translate-y-full' : 'translate-y-0',
         className
       )}
     >
-      {/* Glass background layer — solid enough to fully mask content behind */}
       <div
         className={cn(
           'absolute inset-0 transition-all duration-500',
-          'bg-white dark:bg-gray-950 border-b border-gray-200/40 dark:border-gray-800/40'
+          'bg-white/90 dark:bg-gray-950/90 backdrop-blur-xl',
+          'border-b border-gray-200/40 dark:border-gray-800/40'
         )}
       />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          {/* Logo — smaller */}
           <Link href="/" className="flex items-center gap-2 group">
             <motion.div
               whileHover={{ scale: 0.96 }}
@@ -85,8 +91,7 @@ export function Header({ className }: HeaderProps) {
             </motion.div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-4">
             {navLinks.map((link, i) => (
               <motion.div
                 key={link.href}
@@ -102,9 +107,46 @@ export function Header({ className }: HeaderProps) {
                 </Link>
               </motion.div>
             ))}
+
+            {loading ? (
+              <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse" />
+            ) : customer ? (
+              <div className="flex items-center gap-2 ml-2">
+                <Link
+                  href="/customer/routines"
+                  className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                >
+                  Lịch trình
+                </Link>
+                <span className="text-sm text-gray-400">|</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300 truncate max-w-[120px]">
+                  {customer.email}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                >
+                  {t('auth_logout_btn') || 'Đăng xuất'}
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 ml-2">
+                <Link
+                  href="/customer/login"
+                  className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                >
+                  {t('auth_login_btn') || 'Đăng nhập'}
+                </Link>
+                <Link
+                  href="/customer/register"
+                  className="text-sm font-medium px-3 py-1.5 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-all duration-200"
+                >
+                  {t('auth_register_btn') || 'Đăng ký'}
+                </Link>
+              </div>
+            )}
           </nav>
 
-          {/* Mobile Menu Button */}
           <button
             className="md:hidden relative z-10 p-2.5 -mr-2.5 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -113,25 +155,18 @@ export function Header({ className }: HeaderProps) {
             <div className="w-6 h-6 relative flex flex-col justify-center items-center">
               <motion.span
                 className="absolute w-5 h-[1.5px] bg-current rounded-full"
-                animate={isMobileMenuOpen
-                  ? { rotate: 45, y: 0 }
-                  : { rotate: 0, y: -5 }
-                }
+                animate={isMobileMenuOpen ? { rotate: 45, y: 0 } : { rotate: 0, y: -5 }}
                 transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
               />
               <motion.span
                 className="absolute w-5 h-[1.5px] bg-current rounded-full"
-                animate={isMobileMenuOpen
-                  ? { rotate: -45, y: 0 }
-                  : { rotate: 0, y: 5 }
-                }
+                animate={isMobileMenuOpen ? { rotate: -45, y: 0 } : { rotate: 0, y: 5 }}
                 transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
               />
             </div>
           </button>
         </div>
 
-        {/* Mobile Menu — full glass overlay */}
         <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div
@@ -139,7 +174,7 @@ export function Header({ className }: HeaderProps) {
               animate={{ opacity: 1, height: 'auto', filter: 'blur(0px)' }}
               exit={{ opacity: 0, height: 0, filter: 'blur(10px)' }}
               transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-              className="md:hidden mt-2 overflow-hidden rounded-2xl bg-white/90 dark:bg-gray-950/90 backdrop-blur-2xl border border-gray-200/50 dark:border-gray-800/50 shadow-xl"
+              className="md:hidden mt-2 overflow-hidden rounded-2xl bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl border border-gray-200/50 dark:border-gray-800/50 shadow-xl"
             >
               <nav className="flex flex-col p-4 gap-1">
                 {navLinks.map((link, index) => (
@@ -158,6 +193,59 @@ export function Header({ className }: HeaderProps) {
                     </Link>
                   </motion.div>
                 ))}
+
+                <div className="border-t border-gray-200/60 dark:border-gray-800/60 mt-2 pt-2">
+                  {loading ? (
+                    <div className="px-4 py-3">
+                      <div className="w-24 h-4 rounded bg-gray-200 dark:bg-gray-800 animate-pulse" />
+                    </div>
+                  ) : customer ? (
+                    <>
+                      <Link
+                        href="/customer/routines"
+                        className="block px-4 py-3 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50/50 dark:hover:bg-primary-900/20 rounded-xl transition-all duration-200"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Lịch trình Skincare
+                      </Link>
+                      <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 truncate">
+                        {customer.email}
+                      </div>
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.15, duration: 0.3 }}
+                      >
+                        <button
+                          onClick={() => {
+                            handleLogout();
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="block w-full text-left px-4 py-3 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-200"
+                        >
+                          {t('auth_logout_btn') || 'Đăng xuất'}
+                        </button>
+                      </motion.div>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/customer/login"
+                        className="block px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50/50 dark:hover:bg-primary-900/20 rounded-xl transition-all duration-200"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {t('auth_login_btn') || 'Đăng nhập'}
+                      </Link>
+                      <Link
+                        href="/customer/register"
+                        className="block px-4 py-3 text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 text-center rounded-xl transition-all duration-200"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {t('auth_register_btn') || 'Đăng ký'}
+                      </Link>
+                    </>
+                  )}
+                </div>
               </nav>
             </motion.div>
           )}

@@ -41,12 +41,12 @@ export function Footer() {
   };
 
   return (
-    <footer className="relative bg-gray-950 text-gray-300 mt-auto overflow-hidden">
+    <footer className="relative bg-white dark:bg-gray-950 text-gray-700 dark:text-gray-300 mt-auto overflow-hidden border-t border-gray-200 dark:border-gray-800">
       {/* Decorative gradient border top */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary-500/60 to-transparent" />
 
       {/* Subtle grain overlay */}
-      <div className="absolute inset-0 opacity-[0.03]">
+      <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]">
         <div className="absolute inset-0" style={{
           backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)`,
           backgroundSize: '24px 24px',
@@ -65,7 +65,7 @@ export function Footer() {
           <motion.div className="space-y-4" variants={itemVariants}>
             <Link href="/" className="inline-block group">
               <div className="relative">
-                <Logo size="sm" variant="light" className="group-hover:opacity-80 transition-opacity duration-300" />
+                <Logo size="sm" variant="dark" className="group-hover:opacity-80 transition-opacity duration-300" />
                 {/* Animated underline */}
                 <motion.div
                   className="absolute -bottom-1.5 left-0 h-[1px] bg-gradient-to-r from-primary-500 to-primary-400"
@@ -76,7 +76,7 @@ export function Footer() {
                 />
               </div>
             </Link>
-            <p className="text-gray-500 text-sm leading-relaxed max-w-xs">
+            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed max-w-xs">
               {t('footer_desc')}
             </p>
 
@@ -85,7 +85,7 @@ export function Footer() {
               {[t('footer_tag_1'), t('footer_tag_2'), t('footer_tag_3')].map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center px-2.5 py-1 text-[10px] sm:text-xs font-medium rounded-md bg-gray-900 text-gray-500 border border-gray-800 hover:border-gray-700 hover:text-gray-400 transition-colors duration-200"
+                  className="inline-flex items-center px-2.5 py-1 text-[10px] sm:text-xs font-medium rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200"
                 >
                   {tag}
                 </span>
@@ -95,7 +95,7 @@ export function Footer() {
 
           {/* Liên hệ */}
           <motion.div className="space-y-4" variants={itemVariants}>
-            <h3 className="text-xs font-semibold text-white uppercase tracking-[0.2em]">
+            <h3 className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-[0.2em]">
               {t('footer_contact')}
             </h3>
             <ul className="space-y-3">
@@ -103,7 +103,7 @@ export function Footer() {
                 <li key={item.label}>
                   <Link
                     href={item.href}
-                    className="text-sm text-gray-500 hover:text-gray-300 transition-colors duration-300 flex items-start gap-2.5 group"
+                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-300 flex items-start gap-2.5 group"
                   >
                     <span className="text-base flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform duration-200">{item.icon}</span>
                     <span className="break-all sm:break-normal">{item.label}</span>
@@ -138,7 +138,7 @@ export function Footer() {
                   key={social.label}
                   href={social.href}
                   aria-label={social.label}
-                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-900 text-gray-500 border border-gray-800 hover:border-primary-600 hover:text-primary-400 hover:bg-gray-800 transition-all duration-300"
+                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-primary-600 dark:hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300"
                 >
                   {social.svg}
                 </Link>
@@ -149,11 +149,11 @@ export function Footer() {
 
         {/* Bottom Section */}
         <motion.div
-          className="mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-gray-800/60"
+          className="mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-gray-200 dark:border-gray-800"
           variants={itemVariants}
         >
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
-            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-xs text-gray-600">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-xs text-gray-600 dark:text-gray-400">
               <p>&copy; {currentYear} ur check. {t('footer_rights')}</p>
               <div className="flex items-center gap-2">
                 <span className="relative flex h-2 w-2">

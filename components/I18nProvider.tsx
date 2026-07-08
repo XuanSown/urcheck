@@ -20,7 +20,7 @@ import {
 interface I18nContextValue {
   locale: Locale;
   setLocale: (next: Locale) => void;
-  t: (key: string, fallback?: string) => string;
+  t: (key: string, fallback?: string, vars?: Record<string, string | number>) => string;
 }
 
 const I18nContext = createContext<I18nContextValue | null>(null);
@@ -48,7 +48,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     () => ({
       locale,
       setLocale,
-      t: (key, fallback) => translate(locale, key, fallback),
+      t: (key, fallback, vars) => translate(locale, key, fallback, vars),
     }),
     [locale, setLocale]
   );
@@ -63,7 +63,7 @@ export function useLocale(): I18nContextValue {
     return {
       locale: DEFAULT_LOCALE,
       setLocale: () => undefined,
-      t: (key, fallback) => translate(DEFAULT_LOCALE, key, fallback),
+      t: (key, fallback, vars) => translate(DEFAULT_LOCALE, key, fallback, vars),
     };
   }
   return ctx;

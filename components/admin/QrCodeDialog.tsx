@@ -148,7 +148,7 @@ export function QrCodeDialog({
 
   return (
     <AnimateOverlay>
-      <Card className="w-full max-w-sm bg-white shadow-2xl rounded-2xl overflow-hidden">
+      <Card className="w-full max-w-sm bg-white dark:bg-gray-900 shadow-2xl rounded-2xl overflow-hidden">
         {/* Header with gradient */}
         <div className="bg-gradient-to-br from-primary-600 to-primary-700 px-6 pt-6 pb-8 text-center relative">
           <button
@@ -175,7 +175,7 @@ export function QrCodeDialog({
 
         {/* QR Preview - centered, compact */}
         <div className="px-6 mt-4">
-          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-4 flex flex-col items-center">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 p-4 flex flex-col items-center">
             {/* Visible SVG preview - compact size */}
             <QRCodeSVG
               value={url}
@@ -191,8 +191,8 @@ export function QrCodeDialog({
             />
             {/* Code badge */}
             <div className="mt-3 flex items-center gap-2">
-              <span className="text-xs text-gray-400">{t('qr_dialog_code_label')}:</span>
-              <span className="font-mono text-sm font-bold text-gray-900 bg-gray-100 px-2.5 py-0.5 rounded-md">{code}</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">{t('qr_dialog_code_label')}:</span>
+              <span className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 px-2.5 py-0.5 rounded-md">{code}</span>
             </div>
           </div>
         </div>
@@ -220,7 +220,7 @@ export function QrCodeDialog({
         <div className="px-6 pt-4 pb-6 space-y-4">
           {/* Size picker */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
               {t('qr_dialog_size_label')}
             </label>
             <div className="flex gap-2">
@@ -231,8 +231,8 @@ export function QrCodeDialog({
                   onClick={() => setSizeCm(cm)}
                   className={`flex-1 py-2 rounded-lg text-sm font-semibold border-2 transition-all duration-200 ${
                     sizeCm === cm
-                      ? 'bg-primary-50 text-primary-700 border-primary-500 shadow-sm'
-                      : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-700'
+                      ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 border-primary-500 dark:border-primary-600 shadow-sm'
+                      : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300'
                   }`}
                 >
                   {cm} {t('qr_dialog_size_unit')}
@@ -261,20 +261,20 @@ export function QrCodeDialog({
               type="button"
               onClick={handlePrint}
               disabled={busy}
-              className="flex flex-col items-center gap-2 py-4 px-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 hover:border-gray-300 disabled:opacity-50 transition-all duration-200 group"
+              className="flex flex-col items-center gap-2 py-4 px-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 disabled:opacity-50 transition-all duration-200 group"
             >
-              <div className="w-10 h-10 rounded-full bg-gray-700 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 rounded-full bg-gray-700 dark:bg-gray-600 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
               </div>
               <span className="text-sm font-semibold">In QR</span>
-              <span className="text-[10px] text-gray-400 font-medium">{sizeCm}cm × {sizeCm}cm</span>
+              <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">{sizeCm}cm × {sizeCm}cm</span>
             </button>
           </div>
 
           {/* Guide text */}
-          <p className="text-xs text-gray-400 text-center">
+          <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
             Chọn kích thước rồi bấm Download hoặc In mã QR
           </p>
 
@@ -283,7 +283,7 @@ export function QrCodeDialog({
             <button
               type="button"
               onClick={onClose}
-              className="text-sm text-gray-400 hover:text-gray-600 transition-colors underline underline-offset-2"
+              className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors underline underline-offset-2"
             >
               {t('qr_dialog_close')}
             </button>

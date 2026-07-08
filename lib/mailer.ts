@@ -17,7 +17,7 @@ export const sendOtpEmail = async (to: string, otp: string) => {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
         <h2 style="color: #f97316; text-align: center;">UrCheck</h2>
         <p style="font-size: 16px; color: #374151;">Xin chào,</p>
-        <p style="font-size: 16px; color: #374151;">Bạn vừa yêu cầu khôi phục mật khẩu cho tài khoản quản trị hệ thống UrCheck.</p>
+        <p style="font-size: 16px; color: #374151;">Bạn vừa yêu cầu khôi phục mật khẩu cho tài khoản khách hàng UrCheck.</p>
         <p style="font-size: 16px; color: #374151;">Dưới đây là mã xác thực (OTP) của bạn. Mã này có hiệu lực trong vòng <strong>5 phút</strong>:</p>
         
         <div style="text-align: center; margin: 30px 0;">

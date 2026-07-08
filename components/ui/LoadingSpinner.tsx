@@ -41,10 +41,10 @@ export function LoadingSpinner({ size = 'md', className }: LoadingSpinnerProps) 
 
 export function FullPageLoader() {
   return (
-    <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-white dark:bg-gray-950 flex items-center justify-center z-50">
       <div className="text-center">
         <LoadingSpinner size="lg" />
-        <p className="mt-4 text-gray-600">Đang tải...</p>
+        <p className="mt-4 text-gray-600 dark:text-gray-400">Đang tải...</p>
       </div>
     </div>
   );

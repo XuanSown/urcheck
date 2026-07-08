@@ -1,9 +1,9 @@
 // Lightweight i18n for the QR verification flow and admin.
 // Locales: vi (default) and en.
 // Usage:
-//   import { useLocale, t } from '@/lib/i18n';
-//   const { locale, setLocale, t } = useLocale();
-//   <h1>{t('verify_title')}</h1>
+// import { useLocale, t } from '@/lib/i18n';
+// const { locale, setLocale, t } = useLocale();
+// <h1>{t('verify_title')}</h1>
 
 export type Locale = 'vi' | 'en';
 
@@ -18,7 +18,6 @@ type Dict = Record<string, string>;
 
 const dicts: Record<Locale, Dict> = {
   vi: {
-    // Verify page
     verify_title: 'Xác minh nguồn gốc sản phẩm',
     verify_subtitle: 'Nhập mã QR hoặc URL từ bao bì sản phẩm',
     verify_input_label: 'Mã QR hoặc URL',
@@ -34,7 +33,6 @@ const dicts: Record<Locale, Dict> = {
     verify_expired: 'Sản phẩm đã hết hạn sử dụng',
     verify_unverified: 'Sản phẩm chưa được xác minh',
     verify_conn_error: 'Lỗi kết nối, vui lòng thử lại',
-    // Admin - QR dialog
     qr_dialog_title: 'Mã QR đã được tạo',
     qr_dialog_subtitle: 'Dán mã QR này lên sản phẩm để khách hàng quét và xác minh',
     qr_dialog_download: 'Tải QR',
@@ -44,7 +42,6 @@ const dicts: Record<Locale, Dict> = {
     qr_dialog_code_label: 'Mã QR',
     qr_dialog_url_label: 'URL xác minh',
     qr_dialog_close: 'Đóng',
-    // Footer
     footer_desc: 'Nền tảng xác minh nguồn gốc sản phẩm mỹ phẩm bằng công nghệ mã QR — nhanh chóng, chính xác và miễn phí.',
     footer_tag_1: 'Quét QR',
     footer_tag_2: 'Xác minh tức thì',
@@ -53,17 +50,14 @@ const dicts: Record<Locale, Dict> = {
     footer_rights: 'Bảo lưu mọi quyền.',
     footer_status: 'Hệ thống đang hoạt động',
     footer_dev_by: 'Phát triển tại',
-    // Dashboard
     dashboard_title: 'Dashboard',
     dashboard_top_qr: 'Mã QR được quét nhiều nhất',
     dashboard_total_qr: 'Tổng mã QR',
     dashboard_total_scans: 'Tổng lượt quét',
     dashboard_no_data: 'Chưa có dữ liệu',
-    // Navigation
     nav_how_it_works: 'Cách hoạt động',
     nav_support: 'Hỗ trợ',
     nav_contact: 'Liên hệ',
-    // Hero
     hero_headline_1: 'Kiểm tra nguồn gốc',
     hero_headline_2: 'sản phẩm mỹ phẩm',
     hero_subtitle: 'Quét mã QR để xác minh tính hợp lệ, ngày sản xuất, hạn sử dụng và thông tin nhà sản xuất.',
@@ -72,10 +66,9 @@ const dicts: Record<Locale, Dict> = {
     hero_trust_1: 'Không cần đăng ký',
     hero_trust_2: 'Quét nhanh 2s',
     hero_trust_3: '100% miễn phí',
-    // Product Info
     product_unknown_date: 'Không xác định',
     product_status_authentic: 'Sản phẩm chính hãng',
-    product_status_expired: 'Sản phẩm hết hạn',
+    product_status_expired: 'Sản phẩm đã hết hạn',
     product_status_invalid: 'Sản phẩm không hợp lệ',
     product_mfg_date: 'Ngày sản xuất',
     product_exp_date: 'Hạn sử dụng',
@@ -85,7 +78,6 @@ const dicts: Record<Locale, Dict> = {
     product_usage_instructions: 'Hướng dẫn sử dụng',
     product_ingredients: 'Thành phần nổi bật',
     product_buy_at: 'Mua sản phẩm chính hãng tại',
-    // QR Scanner
     qr_scanner_title: 'Quét mã QR',
     qr_scanner_subtitle: 'Đưa mã QR vào khung hình để xác minh',
     qr_scanner_close: 'Đóng',
@@ -101,8 +93,90 @@ const dicts: Record<Locale, Dict> = {
     qr_scanner_err_cam_fail: 'Không thể mở camera. Vui lòng kiểm tra lại kết nối thiết bị.',
     qr_scanner_err_no_qr_found: 'Không tìm thấy mã QR hợp lệ trong ảnh',
     qr_scanner_err_generic: 'Không thể truy cập camera. Vui lòng cấp quyền!',
-    // Common
     common_language: 'Ngôn ngữ',
+    auth_login_title: 'Đăng nhập',
+    auth_register_title: 'Đăng ký',
+    auth_email_label: 'Email',
+    auth_password_label: 'Mật khẩu',
+    auth_confirm_password_label: 'Xác nhận mật khẩu',
+    auth_login_btn: 'Đăng nhập',
+    auth_register_btn: 'Đăng ký',
+    auth_logout_btn: 'Đăng xuất',
+    auth_login_success: 'Đăng nhập thành công',
+    auth_register_success: 'Đăng ký thành công',
+    auth_invalid_credentials: 'Email hoặc mật khẩu không đúng',
+    auth_email_exists: 'Email này đã được đăng ký',
+    auth_email_required: 'Vui lòng nhập email',
+    auth_password_min_length: 'Mật khẩu tối thiểu 8 ký tự',
+    auth_forgot_title: 'Quên mật khẩu',
+    auth_forgot_subtitle: 'Nhập email để nhận mã OTP đặt lại mật khẩu',
+    auth_reset_title: 'Đặt lại mật khẩu',
+    auth_reset_subtitle: 'Nhập OTP và mật khẩu mới',
+    auth_reset_btn: 'Đặt lại mật khẩu',
+    auth_no_account: 'Chưa có tài khoản?',
+    auth_has_account: 'Đã có tài khoản?',
+    auth_or: 'hoặc',
+    history_title: 'Lịch sử quét',
+    history_empty: 'Chưa có lịch sử quét',
+    history_scan_at: 'Thời gian quét',
+    history_status_valid: 'Hợp lệ',
+    history_status_expired: 'Hết hạn',
+    history_status_unverified: 'Chưa xác minh',
+    history_next_page: 'Trang sau',
+    history_prev_page: 'Trang trước',
+    auth_password_mismatch: 'Mật khẩu xác nhận không khớp',
+    auth_conn_error: 'Không thể kết nối tới máy chủ',
+  auth_forgot_password_link: 'Quên mật khẩu?',
+    // Customer - Badges
+    badges_title: 'Huy hiệu của bạn',
+    badges_earned: 'Đã mở khóa',
+    badges_locked: 'Chưa mở khóa',
+    badges_count: '{count}/{total} đã mở khóa',
+    // Customer - Routines (vi)
+    routines_title: 'Lịch trình Skincare',
+    routines_empty: 'Bạn chưa có lịch trình nào',
+    routines_create_btn: 'Tạo lịch trình mới',
+    routines_edit_title: 'Chỉnh sửa lịch trình',
+    routines_name_label: 'Tên lịch trình',
+    routines_desc_label: 'Mô tả (không bắt buộc)',
+    routines_public_label: 'Công khai',
+    routines_private_label: 'Riêng tư',
+    routines_add_item: 'Thêm sản phẩm',
+    routines_time_label: 'Thời gian sử dụng',
+    routines_notes_label: 'Ghi chú (không bắt buộc)',
+    routines_order_label: 'Thứ tự',
+    routines_morning: 'Sáng',
+    routines_afternoon: 'Chiều',
+    routines_evening: 'Tối',
+    routines_night: 'Đêm',
+    routines_save: 'Lưu',
+    routines_cancel: 'Hủy',
+    routines_delete: 'Xóa',
+    routines_confirm_delete: 'Xác nhận xóa lịch trình này?',
+    routines_share: 'Chia sẻ',
+    routines_share_title: 'Chia sẻ công khai',
+    routines_share_link: 'Liên kết chia sẻ',
+    routines_copy_link: 'Sao chép liên kết',
+    routines_copied: 'Đã sao chép!',
+    routines_public_note: 'Khi công khai, mọi người có thể xem lịch trình qua liên kết',
+    routines_no_products: 'Chưa có sản phẩm nào trong lịch trình',
+common_scan: 'Quét',
+feed_title: 'Khám phá sản phẩm',
+feed_subtitle: 'Gợi ý dành riêng cho bạn',
+feed_empty: 'Chưa có sản phẩm phù hợp',
+feed_load_more: 'Tải thêm',
+feed_filter_skin: 'Loại da',
+feed_filter_brand: 'Thương hiệu...',
+feed_filter_reset: 'Bỏ lọc',
+skin_normal: 'Da thường',
+skin_oily: 'Da dầu',
+skin_dry: 'Da khô',
+skin_combination: 'Da hỗn hợp',
+skin_sensitive: 'Da nhạy cảm',
+wishlist_add: 'Lưu sản phẩm',
+wishlist_remove: 'Đã lưu',
+wishlist_empty: 'Chưa có sản phẩm yêu thích',
+wishlist_title: 'Sản phẩm yêu thích'
   },
   en: {
     verify_title: 'Verify product authenticity',
@@ -132,7 +206,8 @@ const dicts: Record<Locale, Dict> = {
     dashboard_title: 'Dashboard',
     dashboard_top_qr: 'Top scanned QR codes',
     dashboard_total_qr: 'Total QR codes',
-    // Footer
+    dashboard_total_scans: 'Total scans',
+    dashboard_no_data: 'No data yet',
     footer_desc: 'Cosmetic product authenticity verification platform using QR code technology — fast, accurate, and free.',
     footer_tag_1: 'QR Scan',
     footer_tag_2: 'Instant verify',
@@ -141,13 +216,9 @@ const dicts: Record<Locale, Dict> = {
     footer_rights: 'All rights reserved.',
     footer_status: 'All systems operational',
     footer_dev_by: 'Developed in',
-    dashboard_total_scans: 'Total scans',
-    dashboard_no_data: 'No data yet',
-    // Navigation
     nav_how_it_works: 'How it works',
     nav_support: 'Support',
     nav_contact: 'Contact',
-    // Hero
     hero_headline_1: 'Verify authenticity',
     hero_headline_2: 'of cosmetic products',
     hero_subtitle: 'Scan the QR code to verify validity, manufacturing date, expiration date, and manufacturer info.',
@@ -156,7 +227,6 @@ const dicts: Record<Locale, Dict> = {
     hero_trust_1: 'No registration required',
     hero_trust_2: 'Fast 2s scan',
     hero_trust_3: '100% Free',
-    // Product Info
     product_unknown_date: 'Unknown',
     product_status_authentic: 'Authentic Product',
     product_status_expired: 'Expired Product',
@@ -169,7 +239,6 @@ const dicts: Record<Locale, Dict> = {
     product_usage_instructions: 'Instructions',
     product_ingredients: 'Key Ingredients',
     product_buy_at: 'Buy authentic product at',
-    // QR Scanner
     qr_scanner_title: 'Scan QR Code',
     qr_scanner_subtitle: 'Point your camera at the QR code to verify',
     qr_scanner_close: 'Close',
@@ -179,14 +248,96 @@ const dicts: Record<Locale, Dict> = {
     qr_scanner_processing: 'Processing image...',
     qr_scanner_stop_camera: 'Stop camera',
     qr_scanner_cancel: 'Cancel',
-    qr_scanner_err_no_cam_perm: 'Camera permission denied. Please click the lock 🔒 icon in the address bar to allow.',
+    qr_scanner_err_no_cam_perm: 'Camera permission denied. Please click the lock icon in the address bar to allow.',
     qr_scanner_err_no_cam: 'No camera found on your device.',
     qr_scanner_err_cam_in_use: 'Camera is currently in use by another application.',
     qr_scanner_err_cam_fail: 'Could not start camera. Please check your device connection.',
     qr_scanner_err_no_qr_found: 'No valid QR code found in the image.',
     qr_scanner_err_generic: 'Cannot access camera. Please grant permission!',
-    // Common
     common_language: 'Language',
+    auth_login_title: 'Login',
+    auth_register_title: 'Register',
+    auth_email_label: 'Email',
+    auth_password_label: 'Password',
+    auth_confirm_password_label: 'Confirm password',
+    auth_login_btn: 'Login',
+    auth_register_btn: 'Register',
+    auth_logout_btn: 'Logout',
+    auth_login_success: 'Login successful',
+    auth_register_success: 'Registration successful',
+    auth_invalid_credentials: 'Invalid email or password',
+    auth_email_exists: 'This email is already registered',
+    auth_email_required: 'Email is required',
+    auth_password_min_length: 'Password must be at least 8 characters',
+    auth_forgot_title: 'Forgot password',
+    auth_forgot_subtitle: 'Enter your email to receive an OTP',
+    auth_reset_title: 'Reset password',
+    auth_reset_subtitle: 'Enter OTP and new password',
+    auth_reset_btn: 'Reset password',
+    auth_no_account: "Don't have an account?",
+    auth_has_account: 'Already have an account?',
+    auth_or: 'or',
+    history_title: 'Scan History',
+    history_empty: 'No scan history yet',
+    history_scan_at: 'Scanned at',
+    history_status_valid: 'Valid',
+    history_status_expired: 'Expired',
+    history_status_unverified: 'Unverified',
+    history_next_page: 'Next',
+    history_prev_page: 'Previous',
+    auth_password_mismatch: 'Passwords do not match',
+    auth_conn_error: 'Cannot connect to server',
+  auth_forgot_password_link: 'Forgot password?',
+    // Customer - Badges
+    badges_title: 'Your Badges',
+    badges_earned: 'Earned',
+    badges_locked: 'Locked',
+    badges_count: '{count}/{total} earned',
+    // Customer - Routines
+    routines_title: 'Skincare Routine',
+    routines_empty: 'No routines yet',
+    routines_create_btn: 'Create new routine',
+    routines_edit_title: 'Edit routine',
+    routines_name_label: 'Routine name',
+    routines_desc_label: 'Description (optional)',
+    routines_public_label: 'Public',
+    routines_private_label: 'Private',
+    routines_add_item: 'Add product',
+    routines_time_label: 'Time of use',
+    routines_notes_label: 'Notes (optional)',
+    routines_order_label: 'Order',
+    routines_morning: 'Morning',
+    routines_afternoon: 'Afternoon',
+    routines_evening: 'Evening',
+    routines_night: 'Night',
+    routines_save: 'Save',
+    routines_cancel: 'Cancel',
+    routines_delete: 'Delete',
+    routines_confirm_delete: 'Confirm delete this routine?',
+    routines_share: 'Share',
+    routines_share_title: 'Public share',
+    routines_share_link: 'Share link',
+    routines_copy_link: 'Copy link',
+    routines_copied: 'Copied!',
+    routines_public_note: 'When public, anyone can view via the link',
+    routines_no_products: 'No products in this routine',
+common_scan: 'Scan',
+feed_title: 'Discover Products',
+feed_subtitle: 'Personalized for you',
+feed_empty: 'No products match your profile',
+feed_load_more: 'Load more',
+feed_filter_skin: 'Skin type',
+feed_filter_brand: 'Brand...',
+feed_filter_reset: 'Clear',
+skin_normal: 'Normal',
+skin_oily: 'Oily',
+skin_dry: 'Dry',
+skin_combination: 'Combination',
+skin_sensitive: 'Sensitive',
+wishlist_add: 'Save product',
+wishlist_remove: 'Saved',
+wishlist_empty: 'No favorites yet',
+wishlist_title: 'Favorites'
   },
 };
 
@@ -194,9 +345,16 @@ const dicts: Record<Locale, Dict> = {
 export function translate(
   locale: Locale,
   key: string,
-  fallback?: string
+  fallback?: string,
+  vars?: Record<string, string | number>
 ): string {
-  return dicts[locale]?.[key] ?? dicts[DEFAULT_LOCALE][key] ?? fallback ?? key;
+  let text = dicts[locale]?.[key] ?? dicts[DEFAULT_LOCALE][key] ?? fallback ?? key;
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v));
+    }
+  }
+  return text;
 }
 
 // ---------------------------------------------------------------------------
@@ -214,7 +372,9 @@ export function readLocaleFromClient(defaultLocale: Locale = DEFAULT_LOCALE): Lo
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (isLocale(stored)) return stored;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return defaultLocale;
 }
 
@@ -222,9 +382,10 @@ export function writeLocaleToClient(locale: Locale): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(STORAGE_KEY, locale);
-    // Also set cookie so server components can read it on next nav.
     document.cookie = `${COOKIE_KEY}=${locale}; path=/; max-age=31536000; SameSite=Lax`;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 /** Read locale on the server (from cookie set by the client). */

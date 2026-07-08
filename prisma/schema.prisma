@@ -11,31 +11,38 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model Product {
-  id              String    @id @default(cuid())
-  name            String
-  description     String?
-  manufactureDate DateTime?
-  expiryDate      DateTime?
-  expiresInMonths Int?
-  skinType        String?   // e.g., "da dầu", "da khô", "da nhạy cảm"
-  suitableFor     String?   // e.g., "nam/nữ", "trẻ em", "người lớn"
-  usages            String[]  // công dụng
-  usageInstructions String[]  // hướng dẫn sử dụng
-  ingredientAnalysis String? // phân tích thành phần chi tiết
-  tags            String[]  // tags để tìm kiếm
-  status          ProductStatus @default(PUBLISHED)
-  publishedAt     DateTime?
-  purchaseLinks   Json?     // [{ platform: 'Shopee', url: '...' }, { platform: 'Tiki', url: '...' }]
-  imageUrl        String?   // deprecated - sử dụng ProductImage thay thế
-  brandName       String
-  verified        Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+// ─── Core ──────────────────────────────────────────────────────
 
-  qrCodes  QrCode[]
-  images   ProductImage[]
-  versions ProductVersion[]
+model Product {
+  id                 String        @id @default(cuid())
+  name               String
+  description        String?
+  manufactureDate    DateTime?
+  expiryDate         DateTime?
+  expiresInMonths    Int?
+  skinType           String?
+  suitableFor        String?
+  usages             String[]
+  usageInstructions  String[]
+  ingredientAnalysis String?
+  tags               String[]
+  status             ProductStatus @default(PUBLISHED)
+  publishedAt        DateTime?
+  purchaseLinks      Json?
+  imageUrl           String?
+  brandName          String
+  verified           Boolean       @default(true)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  qrCodes      QrCode[]
+  images       ProductImage[]
+  versions     ProductVersion[]
+  favorites    UserFavorite[]
+  items        CollectionItem[]
+  reviews      ProductReview[]
+  expiryAlerts ExpiryAlert[]
+  routineItems RoutineItem[]
 
   @@index([brandName])
   @@index([status])
@@ -43,13 +50,13 @@ model Product {
 }
 
 model ProductImage {
-  id         String   @id @default(cuid())
-  productId  String
-  url        String   // Supabase Storage URL
-  altText    String?
-  sortOrder  Int      // để sắp xếp thứ tự ảnh
-  isPrimary  Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  productId String
+  url       String
+  altText   String?
+  sortOrder Int
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
@@ -58,13 +65,13 @@ model ProductImage {
 }
 
 model ProductVersion {
-  id           String   @id @default(cuid())
-  productId    String
-  productSnapshot Json   // full snapshot của product
-  imageSnapshot Json?    // snapshot của product images (array stored as JSON)
-  changedBy    String   // adminUserId
-  changeReason String?  // lý do chỉnh sửa
-  createdAt    DateTime @default(now())
+  id              String   @id @default(cuid())
+  productId       String
+  productSnapshot Json
+  imageSnapshot   Json?
+  changedBy       String
+  changeReason    String?
+  createdAt       DateTime @default(now())
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
@@ -73,37 +80,69 @@ model ProductVersion {
 }
 
 model AdminUser {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String   // bcrypt hash
-  email     String?  @unique
-  role      UserRole @default(ADMIN)
-  isActive  Boolean  @default(true)
+  id        String    @id @default(cuid())
+  username  String    @unique
+  password  String
+  email     String?   @unique
+  role      UserRole  @default(ADMIN)
+  isActive  Boolean   @default(true)
   lastLogin DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model ScanLog {
-  id         String    @id @default(cuid())
+  id         String   @id @default(cuid())
   qrCode     String
+  customerId String?
+  deviceId   String?
   ipAddress  String?
   userAgent  String?
-  scannedAt  DateTime  @default(now())
+  scannedAt  DateTime @default(now())
 
   @@index([qrCode])
   @@index([scannedAt])
+  @@index([customerId])
+  @@index([deviceId])
   @@map("scan_logs")
+}
+
+model Badge {
+  id            String   @id @default(cuid())
+  name          String
+  descriptionVi String
+  descriptionEn String
+  icon          String
+  criteriaJson  String
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  customerBadges CustomerBadge[]
+
+  @@map("badges")
+}
+
+model CustomerBadge {
+  id         String   @id @default(cuid())
+  customerId String
+  badgeId    String
+  earnedAt   DateTime @default(now())
+
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, badgeId])
+  @@index([customerId])
+  @@map("customer_badges")
 }
 
 model QrCode {
   id            String    @id @default(cuid())
-  code          String    @unique                // 6 ký tự hash (vd "AB12CD")
-  url           String                          // URL đầy đủ, vd "https://urcheck.vercel.app/?q=AB12CD"
+  code          String    @unique
+  url           String
   productId     String
   scanCount     Int       @default(0)
   lastScannedAt DateTime?
-  isActive      Boolean   @default(true)        // Có thể tắt QR cũ khi cần
+  isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -114,6 +153,8 @@ model QrCode {
   @@index([scanCount])
   @@map("qr_codes")
 }
+
+// ─── Enums ─────────────────────────────────────────────────────
 
 enum ProductStatus {
   DRAFT
@@ -126,6 +167,14 @@ enum UserRole {
   CUSTOMER
 }
 
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ─── Auth / Password Reset ──────────────────────────────────────
+
 model OtpVerification {
   id        String   @id @default(cuid())
   email     String
@@ -135,4 +184,214 @@ model OtpVerification {
   createdAt DateTime @default(now())
 
   @@index([email])
+  @@index([email, isUsed, expiresAt])
+}
+
+// ─── Customer (public user, no password) ───────────────────────
+
+model CustomerAccount {
+  id                  String    @id @default(cuid())
+  deviceId            String    @unique
+  email               String?   @unique
+  password            String?
+  resetToken          String?   @unique
+  resetTokenExpiresAt DateTime?
+  isVerified          Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+
+  favorites    UserFavorite[]
+  collections  Collection[]
+  reviews      ProductReview[]
+  expiryAlerts ExpiryAlert[]
+  loginLogs    CustomerLoginLog[]
+  helpful      ReviewHelpful[]
+
+  routines Routine[]
+
+  @@index([deviceId])
+  @@index([createdAt])
+  @@index([email])
+}
+
+model CustomerLoginLog {
+  id            String   @id @default(cuid())
+  customerId    String?
+  deviceId      String?
+  email         String?
+  ipAddress     String?
+  userAgent     String?
+  action        String
+  success       Boolean  @default(true)
+  failureReason String?
+  createdAt     DateTime @default(now())
+
+  customer CustomerAccount? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([customerId])
+  @@index([deviceId])
+  @@index([createdAt])
+  @@index([email])
+  @@index([action])
+}
+
+// ─── Favorites ──────────────────────────────────────────────────
+
+model UserFavorite {
+  id         String   @id @default(cuid())
+  customerId String
+  productId  String
+  createdAt  DateTime @default(now())
+
+  customer CustomerAccount @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product  Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, productId])
+  @@index([customerId])
+  @@index([productId])
+}
+
+// ─── Collections ────────────────────────────────────────────────
+
+model Collection {
+  id          String   @id @default(cuid())
+  customerId  String
+  name        String
+  description String?
+  colorHex    String?  @default("#f97316")
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  customer CustomerAccount  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  items    CollectionItem[]
+
+  @@index([customerId])
+}
+
+model CollectionItem {
+  id           String   @id @default(cuid())
+  collectionId String
+  productId    String
+  sortOrder    Int      @default(0)
+  addedAt      DateTime @default(now())
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, productId])
+  @@index([collectionId])
+  @@index([productId])
+}
+
+// ─── Reviews ────────────────────────────────────────────────────
+
+model ProductReview {
+  id                 String       @id @default(cuid())
+  productId          String
+  customerId         String
+  rating             Int
+  title              String?
+  body               String?
+  isVerifiedPurchase Boolean      @default(false)
+  helpfulCount       Int          @default(0)
+  status             ReviewStatus @default(PENDING)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  product  Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customer CustomerAccount @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  helpful  ReviewHelpful[]
+
+  @@index([productId, status])
+  @@index([productId, createdAt])
+  @@index([customerId])
+}
+
+model ReviewHelpful {
+  id         String @id @default(cuid())
+  reviewId   String
+  customerId String
+
+  review   ProductReview   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  customer CustomerAccount @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, customerId])
+  @@index([reviewId])
+  @@index([customerId])
+}
+
+// ─── Expiry Alerts ──────────────────────────────────────────────
+
+model ExpiryAlert {
+  id          String   @id @default(cuid())
+  customerId  String
+  productId   String
+  alertDate   DateTime
+  monthBefore Int
+  notified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  customer CustomerAccount @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product  Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([productId])
+  @@index([alertDate])
+  @@index([customerId, alertDate])
+}
+
+// ─── Routine ────────────────────────────────────────────────────
+
+model Routine {
+  id          String   @id @default(cuid())
+  customerId  String
+  title       String
+  description String?
+  isPublic    Boolean  @default(false)
+  shareToken  String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  customer CustomerAccount @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  items    RoutineItem[]
+
+  @@index([customerId])
+  @@index([shareToken])
+  @@index([isPublic])
+  @@map("routines")
+}
+
+model RoutineItem {
+  id          String   @id @default(cuid())
+  routineId   String
+  productId   String
+  productName String
+  brandName   String?
+  imageUrl    String?
+  timeOfDay   String   @default("night") // morning | afternoon | evening | night
+  order       Int      @default(0)
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  routine Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([routineId])
+  @@index([productId])
+  @@map("routine_items")
+}
+
+// ─── Ingredient Flag Dictionary (static seed data) ─────────────
+
+model IngredientFlag {
+  id            String  @id @default(cuid())
+  name          String  @unique
+  nameVi        String?
+  category      String
+  riskLevel     String
+  description   String?
+  descriptionVi String?
+  skinWarnings  Json?
+
+  @@index([category])
+  @@index([riskLevel])
 }

@@ -1,0 +1,97 @@
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/db';
+import { requireCustomerApi } from '@/lib/customer-auth';
+import { z } from 'zod';
+
+const ALLOWED_TIME_OF_DAY = ['morning', 'afternoon', 'evening', 'night'] as const;
+const MAX_ROUTINE_ITEMS = 20;
+
+const routineItemSchema = z.object({
+  productId: z.string().min(1, 'productId không được để trống'),
+  productName: z.string().min(1, 'productName không được để trống').max(200),
+  brandName: z.string().max(100).optional().nullable(),
+  imageUrl: z.string().url('imageUrl không hợp lệ').max(500).optional().nullable(),
+  timeOfDay: z.enum(ALLOWED_TIME_OF_DAY).default('night'),
+  order: z.number().int().nonnegative().optional(),
+  notes: z.string().max(500).optional().nullable(),
+});
+
+const routineUpdateSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(1000).optional().nullable(),
+  isPublic: z.boolean().optional(),
+  items: z.array(routineItemSchema).min(1).max(MAX_ROUTINE_ITEMS).optional(),
+});
+
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const guard = await requireCustomerApi();
+  if ('error' in guard) return guard.error;
+
+  const existing = await prisma.routine.findFirst({
+    where: { id, customerId: guard.session.customerId },
+    select: { id: true },
+  });
+
+  if (!existing) {
+    return NextResponse.json({ success: false, message: 'Không tìm thấy routine' }, { status: 404 });
+  }
+
+  const body = await request.json();
+  const parsed = routineUpdateSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { success: false, error: parsed.error.flatten().fieldErrors },
+      { status: 400 }
+    );
+  }
+
+  const { title, description, isPublic, items } = parsed.data;
+  const data: Record<string, unknown> = {};
+
+  if (title !== undefined) data.title = title.trim();
+  if (description !== undefined) data.description = description?.trim() ?? null;
+  if (isPublic !== undefined) data.isPublic = isPublic;
+
+  if (items) {
+    await prisma.routineItem.deleteMany({ where: { routineId: id } });
+    data.items = {
+      create: items.map((item, idx) => ({
+        productId: item.productId,
+        productName: item.productName,
+        brandName: item.brandName ?? null,
+        imageUrl: item.imageUrl ?? null,
+        timeOfDay: item.timeOfDay,
+        order: item.order ?? idx,
+        notes: item.notes ?? null,
+      })),
+    };
+  }
+
+  const routine = await prisma.routine.update({
+    where: { id },
+    data,
+    include: { items: { orderBy: { order: 'asc' } } },
+  });
+
+  return NextResponse.json({ success: true, routine });
+}
+
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const guard = await requireCustomerApi();
+  if ('error' in guard) return guard.error;
+
+  const existing = await prisma.routine.findFirst({
+    where: { id, customerId: guard.session.customerId },
+    select: { id: true },
+  });
+
+  if (!existing) {
+    return NextResponse.json({ success: false, message: 'Không tìm thấy routine' }, { status: 404 });
+  }
+
+  await prisma.routine.delete({ where: { id } });
+  return NextResponse.json({ success: true });
+}

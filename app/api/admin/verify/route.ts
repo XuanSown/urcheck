@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
-import { verifySession, getCurrentAdmin } from '@/lib/auth';
+import { cookies } from 'next/headers';
+import { verifyAdminSession } from '@/lib/session';
+import { getCurrentAdmin } from '@/lib/auth';
 
 export async function GET() {
-  const session = await verifySession();
+  const cookieStore = await cookies();
+  const token = cookieStore.get('admin_session')?.value ?? '';
+  const session = await verifyAdminSession(token);
 
   if (!session) {
-    return NextResponse.json(
-      { success: false, authenticated: false },
-      { status: 401 }
-    );
+    return NextResponse.json({ success: false, authenticated: false }, { status: 401 });
   }
 
   const user = await getCurrentAdmin();

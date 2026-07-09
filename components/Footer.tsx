@@ -147,11 +147,30 @@ export function Footer() {
           </motion.div>
         </div>
 
-        {/* Bottom Section */}
+         {/* Bottom Section */}
         <motion.div
           className="mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-gray-200 dark:border-gray-800"
           variants={itemVariants}
         >
+          <div className="flex flex-wrap justify-center sm:justify-start gap-x-5 gap-y-2 mb-6 text-xs text-gray-600 dark:text-gray-400">
+            {[
+              { href: '/how-it-works', label: t('nav_how_it_works') },
+              { href: '/pricing', label: t('nav_pricing') },
+              { href: '/brands', label: t('nav_brands') },
+              { href: '/security', label: t('nav_security') },
+              { href: '/faq', label: t('nav_faq') },
+              { href: '/contact', label: t('nav_contact') },
+              { href: '/about', label: t('about_nav') },
+            ].map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
             <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-xs text-gray-600 dark:text-gray-400">
               <p>&copy; {currentYear} ur check. {t('footer_rights')}</p>
@@ -166,7 +185,6 @@ export function Footer() {
             <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
               <ThemeToggle variant="iconOnly" />
               <LanguageSwitcher />
-              <Link href="/about" className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">{t('about_nav')}</Link>
               <div className="flex items-center gap-2">
                 <span>{t('footer_dev_by')}</span>
                 <span className="text-sm">🇻🇳</span>

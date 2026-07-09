@@ -66,22 +66,21 @@ export function Header({ className }: HeaderProps) {
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
-        'py-3 sm:py-4',
-        isHidden ? '-translate-y-full' : 'translate-y-0',
+        'fixed inset-x-0 top-0 z-50 transition-transform duration-500 ease-out',
+        isHidden ? '-translate-y-[140%]' : 'translate-y-0',
         className
       )}
     >
-      <div
-        className={cn(
-          'absolute inset-0 transition-all duration-500',
-          'bg-white/90 dark:bg-gray-950/90 backdrop-blur-xl',
-          'border-b border-gray-200/40 dark:border-gray-800/40'
-        )}
-      />
+      <div className="px-3 sm:px-4 pt-3">
+        <div className="relative mx-auto max-w-7xl">
+          {/* Liquid glass background layer */}
+          <div className="liquid-glass absolute inset-0 rounded-2xl overflow-hidden" aria-hidden="true">
+            <div className="liquid-sheen" />
+            {/* soft amber glow corner for brand warmth */}
+            <div className="pointer-events-none absolute -top-10 -right-6 h-32 w-32 rounded-full bg-primary-500/20 blur-3xl" />
+          </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
+          <div className="relative flex items-center justify-between px-4 sm:px-6 py-2.5 sm:py-3">
           <Link href="/" className="flex items-center gap-2 group">
             <motion.div
               whileHover={{ scale: 0.96 }}
@@ -189,17 +188,18 @@ export function Header({ className }: HeaderProps) {
                 transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
               />
             </div>
-          </button>
-        </div>
+        </button>
+      </div>
+      </div>
 
-        <AnimatePresence>
+      <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div
               initial={{ opacity: 0, height: 0, filter: 'blur(10px)' }}
               animate={{ opacity: 1, height: 'auto', filter: 'blur(0px)' }}
               exit={{ opacity: 0, height: 0, filter: 'blur(10px)' }}
               transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-              className="md:hidden mt-2 overflow-hidden rounded-2xl bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl border border-gray-200/50 dark:border-gray-800/50 shadow-xl"
+              className="liquid-glass md:hidden mt-2 overflow-hidden rounded-2xl"
             >
               <nav className="flex flex-col p-4 gap-1">
                 {navLinks.map((link, index) => (
@@ -275,7 +275,7 @@ export function Header({ className }: HeaderProps) {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+        </div>
     </header>
   );
 }

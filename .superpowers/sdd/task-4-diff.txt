@@ -1,0 +1,179 @@
+diff --git a/app/api/customer/history/route.ts b/app/api/customer/history/route.ts
+index 4e5e803..5cbff60 100644
+--- a/app/api/customer/history/route.ts
++++ b/app/api/customer/history/route.ts
+@@ -17,69 +17,50 @@ export async function GET(request: Request) {
+       orderBy: { scannedAt: 'desc' },
+       skip,
+       take: limit,
+-    }),
+-    prisma.scanLog.count({
+-      where: { customerId: guard.session.customerId },
+-    }),
+-  ]);
+-
+-  const qrCodes = logs
+-    .map((l) => l.qrCode.replace('QR:', ''))
+-    .filter(Boolean);
+-
+-  const qrRecords = qrCodes.length
+-    ? await prisma.qrCode.findMany({
+-        where: { code: { in: qrCodes } },
+-        select: {
+-          code: true,
+-          productId: true,
+-          product: {
+-            select: {
+-              id: true,
+-              name: true,
+-              description: true,
+-              brandName: true,
+-              verified: true,
+-              manufactureDate: true,
+-              expiryDate: true,
+-              imageUrl: true,
++      include: {
++        qrCode: {
++          select: {
++            code: true,
++            product: {
++              select: {
++                id: true,
++                name: true,
++                description: true,
++                brandName: true,
++                verified: true,
++                manufactureDate: true,
++                expiryDate: true,
++                images: { where: { isPrimary: true }, take: 1, select: { url: true } },
++              },
+             },
+           },
+         },
+-      })
+-    : [];
+-
+-  const productMap = new Map(qrRecords.map((q) => [q.code, q]));
++      },
++    }),
++    prisma.scanLog.count({ where: { customerId: guard.session.customerId } }),
++  ]);
+ 
+   const items = logs.map((log) => {
+-    const rawCode = log.qrCode.replace('QR:', '');
+-    const qr = productMap.get(rawCode);
+-    const isExpired = qr?.product?.expiryDate
+-      ? new Date(qr.product.expiryDate) < new Date()
+-      : false;
+-    const isValid = qr?.product?.verified && !isExpired;
+-
++    const qr = log.qrCode;
++    const product = qr?.product;
++    const imageUrl = product?.images?.[0]?.url ?? null;
++    const isExpired = product?.expiryDate ? new Date(product.expiryDate) < new Date() : false;
++    const isValid = product?.verified && !isExpired;
+     return {
+       scannedAt: log.scannedAt.toISOString(),
+       isValid: isValid ?? false,
+-      status: isValid
+-        ? 'valid'
+-        : isExpired
+-        ? 'expired'
+-        : 'unverified',
+-      product: qr?.product
++      status: isValid ? 'valid' : isExpired ? 'expired' : 'unverified',
++      product: product
+         ? {
+-            id: qr.product.id,
+-            name: qr.product.name,
+-            brandName: qr.product.brandName,
+-            imageUrl: qr.product.imageUrl,
+-            verified: qr.product.verified,
+-            expiryDate: qr.product.expiryDate
+-              ? qr.product.expiryDate.toISOString()
+-              : null,
++            id: product.id,
++            name: product.name,
++            brandName: product.brandName,
++            imageUrl,
++            verified: product.verified,
++            expiryDate: product.expiryDate ? product.expiryDate.toISOString() : null,
+           }
+         : null,
+-      qrCode: rawCode,
++      qrCode: qr?.code ?? null,
+     };
+   });
+ 
+diff --git a/app/api/feed/route.ts b/app/api/feed/route.ts
+index def3083..04b2068 100644
+--- a/app/api/feed/route.ts
++++ b/app/api/feed/route.ts
+@@ -18,7 +18,7 @@ export async function GET(request: Request) {
+   const [scanLogs, favorites] = await Promise.all([
+     prisma.scanLog.findMany({
+       where: { customerId },
+-      select: { qrCode: true },
++      select: { qrCodeId: true },
+       take: 50,
+       orderBy: { scannedAt: 'desc' },
+     }),
+@@ -29,12 +29,12 @@ export async function GET(request: Request) {
+   ]);
+ 
+   const qrCodes = await prisma.qrCode.findMany({
+-    where: { code: { in: scanLogs.map((s: any) => s.qrCode) } },
+-    select: { code: true, productId: true },
++    where: { id: { in: scanLogs.map((s: any) => s.qrCodeId) } },
++    select: { id: true, code: true, productId: true },
+   });
+-  const codeToProductId = new Map(qrCodes.map((q: any) => [q.code, q.productId]));
++  const idToProductId = new Map(qrCodes.map((q: any) => [q.id, q.productId]));
+   const scannedProductIds = new Set(
+-    scanLogs.map((s: any) => codeToProductId.get(s.qrCode)).filter(Boolean)
++    scanLogs.map((s: any) => idToProductId.get(s.qrCodeId)).filter(Boolean)
+   );
+ 
+   const favoriteIds = new Set(favorites.map((f: any) => f.productId));
+diff --git a/lib/badge-service.ts b/lib/badge-service.ts
+index 02cd155..ac01da5 100644
+--- a/lib/badge-service.ts
++++ b/lib/badge-service.ts
+@@ -24,23 +24,20 @@ export async function evaluateCustomerBadges(customerId: string): Promise<BadgeW
+ 
+   const scanLogs = await prisma.scanLog.findMany({
+     where: { customerId },
+-    select: { scannedAt: true, qrCode: true },
++    select: { scannedAt: true, qrCodeId: true },
+     orderBy: { scannedAt: 'asc' },
+   });
+ 
+-  const qrCodes = scanLogs.map((l) => l.qrCode!.replace('QR:', ''));
+-
+-  const qrRecords = qrCodes.length
++  const qrIds = scanLogs.map((l) => l.qrCodeId).filter(Boolean);
++  const qrRecords = qrIds.length
+     ? await prisma.qrCode.findMany({
+-        where: { code: { in: qrCodes } },
++        where: { id: { in: qrIds } },
+         select: { code: true, product: { select: { brandName: true } } },
+       })
+     : [];
+ 
+-  const productByCode = new Map(qrRecords.map((r) => [r.code, r.product?.brandName ?? null]));
+-
+   const totalScans = scanLogs.length;
+-  const brands = new Set(scanLogs.map((l) => productByCode.get(l.qrCode!.replace('QR:', ''))).filter(Boolean));
++  const brands = new Set(qrRecords.map((r) => r.product?.brandName).filter(Boolean));
+   const uniqueDays = new Set(scanLogs.map((l) => localDate(new Date(l.scannedAt)))).size;
+ 
+   const earnedBadges = await prisma.customerBadge.findMany({
+@@ -54,7 +51,7 @@ export async function evaluateCustomerBadges(customerId: string): Promise<BadgeW
+   for (const badge of badges) {
+     let criteria: Criteria;
+     try {
+-      criteria = JSON.parse(badge.criteriaJson);
++      criteria = JSON.parse(JSON.stringify(badge.criteriaJson));
+     } catch {
+       console.error(`Badge ${badge.id} has invalid criteriaJson`);
+       continue;

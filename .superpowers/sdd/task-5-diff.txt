@@ -1,0 +1,293 @@
+diff --git a/app/admin/products/page.tsx b/app/admin/products/page.tsx
+index f8c88d6..837c15f 100644
+--- a/app/admin/products/page.tsx
++++ b/app/admin/products/page.tsx
+@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
+ import { Card } from '@/components/ui/Card';
+ import { QRCodeSVG } from 'qrcode.react';
+ import { formatDate } from '@/lib/format-utils';
++import { primaryImageUrl } from '@/lib/product-utils';
+ 
+ interface Product {
+   id: string;
+@@ -353,9 +354,9 @@ function AdminProductsInner() {
+                         alt={product.name}
+                         className="w-full h-full object-cover"
+                       />
+-                    ) : product.imageUrl ? (
++                    ) : primaryImageUrl(product.images) ? (
+                       <img
+-                        src={product.imageUrl}
++                        src={primaryImageUrl(product.images)!}
+                         alt={product.name}
+                         className="w-full h-full object-cover"
+                       />
+diff --git a/app/api/admin/products/[id]/images/route.ts b/app/api/admin/products/[id]/images/route.ts
+index abf311f..2eb60a2 100644
+--- a/app/api/admin/products/[id]/images/route.ts
++++ b/app/api/admin/products/[id]/images/route.ts
+@@ -139,14 +139,6 @@ export async function POST(
+       },
+     });
+ 
+-    // If first image, also update product.imageUrl
+-    if (isPrimary) {
+-      await prisma.product.update({
+-        where: { id },
+-        data: { imageUrl: url },
+-      });
+-    }
+-
+     return NextResponse.json({
+       success: true,
+       message: 'Upload ảnh thành công',
+@@ -214,25 +206,7 @@ export async function DELETE(
+       where: { id: imageId },
+     });
+ 
+-    // If deleted image was primary or only image, update product's imageUrl
+-    const remainingImages = await prisma.productImage.findMany({
+-      where: { productId: id },
+-      orderBy: { sortOrder: 'asc' },
+-      take: 1,
+-    });
+-
+-    const newPrimary = remainingImages[0];
+-    if (newPrimary) {
+-      await prisma.product.update({
+-        where: { id },
+-        data: { imageUrl: newPrimary.url },
+-      });
+-    } else {
+-      await prisma.product.update({
+-        where: { id },
+-        data: { imageUrl: null },
+-      });
+-    }
++    // Primary image now lives only in ProductImage; no product.imageUrl to update.
+ 
+     // Reorder remaining images
+     const allImages = await prisma.productImage.findMany({
+diff --git a/app/api/admin/products/[id]/route.ts b/app/api/admin/products/[id]/route.ts
+index 0fe61af..c2f45bc 100644
+--- a/app/api/admin/products/[id]/route.ts
++++ b/app/api/admin/products/[id]/route.ts
+@@ -267,16 +267,8 @@ export async function DELETE(
+ }
+ 
+ function formatProductResponse(product: any) {
+-  // Fallback for old products that only have imageUrl
+-  let existingImages = product.images || [];
+-  if (existingImages.length === 0 && product.imageUrl) {
+-    existingImages = [{
+-      id: 'legacy-image-' + product.id,
+-      url: product.imageUrl,
+-      isPrimary: true,
+-      sortOrder: 0
+-    }];
+-  }
++  // Primary image now lives in ProductImage; no fallback from removed product.imageUrl
++  const existingImages = product.images || [];
+ 
+   return {
+     id: product.id,
+diff --git a/app/api/admin/products/[id]/versions/route.ts b/app/api/admin/products/[id]/versions/route.ts
+index c036460..07fd240 100644
+--- a/app/api/admin/products/[id]/versions/route.ts
++++ b/app/api/admin/products/[id]/versions/route.ts
+@@ -31,7 +31,6 @@ export async function GET(
+     const formattedVersions = versions.map(version => ({
+       id: version.id,
+       productSnapshot: version.productSnapshot,
+-      imageSnapshot: version.imageSnapshot,
+       changedBy: version.changedBy,
+       changeReason: version.changeReason,
+       createdAt: version.createdAt.toISOString(),
+diff --git a/app/api/admin/products/route.ts b/app/api/admin/products/route.ts
+index e266340..cdb798e 100644
+--- a/app/api/admin/products/route.ts
++++ b/app/api/admin/products/route.ts
+@@ -3,6 +3,7 @@ import { z } from 'zod';
+ import { requireAdminApi } from '@/lib/auth';
+ import prisma from '@/lib/db';
+ import { productSchema } from '@/lib/validators';
++import { primaryImageUrl } from '@/lib/product-utils';
+ import {
+   buildQrUrl,
+   generateQrCode,
+@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
+       verified: p.verified,
+       createdAt: p.createdAt.toISOString(),
+       updatedAt: p.updatedAt.toISOString(),
+-      imageUrl: p.imageUrl,
++      imageUrl: primaryImageUrl(p.images),
+       images: p.images,
+       versionCount: p._count.versions,
+       qrCode: p.qrCodes?.[0] || null,
+diff --git a/app/api/customer/history/route.ts b/app/api/customer/history/route.ts
+index 5cbff60..b29c6c2 100644
+--- a/app/api/customer/history/route.ts
++++ b/app/api/customer/history/route.ts
+@@ -56,6 +56,7 @@ export async function GET(request: Request) {
+             name: product.name,
+             brandName: product.brandName,
+             imageUrl,
++            images: product.images,
+             verified: product.verified,
+             expiryDate: product.expiryDate ? product.expiryDate.toISOString() : null,
+           }
+diff --git a/app/api/feed/route.ts b/app/api/feed/route.ts
+index 04b2068..30e6dbb 100644
+--- a/app/api/feed/route.ts
++++ b/app/api/feed/route.ts
+@@ -1,6 +1,7 @@
+ import { NextResponse } from 'next/server';
+ import prisma from '@/lib/db';
+ import { requireCustomerApi } from '@/lib/customer-auth';
++import { primaryImageUrl } from '@/lib/product-utils';
+ 
+ export async function GET(request: Request) {
+   const guard = await requireCustomerApi();
+@@ -108,10 +109,15 @@ async function feedPublic(limit: number, skinType?: string, brand?: string) {
+       where,
+       orderBy: { createdAt: 'desc' },
+       take: limit,
+-      select: { id: true, name: true, brandName: true, skinType: true, imageUrl: true, suitableFor: true, tags: true, status: true, createdAt: true },
++      select: { id: true, name: true, brandName: true, skinType: true, suitableFor: true, tags: true, status: true, createdAt: true, images: { where: { isPrimary: true }, take: 1, select: { url: true } } },
+     }),
+     prisma.product.count({ where }),
+   ]);
+ 
+-  return NextResponse.json({ success: true, products, pagination: { page: 1, limit, total }, profile: { skinType: [], brands: [], scannedCount: 0 } });
++  const productsMapped = products.map((p: any) => ({
++    ...p,
++    imageUrl: primaryImageUrl(p.images),
++  }));
++
++  return NextResponse.json({ success: true, products: productsMapped, pagination: { page: 1, limit, total }, profile: { skinType: [], brands: [], scannedCount: 0 } });
+ }
+diff --git a/app/api/qr/[code]/route.ts b/app/api/qr/[code]/route.ts
+index 1ea8479..a8b4a11 100644
+--- a/app/api/qr/[code]/route.ts
++++ b/app/api/qr/[code]/route.ts
+@@ -3,6 +3,7 @@ import prisma from '@/lib/db';
+ import { isQrEnabled } from '@/lib/feature-flags';
+ import { extractQrCode } from '@/lib/qr-utils';
+ import { verifySession } from '@/lib/customer-auth';
++import { primaryImageUrl } from '@/lib/product-utils';
+ 
+ export async function GET(
+   request: NextRequest,
+@@ -36,7 +37,6 @@ export async function GET(
+             description: true,
+             manufactureDate: true,
+             expiryDate: true,
+-            imageUrl: true,
+             brandName: true,
+             verified: true,
+             createdAt: true,
+@@ -111,7 +111,7 @@ export async function GET(
+     const isExpired = product.expiryDate ? new Date(product.expiryDate) < new Date() : false;
+     const isValid = product.verified && !isExpired;
+ 
+-    const productImageUrl = product.images?.[0]?.url || product.imageUrl;
++    const productImageUrl = primaryImageUrl(product.images);
+ 
+     return NextResponse.json({
+       success: true,
+diff --git a/components/CustomerHistoryList.tsx b/components/CustomerHistoryList.tsx
+index 8114072..7602a01 100644
+--- a/components/CustomerHistoryList.tsx
++++ b/components/CustomerHistoryList.tsx
+@@ -7,12 +7,15 @@ type HistoryItem = {
+     name: string;
+     brandName: string;
+     imageUrl: string | null;
++    images?: { url: string; isPrimary?: boolean }[];
+     verified: boolean;
+     expiryDate: string | null;
+   } | null;
+   qrCode: string;
+ };
+ 
++import { primaryImageUrl } from '@/lib/product-utils';
++
+ const statusConfig = {
+   valid: {
+     label: 'Hợp lệ',
+@@ -65,10 +68,10 @@ export function CustomerHistoryList({ items }: { items: HistoryItem[] }) {
+             className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 hover:shadow-md transition-shadow"
+           >
+             <div className="flex items-center gap-4">
+-              {item.product?.imageUrl ? (
++              {primaryImageUrl(item.product?.images) ? (
+                 <img
+-                  src={item.product.imageUrl}
+-                  alt={item.product.name}
++                  src={primaryImageUrl(item.product?.images)!}
++                  alt={item.product?.name}
+                   className="w-14 h-14 rounded-lg object-cover bg-gray-100 dark:bg-gray-800"
+                 />
+               ) : (
+diff --git a/components/ProductCard.tsx b/components/ProductCard.tsx
+index 82e538b..39f1a40 100644
+--- a/components/ProductCard.tsx
++++ b/components/ProductCard.tsx
+@@ -4,6 +4,7 @@ import { useLocale } from '@/components/I18nProvider';
+ import { useCustomerAuth } from '@/components/CustomerAuth';
+ import { useState } from 'react';
+ import { Button } from '@/components/ui/Button';
++import { primaryImageUrl } from '@/lib/product-utils';
+ 
+ type Product = {
+   id: string;
+@@ -11,6 +12,7 @@ type Product = {
+   brandName: string;
+   skinType?: string | null;
+   imageUrl?: string | null;
++  images?: { url: string; isPrimary?: boolean }[];
+   suitableFor?: string[];
+   tags?: string[];
+ };
+@@ -47,8 +49,8 @@ export function ProductCard({ product, onWishlistChange }: { product: Product; o
+   return (
+     <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm flex flex-col">
+       <div className="relative aspect-square bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden mb-3">
+-        {product.imageUrl ? (
+-          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
++        {primaryImageUrl(product.images) ? (
++          <img src={primaryImageUrl(product.images)!} alt={product.name} className="w-full h-full object-cover" />
+         ) : (
+           <div className="w-full h-full flex items-center justify-center text-sm text-gray-400">No image</div>
+         )}
+diff --git a/components/ProductInfo.tsx b/components/ProductInfo.tsx
+index 1e39545..6a26b39 100644
+--- a/components/ProductInfo.tsx
++++ b/components/ProductInfo.tsx
+@@ -6,6 +6,7 @@ import Image from 'next/image';
+ import { Product } from '@/types/product';
+ import { Button } from '@/components/ui/Button';
+ import { useLocale } from '@/components/I18nProvider';
++import { primaryImageUrl } from '@/lib/product-utils';
+ 
+ interface ProductInfoProps {
+   product: Product;
+@@ -29,7 +30,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
+   // Handle multiple images
+   const images = product.images && product.images.length > 0
+     ? product.images
+-    : product.imageUrl ? [{ id: '1', url: product.imageUrl, isPrimary: true, sortOrder: 0, productId: product.id, createdAt: new Date().toISOString() }] : [];
++    : primaryImageUrl(product.images) ? [{ id: '1', url: primaryImageUrl(product.images)!, isPrimary: true, sortOrder: 0, productId: product.id, createdAt: new Date().toISOString() }] : [];
+   
+   const [activeImageIndex, setActiveImageIndex] = useState(0);
+ 
+diff --git a/lib/product-utils.ts b/lib/product-utils.ts
+new file mode 100644
+index 0000000..bdbf2f2
+--- /dev/null
++++ b/lib/product-utils.ts
+@@ -0,0 +1,4 @@
++export function primaryImageUrl(images?: { url: string; isPrimary?: boolean }[] | null): string | null {
++  if (!images || images.length === 0) return null;
++  return images.find((i) => i.isPrimary)?.url ?? images[0].url ?? null;
++}

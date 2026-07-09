@@ -1,0 +1,158 @@
+diff --git a/prisma/schema.prisma b/prisma/schema.prisma
+index fb1ae8d..2e9d894 100644
+--- a/prisma/schema.prisma
++++ b/prisma/schema.prisma
+@@ -29,7 +29,6 @@ model Product {
+   status             ProductStatus @default(PUBLISHED)
+   publishedAt        DateTime?
+   purchaseLinks      Json?
+-  imageUrl           String?
+   brandName          String
+   verified           Boolean       @default(true)
+   createdAt          DateTime      @default(now())
+@@ -41,7 +40,6 @@ model Product {
+   favorites    UserFavorite[]
+   items        CollectionItem[]
+   reviews      ProductReview[]
+-  expiryAlerts ExpiryAlert[]
+   routineItems RoutineItem[]
+ 
+   @@index([brandName])
+@@ -68,7 +66,6 @@ model ProductVersion {
+   id              String   @id @default(cuid())
+   productId       String
+   productSnapshot Json
+-  imageSnapshot   Json?
+   changedBy       String
+   changeReason    String?
+   createdAt       DateTime @default(now())
+@@ -93,14 +90,16 @@ model AdminUser {
+ 
+ model ScanLog {
+   id         String   @id @default(cuid())
+-  qrCode     String
++  qrCodeId   String
+   customerId String?
+   deviceId   String?
+   ipAddress  String?
+   userAgent  String?
+   scannedAt  DateTime @default(now())
+ 
+-  @@index([qrCode])
++  qrCode QrCode @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
++
++  @@index([qrCodeId])
+   @@index([scannedAt])
+   @@index([customerId])
+   @@index([deviceId])
+@@ -113,7 +112,7 @@ model Badge {
+   descriptionVi String
+   descriptionEn String
+   icon          String
+-  criteriaJson  String
++  criteriaJson  Json
+   order         Int      @default(0)
+   createdAt     DateTime @default(now())
+ 
+@@ -148,9 +147,10 @@ model QrCode {
+ 
+   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+ 
++  scanLogs ScanLog[]
++
+   @@index([code])
+   @@index([productId])
+-  @@index([scanCount])
+   @@map("qr_codes")
+ }
+ 
+@@ -202,9 +202,7 @@ model CustomerAccount {
+   favorites    UserFavorite[]
+   collections  Collection[]
+   reviews      ProductReview[]
+-  expiryAlerts ExpiryAlert[]
+   loginLogs    CustomerLoginLog[]
+-  helpful      ReviewHelpful[]
+ 
+   routines Routine[]
+ 
+@@ -299,46 +297,12 @@ model ProductReview {
+ 
+   product  Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+   customer CustomerAccount @relation(fields: [customerId], references: [id], onDelete: Cascade)
+-  helpful  ReviewHelpful[]
+ 
+   @@index([productId, status])
+   @@index([productId, createdAt])
+   @@index([customerId])
+ }
+ 
+-model ReviewHelpful {
+-  id         String @id @default(cuid())
+-  reviewId   String
+-  customerId String
+-
+-  review   ProductReview   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+-  customer CustomerAccount @relation(fields: [customerId], references: [id], onDelete: Cascade)
+-
+-  @@unique([reviewId, customerId])
+-  @@index([reviewId])
+-  @@index([customerId])
+-}
+-
+-// ─── Expiry Alerts ──────────────────────────────────────────────
+-
+-model ExpiryAlert {
+-  id          String   @id @default(cuid())
+-  customerId  String
+-  productId   String
+-  alertDate   DateTime
+-  monthBefore Int
+-  notified    Boolean  @default(false)
+-  createdAt   DateTime @default(now())
+-
+-  customer CustomerAccount @relation(fields: [customerId], references: [id], onDelete: Cascade)
+-  product  Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+-
+-  @@index([customerId])
+-  @@index([productId])
+-  @@index([alertDate])
+-  @@index([customerId, alertDate])
+-}
+-
+ // ─── Routine ────────────────────────────────────────────────────
+ 
+ model Routine {
+@@ -364,9 +328,6 @@ model RoutineItem {
+   id          String   @id @default(cuid())
+   routineId   String
+   productId   String
+-  productName String
+-  brandName   String?
+-  imageUrl    String?
+   timeOfDay   String   @default("night") // morning | afternoon | evening | night
+   order       Int      @default(0)
+   notes       String?
+@@ -380,22 +341,6 @@ model RoutineItem {
+   @@map("routine_items")
+ }
+ 
+-// ─── Ingredient Flag Dictionary (static seed data) ─────────────
+-
+-model IngredientFlag {
+-  id            String  @id @default(cuid())
+-  name          String  @unique
+-  nameVi        String?
+-  category      String
+-  riskLevel     String
+-  description   String?
+-  descriptionVi String?
+-  skinWarnings  Json?
+-
+-  @@index([category])
+-  @@index([riskLevel])
+-}
+-
+ // ─── Blog ───────────────────────────────────────────────────────
+ 
+ model BlogPost {

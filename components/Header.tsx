@@ -16,6 +16,7 @@ export function Header({ className }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { customer, loading, logout } = useCustomerAuth();
   const { t } = useLocale();
 
@@ -109,25 +110,48 @@ export function Header({ className }: HeaderProps) {
             ))}
 
             {loading ? (
-              <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse" />
+              <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse ml-2" />
             ) : customer ? (
-              <div className="flex items-center gap-2 ml-2">
-                <Link
-                  href="/customer/routines"
-                  className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-                >
-                  Lịch trình
-                </Link>
-                <span className="text-sm text-gray-400">|</span>
-                <span className="text-sm text-gray-600 dark:text-gray-300 truncate max-w-[120px]">
-                  {customer.email}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                >
-                  {t('auth_logout_btn') || 'Đăng xuất'}
+              <div 
+                className="relative flex items-center ml-2"
+                onMouseEnter={() => setIsProfileOpen(true)}
+                onMouseLeave={() => setIsProfileOpen(false)}
+              >
+                <button className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors py-2">
+                  <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold">
+                    {customer.email?.[0].toUpperCase() || 'U'}
+                  </div>
+                  <span className="max-w-[120px] truncate">{customer.email}</span>
+                  <svg className={`w-4 h-4 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
+
+                <AnimatePresence>
+                  {isProfileOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-100 dark:border-gray-800 py-2 overflow-hidden"
+                    >
+                      <Link
+                        href="/customer/routines"
+                        className="block px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                      >
+                        Lịch trình
+                      </Link>
+                      <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      >
+                        {t('auth_logout_btn') || 'Đăng xuất'}
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             ) : (
               <div className="flex items-center gap-2 ml-2">

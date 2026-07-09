@@ -24,15 +24,19 @@ DROP TABLE IF EXISTS "BlogPost" CASCADE;
 DROP TABLE IF EXISTS "SupportArticle" CASCADE;
 
 -- CreateEnum
+DROP TYPE IF EXISTS "ProductStatus";
 CREATE TYPE "ProductStatus" AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED');
 
 -- CreateEnum
+DROP TYPE IF EXISTS "UserRole";
 CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'CUSTOMER');
 
 -- CreateEnum
+DROP TYPE IF EXISTS "ReviewStatus";
 CREATE TYPE "ReviewStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 
 -- CreateEnum
+DROP TYPE IF EXISTS "ContentStatus";
 CREATE TYPE "ContentStatus" AS ENUM ('DRAFT', 'PUBLISHED');
 
 -- CreateTable

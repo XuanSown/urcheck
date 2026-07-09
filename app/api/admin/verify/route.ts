@@ -22,6 +22,7 @@ export async function GET() {
       username: user?.username,
       email: user?.email,
       role: user?.role,
+      twoFactorEnabled: user?.twoFactorEnabled,
     },
   });
 }

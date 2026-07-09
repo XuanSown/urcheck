@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { securityHeaders, isOriginAllowed, defaultRateLimiter } from '@/lib/security';
 import { verifyAdminSession, verifyCustomerSession } from '@/lib/session';
 
-const PUBLIC_PATHS = ['/admin/login', '/api/health', '/api/customer/login', '/api/customer/register', '/favicon.ico'];
+const PUBLIC_PATHS = ['/admin/login', '/api/health', '/api/admin/login', '/api/admin/forgot-password', '/api/customer/login', '/api/customer/register', '/favicon.ico'];
 const STATIC_PREFIXES = ['/_next', '/uploads', '/public'];
 
 function isPublic(path: string): boolean {

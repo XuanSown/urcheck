@@ -45,6 +45,7 @@ export class RateLimiter {
   private static readonly PRESET_LIMITS = {
     'admin:login': { windowMs: 15 * 60 * 1000, max: 5 },
     'customer:login': { windowMs: 15 * 60 * 1000, max: 5 },
+    'admin:forgot': { windowMs: 15 * 60 * 1000, max: 3 },
   } as const;
 
   constructor(options: RateLimiterOptions = {}) {

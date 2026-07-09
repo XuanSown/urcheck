@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import MarkdownEditor from '@/components/admin/MarkdownEditor';
 
 export interface SupportFormData {
   slug: string;
@@ -176,12 +177,22 @@ export default function SupportForm({ articleId, initialData, submitting = false
             <input type="number" name="order" value={formData.order} onChange={handleChange} className={inputClass} />
           </div>
           <div className="md:col-span-2">
-            <label className={labelClass}>Nội dung (VI)</label>
-            <textarea name="bodyVi" value={formData.bodyVi} onChange={handleChange} rows={10} className={inputClass} />
+            <MarkdownEditor
+              label="Nội dung (VI)"
+              value={formData.bodyVi ?? ''}
+              onChange={(v) => setFormData((prev) => ({ ...prev, bodyVi: v }))}
+              placeholder="Viết nội dung bài viết bằng Markdown…"
+              rows={10}
+            />
           </div>
           <div className="md:col-span-2">
-            <label className={labelClass}>Nội dung (EN)</label>
-            <textarea name="bodyEn" value={formData.bodyEn} onChange={handleChange} rows={10} className={inputClass} />
+            <MarkdownEditor
+              label="Nội dung (EN)"
+              value={formData.bodyEn ?? ''}
+              onChange={(v) => setFormData((prev) => ({ ...prev, bodyEn: v }))}
+              placeholder="Write content in Markdown…"
+              rows={10}
+            />
           </div>
           <div>
             <label className={labelClass}>Trạng thái</label>

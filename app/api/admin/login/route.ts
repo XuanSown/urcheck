@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loginAdmin } from '@/lib/auth';
 import { signAdminSession, setAdminSessionCookie } from '@/lib/session';
+import { defaultRateLimiter } from '@/lib/security';
 import { z } from 'zod';
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
   password: z.string().min(1, 'Password is required'),
+  twoFactorToken: z.string().optional(),
 });
+
+function getIp(request: NextRequest): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,8 +28,25 @@ export async function POST(request: NextRequest) {
     }
     const validated = loginSchema.parse(body);
 
-    const result = await loginAdmin(validated.username, validated.password);
+    const rate = await defaultRateLimiter.check(request, 'admin:login');
+    if (!rate.allowed) {
+      return NextResponse.json(
+        { success: false, error: `Quá nhiều lần thử. Vui lòng thử lại sau ${rate.retryAfter} giây.` },
+        { status: 429 }
+      );
+    }
+
+    const result = await loginAdmin(validated.username, validated.password, {
+      ipAddress: getIp(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+      twoFactorToken: validated.twoFactorToken,
+    });
+
     if (!result.success) {
+      // 2FA step pending — let the form prompt for the code (still 200).
+      if (result.twoFactorRequired) {
+        return NextResponse.json({ success: false, twoFactorRequired: true });
+      }
       return NextResponse.json({ success: false, error: result.error || 'Đang nhap that bai' }, { status: 401 });
     }
 

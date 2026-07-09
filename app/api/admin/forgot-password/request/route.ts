@@ -2,9 +2,18 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { sendOtpEmail } from '@/lib/mailer';
 import crypto from 'crypto';
+import { defaultRateLimiter } from '@/lib/security';
 
 export async function POST(request: Request) {
   try {
+    const rate = await defaultRateLimiter.check(request, 'admin:forgot');
+    if (!rate.allowed) {
+      return NextResponse.json(
+        { success: false, error: `Quá nhiều lần thử. Vui lòng thử lại sau ${rate.retryAfter} giây.` },
+        { status: 429 }
+      );
+    }
+
     const { email } = await request.json();
 
     if (!email) {

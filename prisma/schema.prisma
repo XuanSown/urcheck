@@ -84,8 +84,12 @@ model AdminUser {
   role      UserRole  @default(ADMIN)
   isActive  Boolean   @default(true)
   lastLogin DateTime?
+  twoFactorSecret String?
+  twoFactorEnabled Boolean @default(false)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  loginLogs AdminLoginLog[]
 }
 
 model ScanLog {
@@ -175,6 +179,23 @@ enum ReviewStatus {
 
 // ─── Auth / Password Reset ──────────────────────────────────────
 
+model AdminLoginLog {
+  id          String   @id @default(cuid())
+  adminUserId String?
+  username    String
+  success     Boolean  @default(false)
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  adminUser AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+
+  @@index([adminUserId])
+  @@index([username])
+  @@index([createdAt])
+  @@map("admin_login_logs")
+}
+
 model OtpVerification {
   id        String   @id @default(cuid())
   email     String
@@ -197,6 +218,7 @@ model CustomerAccount {
   resetToken          String?   @unique
   resetTokenExpiresAt DateTime?
   isVerified          Boolean   @default(false)
+  isActive            Boolean   @default(true)
   createdAt           DateTime  @default(now())
 
   favorites    UserFavorite[]

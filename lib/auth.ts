@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import bcrypt from 'bcrypt';
 import prisma from './db';
 import { verifyAdminSession, clearAdminSessionCookie } from './session';
+import { verifyToken } from './twofactor';
 
 export interface AdminSession {
   userId: string;
@@ -10,14 +11,43 @@ export interface AdminSession {
   role: string;
 }
 
+interface LoginMeta {
+  ipAddress?: string;
+  userAgent?: string;
+  twoFactorToken?: string;
+}
+
+// Best-effort audit log — must never break the login flow.
+function logAdminLogin(meta: {
+  adminUserId?: string;
+  username: string;
+  success: boolean;
+  ipAddress?: string;
+  userAgent?: string;
+}) {
+  prisma.adminLoginLog
+    .create({
+      data: {
+        adminUserId: meta.adminUserId,
+        username: meta.username,
+        success: meta.success,
+        ipAddress: meta.ipAddress,
+        userAgent: meta.userAgent,
+      },
+    })
+    .catch((err) => console.warn('Failed to write admin login log (non-fatal):', err));
+}
+
 // Login function
 export async function loginAdmin(
   username: string,
-  password: string
+  password: string,
+  meta: LoginMeta = {}
 ): Promise<{
   success: boolean;
   user?: { id: string; username: string; role: string };
   error?: string;
+  twoFactorRequired?: boolean;
 }> {
   let user;
   try {
@@ -28,6 +58,7 @@ export async function loginAdmin(
   }
 
   if (!user) {
+    logAdminLogin({ username, success: false, ipAddress: meta.ipAddress, userAgent: meta.userAgent });
     return { success: false, error: 'Tài khoản không tồn tại' };
   }
 
@@ -39,7 +70,20 @@ export async function loginAdmin(
     return { success: false, error: 'Mật khẩu trong cơ sở dữ liệu bị lỗi. Liên hệ quản trị viên.' };
   }
   if (!isValid) {
+    logAdminLogin({ adminUserId: user.id, username, success: false, ipAddress: meta.ipAddress, userAgent: meta.userAgent });
     return { success: false, error: 'Mật khẩu không đúng' };
+  }
+
+  // 2FA step (only when enabled)
+  if (user.twoFactorEnabled) {
+    if (!meta.twoFactorToken) {
+      return { success: false, twoFactorRequired: true };
+    }
+    const ok = verifyToken(user.twoFactorSecret ?? '', meta.twoFactorToken);
+    if (!ok) {
+      logAdminLogin({ adminUserId: user.id, username, success: false, ipAddress: meta.ipAddress, userAgent: meta.userAgent });
+      return { success: false, error: 'Mã xác thực không đúng' };
+    }
   }
 
   try {
@@ -47,6 +91,8 @@ export async function loginAdmin(
   } catch (updateError) {
     console.warn('Failed to update lastLogin (non-fatal):', updateError);
   }
+
+  logAdminLogin({ adminUserId: user.id, username, success: true, ipAddress: meta.ipAddress, userAgent: meta.userAgent });
 
   return { success: true, user: { id: user.id, username: user.username, role: user.role } };
 }
@@ -63,7 +109,7 @@ export async function getCurrentAdmin() {
 
   const user = await prisma.adminUser.findUnique({
     where: { id: session.userId },
-    select: { id: true, username: true, email: true, role: true, lastLogin: true, createdAt: true },
+    select: { id: true, username: true, email: true, role: true, lastLogin: true, createdAt: true, twoFactorEnabled: true },
   });
   return user;
 }

@@ -19,7 +19,7 @@ async function getDashboardData() {
   ] = await Promise.all([
     prisma.product.count(),
     prisma.qrCode.count({ where: { isActive: true } }),
-    prisma.qrCode.aggregate({ _sum: { scanCount: true } }),
+    prisma.scanLog.count(),
     prisma.scanLog.count({
       where: {
         scannedAt: {
@@ -50,18 +50,41 @@ async function getDashboardData() {
     }),
   ]);
 
-  // Get scan activity for last 7 days
-  const scanActivity = await prisma.scanLog.groupBy({
-    by: ['scannedAt'],
+  // Get scan activity for last 7 days, bucketed by calendar day in JS
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const scanLogs = await prisma.scanLog.findMany({
     where: {
       scannedAt: {
-        gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        gte: sevenDaysAgo,
       },
     },
-    _count: { id: true },
-    orderBy: { scannedAt: 'asc' },
-    take: 7,
+    select: { scannedAt: true },
   });
+
+  const dayMap = new Map<string, { date: Date; label: string; count: number }>();
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(sevenDaysAgo);
+    day.setDate(day.getDate() + i);
+    day.setHours(0, 0, 0, 0);
+    const key = day.toISOString().slice(0, 10);
+    dayMap.set(key, {
+      date: day,
+      label: day.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+      count: 0,
+    });
+  }
+
+  for (const log of scanLogs) {
+    const d = new Date(log.scannedAt);
+    d.setHours(0, 0, 0, 0);
+    const key = d.toISOString().slice(0, 10);
+    const bucket = dayMap.get(key);
+    if (bucket) bucket.count += 1;
+  }
+
+  const scanActivity = Array.from(dayMap.values()).sort(
+    (a, b) => a.date.getTime() - b.date.getTime()
+  );
 
   // Get top scanned products
   const topScannedProducts = await prisma.product.findMany({
@@ -85,7 +108,7 @@ async function getDashboardData() {
   return {
     totalProducts,
     totalQrCodes,
-    totalQrScans: totalQrScans._sum.scanCount || 0,
+    totalQrScans,
     recentScans,
     expiringProducts,
     productsByStatus,
@@ -96,21 +119,20 @@ async function getDashboardData() {
 }
 
 // Simple bar chart component
-function SimpleBarChart({ data }: { data: Array<{ scannedAt: Date; _count: { id: number } }> }) {
-  const maxCount = Math.max(...data.map(d => d._count.id), 1);
+function SimpleBarChart({ data }: { data: Array<{ date: Date; label: string; count: number }> }) {
+  const maxCount = Math.max(...data.map(d => d.count), 1);
 
   return (
     <div className="flex items-end gap-2 h-32">
       {data.map((item, idx) => {
-        const height = (item._count.id / maxCount) * 100;
-        const date = new Date(item.scannedAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+        const height = (item.count / maxCount) * 100;
         return (
           <div key={idx} className="flex-1 flex flex-col items-center gap-1">
             <div
               className="w-full bg-primary-500 rounded-t-sm transition-all hover:bg-primary-600"
               style={{ height: `${height}%`, minHeight: '4px' }}
             />
-            <span className="text-xs text-gray-500">{date}</span>
+            <span className="text-xs text-gray-500">{item.label}</span>
           </div>
         );
       })}
@@ -262,7 +284,7 @@ export async function AdminDashboardPage() {
         {/* Top scanned products */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Sản phẩm được quét nhiều nhất</CardTitle>
+            <CardTitle className="text-base">Sản phẩm có nhiều mã QR</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -274,7 +296,7 @@ export async function AdminDashboardPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold text-primary-600">{product._count.qrCodes}</p>
-                    <p className="text-xs text-gray-500">lượt quét</p>
+                    <p className="text-xs text-gray-500">mã QR</p>
                   </div>
                 </div>
               ))}

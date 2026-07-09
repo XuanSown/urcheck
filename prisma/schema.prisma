@@ -395,3 +395,51 @@ model IngredientFlag {
   @@index([category])
   @@index([riskLevel])
 }
+
+// ─── Blog ───────────────────────────────────────────────────────
+
+model BlogPost {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  titleVi     String
+  titleEn     String
+  excerptVi   String?
+  excerptEn   String?
+  bodyVi      String?      @db.Text
+  bodyEn      String?      @db.Text
+  coverUrl    String?
+  author      String?
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([status])
+  @@index([publishedAt])
+  @@index([slug])
+}
+
+// ─── Support Articles ───────────────────────────────────────────
+
+model SupportArticle {
+  id        String       @id @default(cuid())
+  slug      String       @unique
+  titleVi   String
+  titleEn   String
+  bodyVi    String?      @db.Text
+  bodyEn    String?      @db.Text
+  category  String
+  status    ContentStatus @default(PUBLISHED)
+  order     Int          @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([status])
+  @@index([category])
+  @@index([slug])
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+}

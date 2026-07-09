@@ -85,6 +85,24 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </svg>
       ),
     },
+    {
+      label: 'Blog',
+      href: '/admin/blog',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v10a2 2 0 01-2 2z M14 4v6h6" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Hỗ trợ',
+      href: '/admin/support',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h8M8 14h5m-5 6l-6 2V6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H8z" />
+        </svg>
+      ),
+    },
   ];
 
   const isActive = (href: string) => {

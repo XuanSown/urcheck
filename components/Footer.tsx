@@ -159,7 +159,12 @@ export function Footer() {
               { href: '/brands', label: t('nav_brands') },
               { href: '/security', label: t('nav_security') },
               { href: '/faq', label: t('nav_faq') },
+              { href: '/blog', label: t('nav_blog') },
+              { href: '/support', label: t('nav_support') },
+              { href: '/integrations', label: t('nav_integrations') },
               { href: '/contact', label: t('nav_contact') },
+              { href: '/privacy', label: t('nav_privacy') },
+              { href: '/terms', label: t('nav_terms') },
               { href: '/about', label: t('about_nav') },
             ].map((link) => (
               <Link

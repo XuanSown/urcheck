@@ -2,6 +2,16 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { requireCustomerApi } from '@/lib/customer-auth';
 import { z } from 'zod';
+import { primaryImageUrl } from '@/lib/product-utils';
+
+function mapRoutineItem(item: any) {
+  return {
+    ...item,
+    productName: item.product?.name ?? (item as any).productName ?? '',
+    brandName: item.product?.brandName ?? null,
+    imageUrl: primaryImageUrl(item.product?.images) ?? null,
+  };
+}
 
 const ALLOWED_TIME_OF_DAY = ['morning', 'afternoon', 'evening', 'night'] as const;
 const MAX_ROUTINE_ITEMS = 20;
@@ -27,16 +37,18 @@ export async function GET() {
   const guard = await requireCustomerApi();
   if ('error' in guard) return guard.error;
 
-  const routines = await prisma.routine.findMany({
+  const routinesWithItems = await prisma.routine.findMany({
     where: { customerId: guard.session.customerId },
     include: {
       items: {
         orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+        include: { product: { include: { images: { where: { isPrimary: true }, take: 1, select: { url: true, isPrimary: true } } } } },
       },
     },
     orderBy: { createdAt: 'desc' },
   });
 
+  const routines = routinesWithItems.map((r) => ({ ...r, items: r.items.map(mapRoutineItem) }));
   return NextResponse.json({ success: true, routines });
 }
 
@@ -65,17 +77,20 @@ export async function POST(request: Request) {
       items: {
         create: items.map((item, idx) => ({
           productId: item.productId,
-          productName: item.productName,
-          brandName: item.brandName ?? null,
-          imageUrl: item.imageUrl ?? null,
           timeOfDay: item.timeOfDay,
           order: item.order ?? idx,
           notes: item.notes ?? null,
         })),
       },
     },
-    include: { items: { orderBy: [{ order: 'asc' }] } },
+    include: {
+      items: {
+        orderBy: [{ order: 'asc' }],
+        include: { product: { include: { images: { where: { isPrimary: true }, take: 1, select: { url: true, isPrimary: true } } } } },
+      },
+    },
   });
 
-  return NextResponse.json({ success: true, routine }, { status: 201 });
+  const mapped = { ...routine, items: routine.items.map(mapRoutineItem) };
+  return NextResponse.json({ success: true, routine: mapped }, { status: 201 });
 }

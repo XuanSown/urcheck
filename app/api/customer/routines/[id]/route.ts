@@ -2,6 +2,16 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { requireCustomerApi } from '@/lib/customer-auth';
 import { z } from 'zod';
+import { primaryImageUrl } from '@/lib/product-utils';
+
+function mapRoutineItem(item: any) {
+  return {
+    ...item,
+    productName: item.product?.name ?? (item as any).productName ?? '',
+    brandName: item.product?.brandName ?? null,
+    imageUrl: primaryImageUrl(item.product?.images) ?? null,
+  };
+}
 
 const ALLOWED_TIME_OF_DAY = ['morning', 'afternoon', 'evening', 'night'] as const;
 const MAX_ROUTINE_ITEMS = 20;
@@ -59,9 +69,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     data.items = {
       create: items.map((item, idx) => ({
         productId: item.productId,
-        productName: item.productName,
-        brandName: item.brandName ?? null,
-        imageUrl: item.imageUrl ?? null,
         timeOfDay: item.timeOfDay,
         order: item.order ?? idx,
         notes: item.notes ?? null,
@@ -72,10 +79,16 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const routine = await prisma.routine.update({
     where: { id },
     data,
-    include: { items: { orderBy: { order: 'asc' } } },
+    include: {
+      items: {
+        orderBy: { order: 'asc' },
+        include: { product: { include: { images: { where: { isPrimary: true }, take: 1, select: { url: true, isPrimary: true } } } } },
+      },
+    },
   });
 
-  return NextResponse.json({ success: true, routine });
+  const mapped = { ...routine, items: routine.items.map(mapRoutineItem) };
+  return NextResponse.json({ success: true, routine: mapped });
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {

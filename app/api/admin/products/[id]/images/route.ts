@@ -139,14 +139,6 @@ export async function POST(
       },
     });
 
-    // If first image, also update product.imageUrl
-    if (isPrimary) {
-      await prisma.product.update({
-        where: { id },
-        data: { imageUrl: url },
-      });
-    }
-
     return NextResponse.json({
       success: true,
       message: 'Upload ảnh thành công',
@@ -214,25 +206,7 @@ export async function DELETE(
       where: { id: imageId },
     });
 
-    // If deleted image was primary or only image, update product's imageUrl
-    const remainingImages = await prisma.productImage.findMany({
-      where: { productId: id },
-      orderBy: { sortOrder: 'asc' },
-      take: 1,
-    });
-
-    const newPrimary = remainingImages[0];
-    if (newPrimary) {
-      await prisma.product.update({
-        where: { id },
-        data: { imageUrl: newPrimary.url },
-      });
-    } else {
-      await prisma.product.update({
-        where: { id },
-        data: { imageUrl: null },
-      });
-    }
+    // Primary image now lives only in ProductImage; no product.imageUrl to update.
 
     // Reorder remaining images
     const allImages = await prisma.productImage.findMany({

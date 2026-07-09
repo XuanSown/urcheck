@@ -4,6 +4,7 @@ import { useLocale } from '@/components/I18nProvider';
 import { useCustomerAuth } from '@/components/CustomerAuth';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
+import { primaryImageUrl } from '@/lib/product-utils';
 
 type Product = {
   id: string;
@@ -11,6 +12,7 @@ type Product = {
   brandName: string;
   skinType?: string | null;
   imageUrl?: string | null;
+  images?: { url: string; isPrimary?: boolean }[];
   suitableFor?: string[];
   tags?: string[];
 };
@@ -47,8 +49,8 @@ export function ProductCard({ product, onWishlistChange }: { product: Product; o
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm flex flex-col">
       <div className="relative aspect-square bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden mb-3">
-        {product.imageUrl ? (
-          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+        {primaryImageUrl(product.images) ? (
+          <img src={primaryImageUrl(product.images)!} alt={product.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-sm text-gray-400">No image</div>
         )}

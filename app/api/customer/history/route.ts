@@ -56,6 +56,7 @@ export async function GET(request: Request) {
             name: product.name,
             brandName: product.brandName,
             imageUrl,
+            images: product.images,
             verified: product.verified,
             expiryDate: product.expiryDate ? product.expiryDate.toISOString() : null,
           }

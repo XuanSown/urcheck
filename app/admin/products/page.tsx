@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { QRCodeSVG } from 'qrcode.react';
 import { formatDate } from '@/lib/format-utils';
+import { primaryImageUrl } from '@/lib/product-utils';
 
 interface Product {
   id: string;
@@ -353,9 +354,9 @@ function AdminProductsInner() {
                         alt={product.name}
                         className="w-full h-full object-cover"
                       />
-                    ) : product.imageUrl ? (
+                    ) : primaryImageUrl(product.images) ? (
                       <img
-                        src={product.imageUrl}
+                        src={primaryImageUrl(product.images)!}
                         alt={product.name}
                         className="w-full h-full object-cover"
                       />

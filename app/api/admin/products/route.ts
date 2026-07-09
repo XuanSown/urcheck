@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAdminApi } from '@/lib/auth';
 import prisma from '@/lib/db';
 import { productSchema } from '@/lib/validators';
+import { primaryImageUrl } from '@/lib/product-utils';
 import {
   buildQrUrl,
   generateQrCode,
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
       verified: p.verified,
       createdAt: p.createdAt.toISOString(),
       updatedAt: p.updatedAt.toISOString(),
-      imageUrl: p.imageUrl,
+      imageUrl: primaryImageUrl(p.images),
       images: p.images,
       versionCount: p._count.versions,
       qrCode: p.qrCodes?.[0] || null,

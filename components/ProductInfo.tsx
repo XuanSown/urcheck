@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Product } from '@/types/product';
 import { Button } from '@/components/ui/Button';
 import { useLocale } from '@/components/I18nProvider';
+import { primaryImageUrl } from '@/lib/product-utils';
 
 interface ProductInfoProps {
   product: Product;
@@ -29,7 +30,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
   // Handle multiple images
   const images = product.images && product.images.length > 0
     ? product.images
-    : product.imageUrl ? [{ id: '1', url: product.imageUrl, isPrimary: true, sortOrder: 0, productId: product.id, createdAt: new Date().toISOString() }] : [];
+    : primaryImageUrl(product.images) ? [{ id: '1', url: primaryImageUrl(product.images)!, isPrimary: true, sortOrder: 0, productId: product.id, createdAt: new Date().toISOString() }] : [];
   
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 

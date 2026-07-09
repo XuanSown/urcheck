@@ -3,6 +3,7 @@ import prisma from '@/lib/db';
 import { isQrEnabled } from '@/lib/feature-flags';
 import { extractQrCode } from '@/lib/qr-utils';
 import { verifySession } from '@/lib/customer-auth';
+import { primaryImageUrl } from '@/lib/product-utils';
 
 export async function GET(
   request: NextRequest,
@@ -36,7 +37,6 @@ export async function GET(
             description: true,
             manufactureDate: true,
             expiryDate: true,
-            imageUrl: true,
             brandName: true,
             verified: true,
             createdAt: true,
@@ -111,7 +111,7 @@ export async function GET(
     const isExpired = product.expiryDate ? new Date(product.expiryDate) < new Date() : false;
     const isValid = product.verified && !isExpired;
 
-    const productImageUrl = product.images?.[0]?.url || product.imageUrl;
+    const productImageUrl = primaryImageUrl(product.images);
 
     return NextResponse.json({
       success: true,

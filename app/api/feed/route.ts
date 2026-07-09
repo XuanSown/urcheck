@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { requireCustomerApi } from '@/lib/customer-auth';
+import { primaryImageUrl } from '@/lib/product-utils';
 
 export async function GET(request: Request) {
   const guard = await requireCustomerApi();
@@ -108,10 +109,15 @@ async function feedPublic(limit: number, skinType?: string, brand?: string) {
       where,
       orderBy: { createdAt: 'desc' },
       take: limit,
-      select: { id: true, name: true, brandName: true, skinType: true, imageUrl: true, suitableFor: true, tags: true, status: true, createdAt: true },
+      select: { id: true, name: true, brandName: true, skinType: true, suitableFor: true, tags: true, status: true, createdAt: true, images: { where: { isPrimary: true }, take: 1, select: { url: true } } },
     }),
     prisma.product.count({ where }),
   ]);
 
-  return NextResponse.json({ success: true, products, pagination: { page: 1, limit, total }, profile: { skinType: [], brands: [], scannedCount: 0 } });
+  const productsMapped = products.map((p: any) => ({
+    ...p,
+    imageUrl: primaryImageUrl(p.images),
+  }));
+
+  return NextResponse.json({ success: true, products: productsMapped, pagination: { page: 1, limit, total }, profile: { skinType: [], brands: [], scannedCount: 0 } });
 }

@@ -267,16 +267,8 @@ export async function DELETE(
 }
 
 function formatProductResponse(product: any) {
-  // Fallback for old products that only have imageUrl
-  let existingImages = product.images || [];
-  if (existingImages.length === 0 && product.imageUrl) {
-    existingImages = [{
-      id: 'legacy-image-' + product.id,
-      url: product.imageUrl,
-      isPrimary: true,
-      sortOrder: 0
-    }];
-  }
+  // Primary image now lives in ProductImage; no fallback from removed product.imageUrl
+  const existingImages = product.images || [];
 
   return {
     id: product.id,

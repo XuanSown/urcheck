@@ -31,7 +31,6 @@ export async function GET(
     const formattedVersions = versions.map(version => ({
       id: version.id,
       productSnapshot: version.productSnapshot,
-      imageSnapshot: version.imageSnapshot,
       changedBy: version.changedBy,
       changeReason: version.changeReason,
       createdAt: version.createdAt.toISOString(),

@@ -7,11 +7,14 @@ type HistoryItem = {
     name: string;
     brandName: string;
     imageUrl: string | null;
+    images?: { url: string; isPrimary?: boolean }[];
     verified: boolean;
     expiryDate: string | null;
   } | null;
   qrCode: string;
 };
+
+import { primaryImageUrl } from '@/lib/product-utils';
 
 const statusConfig = {
   valid: {
@@ -65,10 +68,10 @@ export function CustomerHistoryList({ items }: { items: HistoryItem[] }) {
             className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 hover:shadow-md transition-shadow"
           >
             <div className="flex items-center gap-4">
-              {item.product?.imageUrl ? (
+              {primaryImageUrl(item.product?.images) ? (
                 <img
-                  src={item.product.imageUrl}
-                  alt={item.product.name}
+                  src={primaryImageUrl(item.product?.images)!}
+                  alt={item.product?.name}
                   className="w-14 h-14 rounded-lg object-cover bg-gray-100 dark:bg-gray-800"
                 />
               ) : (

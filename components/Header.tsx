@@ -53,6 +53,7 @@ export function Header({ className }: HeaderProps) {
 
   const navLinks = [
     { href: '/discover', label: t('feed_title') },
+    { href: '/about', label: t('about_nav') },
   ];
 
   const authLinks = customer

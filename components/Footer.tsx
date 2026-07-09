@@ -166,6 +166,7 @@ export function Footer() {
             <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
               <ThemeToggle variant="iconOnly" />
               <LanguageSwitcher />
+              <Link href="/about" className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">{t('about_nav')}</Link>
               <div className="flex items-center gap-2">
                 <span>{t('footer_dev_by')}</span>
                 <span className="text-sm">🇻🇳</span>

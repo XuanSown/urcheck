@@ -82,12 +82,12 @@ export async function GET(
 
       const session = await verifySession();
       const trackData: {
-        qrCode: string;
+        qrCodeId: string;
         ipAddress: string | null;
         userAgent: string | null;
         customerId?: string;
       } = {
-        qrCode: `QR:${qrCode.code}`,
+        qrCodeId: qrCode.id,
         ipAddress: ipAddress ?? null,
         userAgent: userAgent ?? null,
       };

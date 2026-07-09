@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useLocale } from '@/components/I18nProvider';
 import { ProductCard } from '@/components/ProductCard';
 import { FilterBar } from '@/components/FilterBar';
+import { Button } from '@/components/ui/Button';
 
 type Product = {
   id: string;
@@ -24,9 +25,11 @@ export default function DiscoverPage() {
   const [hasMore, setHasMore] = useState(false);
   const [skinType, setSkinType] = useState<string | undefined>();
   const [brand, setBrand] = useState<string | undefined>();
+  const [error, setError] = useState<string | null>(null);
 
   const fetchFeed = useCallback(async (p = 1, reset = false) => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams({ page: String(p), limit: '12' });
       if (skinType) params.set('skinType', skinType);
@@ -41,7 +44,7 @@ export default function DiscoverPage() {
         setPage(data.pagination.page);
       }
     } catch {
-      // silent
+      setError(t('feed_error') || 'Đã xảy ra lỗi khi tải dữ liệu, vui lòng thử lại');
     } finally {
       setLoading(false);
     }
@@ -86,6 +89,10 @@ export default function DiscoverPage() {
           </div>
         ) : products.length === 0 ? (
           <p className="text-center text-gray-500 py-12">{t('feed_empty')}</p>
+        ) : error ? (
+          <div className="mt-8 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded-xl flex items-start gap-3" role="alert">
+            <p className="text-red-700 dark:text-red-400">{error}</p>
+          </div>
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -95,9 +102,9 @@ export default function DiscoverPage() {
             </div>
             {hasMore && (
               <div className="mt-8 text-center">
-                <button onClick={loadMore} disabled={loading} className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50">
-                  {loading ? '...' : t('feed_load_more')}
-                </button>
+                <Button onClick={loadMore} loading={loading} size="lg">
+                  {t('feed_load_more')}
+                </Button>
               </div>
             )}
           </>

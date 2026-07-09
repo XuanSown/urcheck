@@ -3,6 +3,7 @@
 import { useLocale } from '@/components/I18nProvider';
 import { useCustomerAuth } from '@/components/CustomerAuth';
 import { useState } from 'react';
+import { Button } from '@/components/ui/Button';
 
 type Product = {
   id: string;
@@ -19,10 +20,12 @@ export function ProductCard({ product, onWishlistChange }: { product: Product; o
   const { customer } = useCustomerAuth();
   const [wishlisted, setWishlisted] = useState(false);
   const [wishloading, setWishloading] = useState(false);
+  const [wishError, setWishError] = useState<string | null>(null);
 
   const handleWishlist = async () => {
     if (!customer) return;
     setWishloading(true);
+    setWishError(null);
     try {
       const res = await fetch('/api/customer/wishlist', {
         method: 'POST',
@@ -35,7 +38,7 @@ export function ProductCard({ product, onWishlistChange }: { product: Product; o
         onWishlistChange?.(product.id);
       }
     } catch {
-      // silent
+      setWishError(t('wishlist_error') || 'Không thể lưu, vui lòng thử lại');
     } finally {
       setWishloading(false);
     }
@@ -54,29 +57,32 @@ export function ProductCard({ product, onWishlistChange }: { product: Product; o
         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{product.brandName}</p>
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2">{product.name}</h3>
         {product.skinType && (
-          <span className="inline-block mt-2 px-2 py-1 text-xs rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300">
+          <span className="inline-block mt-2 px-2 py-1 text-xs rounded-full bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-300">
             {product.skinType}
           </span>
         )}
       </div>
-      <div className="mt-3 flex items-center gap-2">
-        <a
-          href={`/?q=${product.id}`}
-          className="flex-1 text-center text-xs py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
-        >
-          {t('common_scan') || 'Quét'}
-        </a>
-        <button
-          onClick={handleWishlist}
-          disabled={wishloading}
-          className={`flex-1 text-xs py-2 rounded-lg border transition-colors ${
-            wishlisted
-              ? 'border-red-200 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20'
-              : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
-          }`}
-        >
-          {wishlisted ? (t('wishlist_remove') || 'Đã lưu') : (t('wishlist_add') || 'Lưu')}
-        </button>
+      <div className="mt-3 flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <a
+            href={`/?q=${product.id}`}
+            className="flex-1 text-center text-xs py-2.5 rounded-xl border-2 border-primary-600 dark:border-primary-500 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 min-h-[44px] inline-flex items-center justify-center transition-colors"
+          >
+            {t('common_scan') || 'Quét'}
+          </a>
+          <Button
+            onClick={handleWishlist}
+            loading={wishloading}
+            variant={wishlisted ? 'danger' : 'outline'}
+            size="md"
+            className="flex-1"
+          >
+            {wishlisted ? (t('wishlist_remove') || 'Đã lưu') : (t('wishlist_add') || 'Lưu')}
+          </Button>
+        </div>
+        {wishError && (
+          <p className="text-xs text-red-600 dark:text-red-400" role="alert">{wishError}</p>
+        )}
       </div>
     </div>
   );

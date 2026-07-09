@@ -123,9 +123,9 @@ export async function AdminDashboardPage() {
   const data = await getDashboardData();
 
   const statusColors: Record<string, string> = {
-    DRAFT: 'bg-yellow-100 text-yellow-800',
-    PUBLISHED: 'bg-green-100 text-green-800',
-    ARCHIVED: 'bg-gray-100 text-gray-800',
+    DRAFT: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400',
+    PUBLISHED: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400',
+    ARCHIVED: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200',
   };
 
   return (
@@ -238,7 +238,7 @@ export async function AdminDashboardPage() {
                 }, {} as Record<string, number>)
               ).map(([status, count]) => (
                 <div key={status} className="flex items-center gap-3">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[status] || 'bg-gray-100 text-gray-800'}`}>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[status] || 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'}`}>
                     {status}
                   </span>
                   <div className="flex-1">

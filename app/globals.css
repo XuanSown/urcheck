@@ -23,6 +23,17 @@
   --accent-stone: #78716c;
   --accent-stone-light: #a8a29e;
   --accent-stone-dark: #57534e;
+  /* Semantic status colors (light) */
+  --success: #16a34a;
+  --warning: #d97706;
+  --info: #0891b2;
+  --error: #dc2626;
+  --success-fg: #15803d;
+  --warning-fg: #b45309;
+  --info-fg: #0e7490;
+  --error-fg: #b91c1c;
+  --bg-subtle: #f5f5f4;
+  --border: #e7e5e4;
 }
 
 @theme inline {
@@ -41,6 +52,16 @@
   --color-accent-stone: var(--accent-stone);
   --color-accent-stone-light: var(--accent-stone-light);
   --color-accent-stone-dark: var(--accent-stone-dark);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-error: var(--error);
+  --color-success-fg: var(--success-fg);
+  --color-warning-fg: var(--warning-fg);
+  --color-info-fg: var(--info-fg);
+  --color-error-fg: var(--error-fg);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-border: var(--border);
   --font-mono: var(--font-jetbrains-mono);
 }
 
@@ -63,6 +84,16 @@
   --accent-stone: #d6d3d1;
   --accent-stone-light: #e7e5e4;
   --accent-stone-dark: #a8a29e;
+  --success: #22c55e;
+  --warning: #fbbf24;
+  --info: #22d3ee;
+  --error: #f87171;
+  --success-fg: #86efac;
+  --warning-fg: #fcd34d;
+  --info-fg: #67e8f9;
+  --error-fg: #fca5a5;
+  --bg-subtle: #171717;
+  --border: #262626;
 }
 
 /* Smooth transition when switching theme */
@@ -324,11 +355,9 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-@media (prefers-color-scheme: dark) {
-  .glass {
-    background: rgba(10, 10, 10, 0.65);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-  }
+.dark .glass {
+  background: rgba(10, 10, 10, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Glass hover effect — applies glassmorphism on hover */
@@ -365,16 +394,14 @@ html {
   transform: translateY(-2px);
 }
 
-@media (prefers-color-scheme: dark) {
-  .glass-hover:hover::before {
-    background: rgba(255, 255, 255, 0.05);
-  }
-  .glass-hover:hover {
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  }
+.dark .glass-hover:hover::before {
+  background: rgba(255, 255, 255, 0.05);
+}
+.dark .glass-hover:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* Hover blur (original preserved) */
@@ -436,6 +463,15 @@ html {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Hide scrollbar (used by modal/result containers) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* ========================================

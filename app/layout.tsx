@@ -47,7 +47,7 @@ export default function RootLayout({
         {/* Apply theme class before page renders to prevent flash. */}
         <ThemeScript />
       </head>
-      <body className="min-h-full flex flex-col bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+      <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider>
           <I18nProvider>
             <Preloader />

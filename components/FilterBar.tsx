@@ -19,7 +19,11 @@ export function FilterBar({
 
   return (
     <div className="flex flex-wrap gap-3 mb-6">
+      <label htmlFor="filter-skin-type" className="sr-only">
+        {t('feed_filter_skin') || 'Lọc theo loại da'}
+      </label>
       <select
+        id="filter-skin-type"
         value={skinType ?? ''}
         onChange={(e) => onSkinTypeChange(e.target.value || undefined)}
         className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-sm"
@@ -31,15 +35,21 @@ export function FilterBar({
         <option value="combination">{t('skin_combination') || 'Hỗn hợp'}</option>
         <option value="sensitive">{t('skin_sensitive') || 'Nhạy cảm'}</option>
       </select>
+      <label htmlFor="filter-brand" className="sr-only">
+        {t('feed_filter_brand') || 'Tìm kiếm theo thương hiệu'}
+      </label>
       <input
+        id="filter-brand"
         type="text"
         value={brand ?? ''}
         onChange={(e) => onBrandChange(e.target.value || undefined)}
         placeholder={t('feed_filter_brand') || 'Thương hiệu...'}
+        aria-label={t('feed_filter_brand') || 'Tìm kiếm theo thương hiệu'}
         className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-sm"
       />
       <button
         onClick={onReset}
+        aria-label={t('feed_filter_reset') || 'Bỏ lọc'}
         className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
       >
         {t('feed_filter_reset') || 'Bỏ lọc'}

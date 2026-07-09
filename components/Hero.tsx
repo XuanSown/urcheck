@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Logo } from '@/components/Logo';
 import Link from 'next/link';
@@ -9,6 +9,12 @@ import { useLocale } from '@/components/I18nProvider';
 
 export function Hero() {
   const { t } = useLocale();
+  const reducedMotion = useReducedMotion();
+
+  const infiniteTransition = (duration: number) =>
+    reducedMotion
+      ? { duration: 0 }
+      : { duration, repeat: Infinity, ease: "easeInOut" as const };
 
   return (
     <section className="relative min-h-[90vh] sm:min-h-[85vh] flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden bg-gradient-to-b from-gray-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 grain-overlay">
@@ -26,11 +32,7 @@ export function Hero() {
               '30% 70% 70% 30% / 30% 30% 70% 70%',
             ],
           }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
+          transition={infiniteTransition(20)}
         />
         {/* Secondary blob — stone accent */}
         <motion.div
@@ -40,11 +42,7 @@ export function Hero() {
             x: [0, 30, 0],
             y: [0, -20, 0],
           }}
-          transition={{
-            duration: 15,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
+          transition={infiniteTransition(15)}
         />
         {/* Small accent glow */}
         <motion.div
@@ -53,11 +51,7 @@ export function Hero() {
             opacity: [0.3, 0.6, 0.3],
             scale: [1, 1.3, 1],
           }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
+          transition={infiniteTransition(8)}
         />
       </div>
 
@@ -117,7 +111,7 @@ export function Hero() {
               animate={{
                 backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
               }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+              transition={infiniteTransition(6)}
               style={{ backgroundSize: '200% auto' }}
             >
               {t('hero_headline_2')}
@@ -165,11 +159,11 @@ export function Hero() {
                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                   initial={{ x: '-200%' }}
                   animate={{ x: '200%' }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    repeatDelay: 3,
-                  }}
+                  transition={
+                    reducedMotion
+                      ? { duration: 0 }
+                      : { duration: 2, repeat: Infinity, repeatDelay: 3 }
+                  }
                 />
                 <svg
                   className="mr-2 h-5 w-5 sm:h-6 sm:w-6 relative z-10"
@@ -223,12 +217,12 @@ export function Hero() {
       >
         <motion.div
           animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          transition={infiniteTransition(1.5)}
           className="w-5 h-8 sm:w-6 sm:h-9 border-2 border-gray-300 dark:border-gray-600 rounded-full flex justify-center pt-1.5"
         >
           <motion.div
             animate={{ opacity: [1, 0.3, 1], y: [0, 6, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            transition={infiniteTransition(1.5)}
             className="w-1 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-full"
           />
         </motion.div>

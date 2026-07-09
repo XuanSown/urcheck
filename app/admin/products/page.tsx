@@ -382,7 +382,7 @@ function AdminProductsInner() {
                     </div>
                     {!product.verified && (
                       <div className="absolute bottom-2 left-2 right-2">
-                        <span className="bg-red-50 dark:bg-red-900/200 text-white text-xs px-2 py-1 rounded">
+                        <span className="bg-red-50 dark:bg-red-900/20 text-white text-xs px-2 py-1 rounded">
                           Chưa xác minh
                         </span>
                       </div>
@@ -412,7 +412,7 @@ function AdminProductsInner() {
                       </span>
                       <div className="flex gap-2">
                         <Link href={`/admin/products/${product.id}`}>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" aria-label="Chỉnh sửa">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                             </svg>

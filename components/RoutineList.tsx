@@ -1,6 +1,7 @@
 'use client';
 
 import { useLocale } from '@/components/I18nProvider';
+import { Button } from '@/components/ui/Button';
 
 type RoutineItemInput = {
   productId?: string;
@@ -23,8 +24,8 @@ export function RoutineList({
 }) {
   const { t } = useLocale();
 
-  const handleDelete = async (id: string) => {
-    if (!confirm(t('routines_confirm_delete'))) return;
+  const handleDelete = async (id: string, title: string) => {
+    if (!confirm(`${t('routines_confirm_delete')} "${title}"?`)) return;
     const res = await fetch(`/api/customer/routines/${id}`, { method: 'DELETE' });
     if (res.ok) onChanged();
   };
@@ -47,9 +48,13 @@ export function RoutineList({
             </div>
             <div className="flex gap-2">
               {onEdit && (
-                <button onClick={() => onEdit(r)} className="text-sm text-blue-600">{t('routines_edit_title')}</button>
+                <Button variant="outline" size="sm" onClick={() => onEdit(r)} aria-label={t('routines_edit_title')}>
+                  {t('routines_edit_title')}
+                </Button>
               )}
-              <button onClick={() => handleDelete(r.id)} className="text-sm text-red-600">{t('routines_delete')}</button>
+              <Button variant="danger" size="sm" onClick={() => handleDelete(r.id, r.title)} aria-label={t('routines_delete')}>
+                {t('routines_delete')}
+              </Button>
             </div>
           </div>
 

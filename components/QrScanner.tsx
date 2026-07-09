@@ -38,26 +38,11 @@ type ScanMode = 'camera' | 'upload' | 'idle';
 export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
   const { t } = useLocale();
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState<ScanMode>('idle');
   const [error, setError] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Reset state every time the dialog re-opens.
-  useEffect(() => {
-    if (isOpen) {
-      setMode('idle');
-      setError(null);
-    }
-  }, [isOpen]);
-
-  // Always stop the camera when the dialog closes or unmounts.
-  useEffect(() => {
-    return () => {
-      stopScanner();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const stopScanner = useCallback(() => {
     if (scannerRef.current) {
@@ -74,6 +59,53 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
     setIsScanning(false);
     setMode('idle');
   }, []);
+
+  // Reset state every time the dialog re-opens.
+  useEffect(() => {
+    if (isOpen) {
+      setMode('idle');
+      setError(null);
+    }
+  }, [isOpen]);
+
+  // Always stop the camera when the dialog closes or unmounts.
+  useEffect(() => {
+    return () => {
+      stopScanner();
+    };
+  }, [stopScanner]);
+
+  // Focus trap: focus the modal on open, keep Tab inside, Escape closes.
+  useEffect(() => {
+    if (!isOpen) return;
+    const modal = modalRef.current;
+    modal?.focus();
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        stopScanner();
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab' || !modal) return;
+      const focusables = modal.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose, stopScanner]);
 
   const startCamera = useCallback(async () => {
     setError(null);
@@ -175,13 +207,18 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
           onClose();
         }}
       >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          onClick={(e) => e.stopPropagation()}
-          className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
-        >
+          <motion.div
+            ref={modalRef}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            onClick={(e) => e.stopPropagation()}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('qr_scanner_title')}
+            className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden outline-none"
+          >
           {/* Header */}
           <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
             <div>
@@ -215,8 +252,7 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
 
             {mode === 'idle' && (
               <div
-                className="h-[320px] flex flex-col items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%)' }}
+                className="h-[320px] flex flex-col items-center justify-center bg-gray-900 dark:bg-gray-950"
               >
                 <div className="text-center p-6">
                   <svg className="w-20 h-20 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

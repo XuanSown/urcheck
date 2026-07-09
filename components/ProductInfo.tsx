@@ -4,10 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { Product } from '@/types/product';
-import { Badge } from '@/components/ui/Badge';
-import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import Link from 'next/link';
 import { useLocale } from '@/components/I18nProvider';
 
 interface ProductInfoProps {
@@ -109,7 +106,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
           {/* Right: Product Info */}
           <div className="md:w-7/12 p-4 md:p-6 md:pl-0 flex flex-col gap-4 sm:gap-6 animate-fade-up delay-200">
             <div>
-              <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 mb-2">{product.name}</h1>
+              <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 mb-2">{product.name}</h1>
               <p className="text-primary-600 dark:text-primary-400 font-medium text-sm tracking-wide uppercase">{product.brandName}</p>
             </div>
 
@@ -163,9 +160,9 @@ export function ProductInfo({ product }: ProductInfoProps) {
                   )}
                   {product.usageInstructions?.length > 0 && (
                     <div className="mt-2">
-                      <span className="text-xs font-medium text-blue-500 uppercase flex items-center gap-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> {t('product_usage_instructions')}</span>
+                      <span className="text-xs font-medium text-primary-500 uppercase flex items-center gap-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> {t('product_usage_instructions')}</span>
                       <ul className="text-xs text-gray-700 dark:text-gray-300 mt-1 space-y-1">
-                        {product.usageInstructions.map((instruction, i) => <li key={i} className="flex items-start before:content-['•'] before:mr-1 before:text-blue-400">{instruction}</li>)}
+                        {product.usageInstructions.map((instruction, i) => <li key={i} className="flex items-start before:content-['•'] before:mr-1 before:text-primary-400">{instruction}</li>)}
                       </ul>
                     </div>
                   )}
@@ -198,9 +195,11 @@ export function ProductInfo({ product }: ProductInfoProps) {
                 <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 block">{t('product_buy_at')}</span>
                 <div className="flex flex-wrap gap-3">
                   {product.purchaseLinks.map((link, i) => (
-                    <a key={i} href={link.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white text-sm font-bold rounded-xl shadow-[0_8px_20px_rgba(234,88,12,0.3)] hover:shadow-[0_12px_25px_rgba(234,88,12,0.4)] transform hover:-translate-y-1 transition-all">
-                      {link.platform}
-                      <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                    <a key={i} href={link.url} target="_blank" rel="noopener noreferrer" className="inline-flex">
+                      <Button variant="primary" size="lg" className="group">
+                        {link.platform}
+                        <svg className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 0 00-2 2v10a2 0 002 2h10a2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                      </Button>
                     </a>
                   ))}
                 </div>

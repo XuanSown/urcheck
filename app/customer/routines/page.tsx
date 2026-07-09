@@ -37,7 +37,7 @@ export default function CustomerRoutinesPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -47,7 +47,7 @@ export default function CustomerRoutinesPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Vui lòng đăng nhập</h1>
-          <a href="/customer/login" className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+          <a href="/customer/login" className="inline-block px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors">
             Đăng nhập
           </a>
         </div>
@@ -62,7 +62,7 @@ export default function CustomerRoutinesPage() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Lịch trình Skincare của tôi</h1>
           <button
             onClick={() => { setEditing(null); setShowForm(true); }}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
           >
             {t('routines_create_btn')}
           </button>

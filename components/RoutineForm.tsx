@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useCustomerAuth } from '@/components/CustomerAuth';
 import { useLocale } from '@/components/I18nProvider';
+import { Button } from '@/components/ui/Button';
 
 const TIME_OPTIONS = [
   { value: 'morning', labelKey: 'routines_morning' },
@@ -31,7 +32,7 @@ export function RoutineForm({
   onSaved: () => void;
 }) {
   const { customer } = useCustomerAuth();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [title, setTitle] = useState(routine?.title ?? '');
   const [description, setDescription] = useState(routine?.description ?? '');
   const [isPublic, setIsPublic] = useState(routine?.isPublic ?? false);
@@ -60,7 +61,8 @@ export function RoutineForm({
       const method = routine?.id ? 'PUT' : 'POST';
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json', 'Accept-Language': 'vi' },
+        // ponytail: dùng locale từ I18nProvider thay vì hardcode 'vi'
+        headers: { 'Content-Type': 'application/json', 'Accept-Language': locale },
         body: JSON.stringify({ title, description, isPublic, items }),
       });
       const data = await res.json();
@@ -105,7 +107,7 @@ export function RoutineForm({
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Sản phẩm</span>
-          <button type="button" onClick={addItem} className="text-sm text-blue-600 hover:text-blue-700">
+          <button type="button" onClick={addItem} className="text-sm text-primary-600 hover:text-primary-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 rounded min-h-[44px] inline-flex items-center">
             + Thêm
           </button>
         </div>
@@ -141,12 +143,12 @@ export function RoutineForm({
       </div>
 
       <div className="flex justify-end gap-2">
-        <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700">
+        <Button type="button" variant="outline" onClick={onClose}>
           {t('routines_cancel')}
-        </button>
-        <button type="submit" disabled={saving} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50">
+        </Button>
+        <Button type="submit" variant="primary" loading={saving}>
           {saving ? 'Đang lưu...' : t('routines_save')}
-        </button>
+        </Button>
       </div>
     </form>
   );

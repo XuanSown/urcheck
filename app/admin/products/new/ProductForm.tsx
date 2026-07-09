@@ -874,12 +874,12 @@ export default function ProductForm({
 
           {/* Upload progress */}
           {uploadingImages && (
-            <div className="mb-4 flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <svg className="w-4 h-4 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
+            <div className="mb-4 flex items-center gap-3 p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
+              <svg className="w-4 h-4 text-primary-600 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
-              <span className="text-sm text-blue-700">Đang tải ảnh lên...</span>
+              <span className="text-sm text-primary-700 dark:text-primary-400">Đang tải ảnh lên...</span>
             </div>
           )}
 
@@ -1125,8 +1125,8 @@ export default function ProductForm({
                       </div>
                     )}
                     {previewData.usageInstructions && previewData.usageInstructions.filter((c: string) => c).length > 0 && (
-                      <div className="bg-blue-50 rounded-lg p-4">
-                        <h4 className="text-sm font-medium text-blue-700 mb-2 flex items-center">
+                      <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-4">
+                        <h4 className="text-sm font-medium text-primary-700 dark:text-primary-400 mb-2 flex items-center">
                           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
@@ -1134,7 +1134,7 @@ export default function ProductForm({
                         </h4>
                         <ul className="space-y-1">
                           {previewData.usageInstructions.filter((c: string) => c).map((con: string, i: number) => (
-                            <li key={i} className="text-sm text-blue-700 flex items-start">
+                            <li key={i} className="text-sm text-primary-700 dark:text-primary-400 flex items-start">
                               <span className="mr-2">•</span>
                               <span>{con}</span>
                             </li>
@@ -1160,7 +1160,7 @@ export default function ProductForm({
                   {previewData.suitableFor && (
                     <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-1">Phù hợp cho</h4>
-                      <p className="text-gray-600 text-sm bg-blue-50 inline-block px-3 py-1 rounded-full">
+                      <p className="text-gray-600 dark:text-gray-300 text-sm bg-primary-50 dark:bg-primary-900/20 inline-block px-3 py-1 rounded-full">
                         {previewData.suitableFor}
                       </p>
                     </div>

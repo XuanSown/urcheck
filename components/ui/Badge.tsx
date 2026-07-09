@@ -8,10 +8,10 @@ interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 
 export function Badge({ className, variant = 'neutral', children, ...props }: BadgeProps) {
   const variants = {
-    success: 'bg-green-900/20 text-green-600 border-green-800/30 backdrop-blur-sm',
-    error: 'bg-red-900/20 text-red-500 border-red-800/30 backdrop-blur-sm',
-    warning: 'bg-amber-900/20 text-amber-600 border-amber-800/30 backdrop-blur-sm',
-    info: 'bg-primary-900/10 text-primary-600 border-primary-800/20 backdrop-blur-sm',
+    success: 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/25 dark:text-green-400 dark:border-green-800/40 backdrop-blur-sm',
+    error: 'bg-red-100 text-red-700 border-red-300 dark:bg-red-900/25 dark:text-red-400 dark:border-red-800/40 backdrop-blur-sm',
+    warning: 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/25 dark:text-amber-400 dark:border-amber-800/40 backdrop-blur-sm',
+    info: 'bg-primary-100 text-primary-700 border-primary-300 dark:bg-primary-900/25 dark:text-primary-400 dark:border-primary-800/40 backdrop-blur-sm',
     neutral: 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
   };
 

@@ -1,118 +1,170 @@
-# ur check — Xác minh nguồn gốc sản phẩm mỹ phẩm
+<div align="center">
 
-> Nền tảng quét mã vạch (barcode) để kiểm tra tính hợp lệ, ngày sản xuất, hạn sử dụng và thông tin nhà sản xuất mỹ phẩm. Nhanh chóng, miễn phí, không cần đăng ký.
+# urcheck
 
-## ✨ Tính năng
+### Verify the origin of cosmetic products — instantly, privately, for free.
 
-- **Quét mã vạch** — Sử dụng camera hoặc upload ảnh để quét mã vạch (EAN-13, EAN-8) trên sản phẩm
-- **Xác minh tức thì** — Kiểm tra tính hợp lệ sản phẩm trong vài giây
-- **Thông tin chi tiết** — Hiển thị số lô, SKU, ngày sản xuất, hạn sử dụng, nhà sản xuất
-- **Responsive** — Tối ưu trải nghiệm trên mọi thiết bị (mobile, tablet, desktop)
-- **Hiệu ứng premium** — Glassmorphism, micro-animations, scroll-triggered reveals
+[![Version](https://img.shields.io/badge/version-1.0.0-success.svg)](https://github.com/XuanSown/urcheck/releases/tag/v1.0.0)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org)
+[![License](https://img.shields.io/badge/license-Proprietary-blue.svg)](#license)
+![Deploy](https://img.shields.io/badge/deployed-Vercel-black)
 
-## 🛠 Công nghệ
+**urcheck** lets anyone scan a product barcode (EAN‑13 / EAN‑8) and verify
+its authenticity, batch number, manufacturer, and shelf life in seconds —
+no account required.
 
-| Thành phần | Công nghệ |
-|---|---|
+[🌐 Live demo](https://urcheck.vercel.app) · [📘 Docs](#getting-started) · [🐛 Report issue](https://github.com/XuanSown/urcheck/issues)
+
+</div>
+
+---
+
+## ✨ Features
+
+- **Instant barcode scanning** — Use your camera or upload an image to decode EAN‑13 / EAN‑8 codes.
+- **Real‑time verification** — Check a product's validity in a couple of seconds.
+- **Rich product details** — Batch number, SKU, manufacture date, expiry, and manufacturer info.
+- **Customer accounts** — Save verification history, earn authenticity badges, and build skincare routines.
+- **Admin console** — Manage products, blog posts, and support articles with versioned history & rollback.
+- **Internationalized** — Built‑in Vietnamese / English locale switching.
+- **Accessible motion** — Every animation respects `prefers-reduced-motion`.
+- **Responsive & premium** — Glassmorphism, scroll reveals, and a refined dark mode across all devices.
+
+## 🧱 Tech Stack
+
+| Layer | Technology |
+| --- | --- |
 | Framework | [Next.js 16](https://nextjs.org) (App Router) |
-| Ngôn ngữ | TypeScript |
+| Language | TypeScript |
 | Styling | Tailwind CSS v4 |
-| Animation | Framer Motion |
-| Barcode Scanner | html5-qrcode |
-| Database | Prisma + Supabase (PostgreSQL) |
-| Font | **JetBrains Mono** (duy nhất) |
+| Animation | Framer Motion v12 |
+| 3D / Visual | React Three Fiber · drei · three |
+| Scanner | `html5-qrcode` · `qrcode.react` |
+| Database | Prisma 5 + PostgreSQL (Supabase) |
+| Auth | `jose` (JWT) · `bcrypt` |
+| Validation | Zod |
+| Email | Nodemailer |
 
 ## 🎨 Design System
 
-### Font
+The product is built around a single monospace voice and a warm amber accent.
 
-Toàn bộ ứng dụng sử dụng **JetBrains Mono** — không sử dụng bất kỳ font phổ biến nào khác (Inter, Roboto, Segoe UI, Google Sans, Aptos...).
+### Typography
+
+The entire UI uses **JetBrains Mono** — no system UI fonts.
 
 ```css
 font-family: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
 ```
 
-### Bảng màu (Primary Palette)
+### Color Palette
 
-| Token | Mã màu | Mô tả |
-|---|---|---|
-| `--primary-400` | `#fb923c` | Orange Light |
-| `--primary-500` | `#f97316` | Orange Main |
-| `--primary-600` | `#ea580c` | Orange Dark |
-| `--primary-700` | `#c2410c` | Orange Deeper |
-| `--accent-stone` | `#78716c` | Stone Accent |
+| Token | Hex | Use |
+| --- | --- | --- |
+| `--primary-400` | `#fb923c` | Orange light |
+| `--primary-500` | `#f97316` | Orange main |
+| `--primary-600` | `#ea580c` | Orange dark *(brand)* |
+| `--primary-700` | `#c2410c` | Orange deeper |
+| `--accent-stone` | `#78716c` | Stone accent |
 
-### Hiệu ứng
+### Motion & Texture
 
-- **Glassmorphism** — `backdrop-filter: blur()` + semi-transparent backgrounds
-- **Glass hover** — Hiệu ứng mờ kính khi di chuột
-- **Hover lift** — Cards nổi lên khi hover
-- **Scroll reveals** — Phần tử xuất hiện mượt mà khi cuộn
-- **Grain texture** — Lớp texture tinh tế cho cảm giác premium
+- **Liquid glass** — `backdrop-filter: blur()` + translucent surfaces
+- **Hover tilt / lift** — cards respond subtly to the pointer
+- **Scroll reveals** — elements fade in on scroll
+- **Grain overlay** — a fine texture for a premium feel
+- **Reduced motion** — all effects disabled when requested by the OS
 
-## 🚀 Bắt đầu
+## 🚀 Getting Started
 
-### Yêu cầu
+### Prerequisites
 
 - Node.js 18+
-- npm / yarn / pnpm / bun
+- npm / pnpm / yarn / bun
+- A PostgreSQL database (Supabase recommended)
 
-### Cài đặt
+### Installation
 
 ```bash
-# Clone repository
+# Clone the repository
 git clone https://github.com/XuanSown/urcheck.git
 cd urcheck
 
-# Cài đặt dependencies
+# Install dependencies
 npm install
 
-# Thiết lập biến môi trường
+# Configure environment variables
 cp .env.example .env.local
-# Sau đó điền giá trị thật cho DATABASE_URL, DIRECT_URL, SUPABASE keys
+# Fill in DATABASE_URL, DIRECT_URL, Supabase keys, JWT secret, SMTP, etc.
 
-# Khởi tạo database
+# Generate the Prisma client and apply migrations
 npx prisma generate
 npx prisma migrate deploy
 
-# Chạy development server
+# (Optional) Seed the database with an admin user and sample content
+npm run seed
+
+# Start the development server
 npm run dev
 ```
 
-Mở [http://localhost:3000](http://localhost:3000) để xem kết quả.
+Open [http://localhost:3000](http://localhost:3000).
 
-## 📁 Cấu trúc dự án
+### Scripts
+
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build |
+| `npm run start` | Run the production server |
+| `npm run lint` | Lint the codebase |
+| `npm run seed` | Seed the database |
+| `npm run prisma:generate` | Regenerate the Prisma client |
+| `npm run prisma:migrate` | Apply migrations to the database |
+
+## 📁 Project Structure
 
 ```
 urcheck/
-├── app/                    # Next.js App Router
-│   ├── api/               # API Routes
-│   ├── globals.css        # Global styles & animations
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Trang chủ
-├── components/            # React Components
-│   ├── ui/               # UI primitives (Button, Card, Badge...)
-│   ├── Header.tsx        # Navigation header
-│   ├── Hero.tsx          # Hero section
-│   ├── Footer.tsx        # Footer
-│   ├── BarcodeScanner.tsx # Barcode scanner (EAN-13, EAN-8)
-│   └── ProductInfo.tsx   # Hiển thị thông tin sản phẩm
-├── lib/                   # Utilities & database
-├── prisma/               # Database schema & migrations
-├── public/               # Static assets
-└── types/                # TypeScript type definitions
+├── app/                 # Next.js App Router
+│   ├── api/             # API routes (admin, customer, qr, health)
+│   ├── admin/           # Admin console (products, blog, support)
+│   ├── blog/            # Public blog
+│   ├── support/         # Support center
+│   ├── customer/        # Customer portal
+│   └── (marketing)/     # about, pricing, faq, brands, integrations…
+├── components/          # React components grouped by feature
+│   └── ui/              # Shared UI primitives
+├── lib/                 # Utilities, auth, i18n, session helpers
+├── prisma/              # Schema, migrations, seed
+├── public/              # Static assets
+└── types/               # TypeScript type definitions
 ```
 
-## 🌐 Deploy
+## ☁️ Deployment
 
-Deploy lên [Vercel](https://vercel.com):
+Deploy to [Vercel](https://vercel.com) in one click:
 
 ```bash
 npm run build
 ```
 
+Make sure the environment variables from `.env.example` are set in your
+Vercel project settings. The app ships a `/api/health` endpoint you can use
+as a deploy hook health check.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please open an issue to discuss changes before
+submitting a pull request.
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feat/my-feature`)
+3. Commit your changes (`git commit -m "feat: ..."`)
+4. Push and open a pull request
+
 ## 📄 License
 
-© 2026 ur check. Bảo lưu mọi quyền.
+Proprietary © 2026 urcheck. All rights reserved.
 
-Phát triển tại 🇻🇳 Việt Nam.
+Built with care in 🇻🇳 Vietnam.

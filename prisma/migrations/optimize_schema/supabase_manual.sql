@@ -3,8 +3,10 @@
 -- Run in Supabase SQL Editor. Idempotent where possible.
 -- Local cannot reach Supabase (P1001), so this is applied by hand.
 -- ============================================================
-
-BEGIN;
+--
+-- NOTE: intentionally NOT wrapped in BEGIN;...COMMIT; so a failure in the
+-- ScanLog backfill/NOT NULL step cannot roll back the earlier table/column
+-- drops on the user's live DB. Each step is independently idempotent.
 
 -- 1) Drop unused tables
 DROP TABLE IF EXISTS "IngredientFlag" CASCADE;
@@ -18,6 +20,8 @@ ALTER TABLE "Product" DROP COLUMN IF EXISTS "imageUrl";
 ALTER TABLE "ProductVersion" DROP COLUMN IF EXISTS "imageSnapshot";
 
 -- 4) RoutineItem: drop snapshot fields
+-- NOTE: each statement below runs outside a single transaction so a failure in
+-- step 6 cannot roll back the earlier drops on the live DB.
 ALTER TABLE "routine_items" DROP COLUMN IF EXISTS "productName";
 ALTER TABLE "routine_items" DROP COLUMN IF EXISTS "brandName";
 ALTER TABLE "routine_items" DROP COLUMN IF EXISTS "imageUrl";
@@ -59,7 +63,12 @@ WHERE s."qrCodeId" IS NULL
   AND s."qrCode" IS NOT NULL
   AND s."qrCode" = 'QR:' || q."code";
 
--- 6c) Add the FK constraint if missing
+-- 6c) Delete orphan scan_logs rows whose qrCode did not match any qr_codes.code
+-- (analytics logs, safe to drop). This guarantees no NULL qrCodeId remains
+-- before SET NOT NULL.
+DELETE FROM "scan_logs" WHERE "qrCodeId" IS NULL;
+
+-- 6d) Add the FK constraint if missing
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -74,16 +83,14 @@ BEGIN
   END IF;
 END $$;
 
--- 6d) Enforce NOT NULL once backfilled
+-- 6e) Enforce NOT NULL once backfilled (no NULL remains after 6c)
 ALTER TABLE "scan_logs" ALTER COLUMN "qrCodeId" SET NOT NULL;
 
--- 6e) Drop the old qrCode column
+-- 6f) Drop the old qrCode column
 ALTER TABLE "scan_logs" DROP COLUMN IF EXISTS "qrCode";
 
--- 6f) Index on qrCodeId
+-- 6g) Index on qrCodeId
 CREATE INDEX IF NOT EXISTS "scan_logs_qrCodeId_idx" ON "scan_logs"("qrCodeId");
 
 -- 7) QrCode: drop redundant scanCount index (column kept)
 DROP INDEX IF EXISTS "QrCode_scanCount_idx";
-
-COMMIT;

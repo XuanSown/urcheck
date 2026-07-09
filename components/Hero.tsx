@@ -17,7 +17,7 @@ export function Hero() {
       : { duration, repeat: Infinity, ease: "easeInOut" as const };
 
   return (
-    <section className="relative min-h-[90vh] sm:min-h-[85vh] flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden bg-gradient-to-b from-gray-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 grain-overlay">
+    <section className="relative min-h-[90vh] sm:min-h-[85vh] flex flex-col items-center justify-center pt-24 sm:pt-32 pb-12 px-4 sm:px-6 lg:px-8 overflow-hidden bg-gradient-to-b from-gray-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 grain-overlay">
       {/* Sophisticated animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Large morphing blob — primary */}
@@ -55,7 +55,7 @@ export function Hero() {
         />
       </div>
 
-      <div className="relative max-w-4xl mx-auto text-center z-10 px-2 sm:px-4 pt-16 sm:pt-0">
+      <div className="relative max-w-4xl mx-auto text-center z-10 px-2 sm:px-4">
         {/* Logo — smaller with premium animation */}
         <motion.div
           initial={{ opacity: 0, y: 30, scale: 0.95 }}

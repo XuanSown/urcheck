@@ -2,8 +2,6 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { useTheme } from './ThemeProvider';
-
 interface LogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
@@ -14,7 +12,6 @@ interface LogoProps {
  * Logo component that renders the UR Check logo.
  */
 export function Logo({ className = '', size = 'md', variant = 'dark' }: LogoProps) {
-  const { resolved } = useTheme();
   const sizeMap = {
     sm: { width: 56, height: 20, imgClass: 'h-5 w-auto' },
     md: { width: 80, height: 28, imgClass: 'h-7 sm:h-8 w-auto' },
@@ -23,9 +20,8 @@ export function Logo({ className = '', size = 'md', variant = 'dark' }: LogoProp
 
   const { width, height, imgClass } = sizeMap[size];
 
-  // Use logo-main.png (dark) for light backgrounds
-  // Use logo-white.png for dark backgrounds
-  const logoSrc = resolved === 'dark' ? '/images/logo-white.png' : '/images/logo-main.png';
+  // Use the main logo and invert its colors in dark mode using CSS filters
+  const logoSrc = '/images/logo-main.png';
 
   return (
     <div className={`inline-flex items-center ${className}`}>
@@ -34,7 +30,7 @@ export function Logo({ className = '', size = 'md', variant = 'dark' }: LogoProp
         alt="ur check"
         width={width}
         height={height}
-        className={`object-contain ${imgClass}`}
+        className={`object-contain ${imgClass} dark:invert`}
         style={{
           width: 'auto',
           height: 'auto',

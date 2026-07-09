@@ -78,7 +78,7 @@ export function BrandsCta() {
                   {t('brands_cta_primary')}
                 </Button>
               </Link>
-              <Link href="/pricing" className="w-full sm:w-auto">
+              <Link href="/contact" className="w-full sm:w-auto">
                 <Button
                   variant="outline"
                   size="lg"

@@ -155,7 +155,6 @@ export function Footer() {
           <div className="flex flex-wrap justify-center sm:justify-start gap-x-5 gap-y-2 mb-6 text-xs text-gray-600 dark:text-gray-400">
             {[
               { href: '/how-it-works', label: t('nav_how_it_works') },
-              { href: '/pricing', label: t('nav_pricing') },
               { href: '/brands', label: t('nav_brands') },
               { href: '/security', label: t('nav_security') },
               { href: '/faq', label: t('nav_faq') },

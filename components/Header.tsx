@@ -54,7 +54,6 @@ export function Header({ className }: HeaderProps) {
   const navLinks = [
     { href: '/discover', label: t('feed_title') },
     { href: '/how-it-works', label: t('nav_how_it_works') },
-    { href: '/pricing', label: t('nav_pricing') },
     { href: '/brands', label: t('nav_brands') },
     { href: '/contact', label: t('nav_contact') },
   ];

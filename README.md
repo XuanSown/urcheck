@@ -132,7 +132,7 @@ urcheck/
 │   ├── blog/            # Public blog
 │   ├── support/         # Support center
 │   ├── customer/        # Customer portal
-│   └── (marketing)/     # about, pricing, faq, brands, integrations…
+│   └── (marketing)/     # about, faq, brands, integrations…
 ├── components/          # React components grouped by feature
 │   └── ui/              # Shared UI primitives
 ├── lib/                 # Utilities, auth, i18n, session helpers

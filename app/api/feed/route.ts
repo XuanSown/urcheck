@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   const [scanLogs, favorites] = await Promise.all([
     prisma.scanLog.findMany({
       where: { customerId },
-      select: { qrCode: true },
+      select: { qrCodeId: true },
       take: 50,
       orderBy: { scannedAt: 'desc' },
     }),
@@ -29,12 +29,12 @@ export async function GET(request: Request) {
   ]);
 
   const qrCodes = await prisma.qrCode.findMany({
-    where: { code: { in: scanLogs.map((s: any) => s.qrCode) } },
-    select: { code: true, productId: true },
+    where: { id: { in: scanLogs.map((s: any) => s.qrCodeId) } },
+    select: { id: true, code: true, productId: true },
   });
-  const codeToProductId = new Map(qrCodes.map((q: any) => [q.code, q.productId]));
+  const idToProductId = new Map(qrCodes.map((q: any) => [q.id, q.productId]));
   const scannedProductIds = new Set(
-    scanLogs.map((s: any) => codeToProductId.get(s.qrCode)).filter(Boolean)
+    scanLogs.map((s: any) => idToProductId.get(s.qrCodeId)).filter(Boolean)
   );
 
   const favoriteIds = new Set(favorites.map((f: any) => f.productId));

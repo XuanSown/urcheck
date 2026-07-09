@@ -24,23 +24,20 @@ export async function evaluateCustomerBadges(customerId: string): Promise<BadgeW
 
   const scanLogs = await prisma.scanLog.findMany({
     where: { customerId },
-    select: { scannedAt: true, qrCode: true },
+    select: { scannedAt: true, qrCodeId: true },
     orderBy: { scannedAt: 'asc' },
   });
 
-  const qrCodes = scanLogs.map((l) => l.qrCode!.replace('QR:', ''));
-
-  const qrRecords = qrCodes.length
+  const qrIds = scanLogs.map((l) => l.qrCodeId).filter(Boolean);
+  const qrRecords = qrIds.length
     ? await prisma.qrCode.findMany({
-        where: { code: { in: qrCodes } },
+        where: { id: { in: qrIds } },
         select: { code: true, product: { select: { brandName: true } } },
       })
     : [];
 
-  const productByCode = new Map(qrRecords.map((r) => [r.code, r.product?.brandName ?? null]));
-
   const totalScans = scanLogs.length;
-  const brands = new Set(scanLogs.map((l) => productByCode.get(l.qrCode!.replace('QR:', ''))).filter(Boolean));
+  const brands = new Set(qrRecords.map((r) => r.product?.brandName).filter(Boolean));
   const uniqueDays = new Set(scanLogs.map((l) => localDate(new Date(l.scannedAt)))).size;
 
   const earnedBadges = await prisma.customerBadge.findMany({
@@ -54,7 +51,7 @@ export async function evaluateCustomerBadges(customerId: string): Promise<BadgeW
   for (const badge of badges) {
     let criteria: Criteria;
     try {
-      criteria = JSON.parse(badge.criteriaJson);
+      criteria = JSON.parse(JSON.stringify(badge.criteriaJson));
     } catch {
       console.error(`Badge ${badge.id} has invalid criteriaJson`);
       continue;

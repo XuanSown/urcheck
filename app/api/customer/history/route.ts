@@ -17,69 +17,50 @@ export async function GET(request: Request) {
       orderBy: { scannedAt: 'desc' },
       skip,
       take: limit,
-    }),
-    prisma.scanLog.count({
-      where: { customerId: guard.session.customerId },
-    }),
-  ]);
-
-  const qrCodes = logs
-    .map((l) => l.qrCode.replace('QR:', ''))
-    .filter(Boolean);
-
-  const qrRecords = qrCodes.length
-    ? await prisma.qrCode.findMany({
-        where: { code: { in: qrCodes } },
-        select: {
-          code: true,
-          productId: true,
-          product: {
-            select: {
-              id: true,
-              name: true,
-              description: true,
-              brandName: true,
-              verified: true,
-              manufactureDate: true,
-              expiryDate: true,
-              imageUrl: true,
+      include: {
+        qrCode: {
+          select: {
+            code: true,
+            product: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                brandName: true,
+                verified: true,
+                manufactureDate: true,
+                expiryDate: true,
+                images: { where: { isPrimary: true }, take: 1, select: { url: true } },
+              },
             },
           },
         },
-      })
-    : [];
-
-  const productMap = new Map(qrRecords.map((q) => [q.code, q]));
+      },
+    }),
+    prisma.scanLog.count({ where: { customerId: guard.session.customerId } }),
+  ]);
 
   const items = logs.map((log) => {
-    const rawCode = log.qrCode.replace('QR:', '');
-    const qr = productMap.get(rawCode);
-    const isExpired = qr?.product?.expiryDate
-      ? new Date(qr.product.expiryDate) < new Date()
-      : false;
-    const isValid = qr?.product?.verified && !isExpired;
-
+    const qr = log.qrCode;
+    const product = qr?.product;
+    const imageUrl = product?.images?.[0]?.url ?? null;
+    const isExpired = product?.expiryDate ? new Date(product.expiryDate) < new Date() : false;
+    const isValid = product?.verified && !isExpired;
     return {
       scannedAt: log.scannedAt.toISOString(),
       isValid: isValid ?? false,
-      status: isValid
-        ? 'valid'
-        : isExpired
-        ? 'expired'
-        : 'unverified',
-      product: qr?.product
+      status: isValid ? 'valid' : isExpired ? 'expired' : 'unverified',
+      product: product
         ? {
-            id: qr.product.id,
-            name: qr.product.name,
-            brandName: qr.product.brandName,
-            imageUrl: qr.product.imageUrl,
-            verified: qr.product.verified,
-            expiryDate: qr.product.expiryDate
-              ? qr.product.expiryDate.toISOString()
-              : null,
+            id: product.id,
+            name: product.name,
+            brandName: product.brandName,
+            imageUrl,
+            verified: product.verified,
+            expiryDate: product.expiryDate ? product.expiryDate.toISOString() : null,
           }
         : null,
-      qrCode: rawCode,
+      qrCode: qr?.code ?? null,
     };
   });
 

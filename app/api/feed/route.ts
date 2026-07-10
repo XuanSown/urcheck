@@ -3,6 +3,11 @@ import prisma from '@/lib/db';
 import { requireCustomerApi } from '@/lib/customer-auth';
 import { primaryImageUrl } from '@/lib/product-utils';
 
+function avgRating(reviews: { rating: number }[]): number | null {
+  if (!reviews.length) return null;
+  return Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10;
+}
+
 function encodeCursor(v: { s: number; i: string } | { t: string; i: string }): string {
   return Buffer.from(JSON.stringify(v)).toString('base64url');
 }
@@ -55,21 +60,21 @@ export async function GET(request: Request) {
       images: { where: { isPrimary: true }, take: 1, select: { url: true } },
       reviews: { select: { rating: true } },
     },
-    take: 200,
+    // ponytail: removed take:200 cap so cursor pagination can traverse full catalog
   });
 
   const scored = candidates
     .map((p: any) => ({ ...p, _score: scoreProduct(p, favoriteSkinTypes, favoriteBrands, trendingIds) }))
     .sort((a: any, b: any) => (b._score - a._score) || (a.id < b.id ? -1 : 1));
 
-  const startIdx = cursor && 's' in cursor ? scored.findIndex((p: any) => p._score === cursor.s && p.id === cursor.i) + 1 : 0;
+  const startIdx = cursor && 's' in cursor ? (() => { const i = scored.findIndex((p: any) => p._score === cursor.s && p.id === cursor.i); return i === -1 ? 0 : i + 1; })() : 0;
   const slice = scored.slice(startIdx, startIdx + limit + 1);
   const hasMore = slice.length > limit;
   const pageItems = slice.slice(0, limit).map(({ _score, qrCodes, reviews, images, ...p }: any) => ({
     ...p,
     imageUrl: primaryImageUrl(images),
     verified: p.verified,
-    rating: reviews.length ? Math.round((reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length) * 10) / 10 : null,
+    rating: avgRating(reviews),
   }));
 
   return NextResponse.json({
@@ -99,17 +104,17 @@ async function feedPublic(limit: number, skinType?: string, brand?: string, curs
   const candidates = await prisma.product.findMany({
     where,
     include: { images: { where: { isPrimary: true }, take: 1, select: { url: true } }, reviews: { select: { rating: true } } },
-    take: 200,
+    // ponytail: removed take:200 cap so cursor pagination can traverse full catalog
     orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
   });
-  const startIdx = cursor && 't' in cursor ? candidates.findIndex((p: any) => p.createdAt.toISOString() === cursor.t && p.id === cursor.i) + 1 : 0;
+  const startIdx = cursor && 't' in cursor ? (() => { const i = candidates.findIndex((p: any) => p.createdAt.toISOString() === cursor.t && p.id === cursor.i); return i === -1 ? 0 : i + 1; })() : 0;
   const slice = candidates.slice(startIdx, startIdx + limit + 1);
   const hasMore = slice.length > limit;
   const pageItems = slice.slice(0, limit).map(({ reviews, images, ...p }: any) => ({
     ...p,
     imageUrl: primaryImageUrl(images),
     verified: p.verified,
-    rating: reviews.length ? Math.round((reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length) * 10) / 10 : null,
+    rating: avgRating(reviews),
   }));
   return NextResponse.json({
     success: true,

@@ -55,6 +55,8 @@ function QrCube({ pointer }: { pointer: React.MutableRefObject<{ x: number; y: n
   const mesh = useRef<THREE.Mesh>(null);
   const tex = useMemo(() => buildQrTexture(), []);
 
+  useEffect(() => () => tex.dispose(), [tex]);
+
   useFrame((_, delta) => {
     if (!mesh.current) return;
     // Auto-rotate nền.
@@ -123,6 +125,7 @@ function Particles() {
 export function HeroScene3D() {
   const reducedMotion = useReducedMotion();
   const [mount, setMount] = useState(false);
+  const [webglOk, setWebglOk] = useState(true);
   const pointer = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -143,14 +146,17 @@ export function HeroScene3D() {
     return () => window.removeEventListener('mousemove', onMove);
   }, [mount]);
 
-  if (!mount) return <HeroScene3DFallback />;
+  if (!mount || !webglOk) return <HeroScene3DFallback />;
 
   return (
     <Canvas
       camera={{ position: [0, 0, 4], fov: 45 }}
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: true }}
-      style={{ pointerEvents: 'none' }}
+      style={{ pointerEvents: 'none', width: '100%', height: '100%' }}
+      onCreated={({ gl }) => {
+        if (!gl.getContext()) setWebglOk(false);
+      }}
     >
       <ambientLight intensity={0.6} />
       <directionalLight position={[3, 3, 3]} intensity={1.2} />

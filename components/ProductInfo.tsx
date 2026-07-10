@@ -33,6 +33,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
     : primaryImageUrl(product.images) ? [{ id: '1', url: primaryImageUrl(product.images)!, isPrimary: true, sortOrder: 0, productId: product.id, createdAt: new Date().toISOString() }] : [];
   
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [imgLoading, setImgLoading] = useState(true);
 
   return (
     <motion.div
@@ -51,6 +52,11 @@ export function ProductInfo({ product }: ProductInfoProps) {
             )}
             <span className={`relative inline-flex rounded-full h-3 w-3 ${isVerified ? 'bg-green-500' : 'bg-red-500'}`}></span>
           </span>
+          {isVerified ? (
+            <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          ) : (
+            <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          )}
           <span className={`font-semibold tracking-wide uppercase text-sm ${isVerified ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
             {isVerified ? t('product_status_authentic') : (isExpired ? t('product_status_expired') : t('product_status_invalid'))}
           </span>
@@ -71,14 +77,20 @@ export function ProductInfo({ product }: ProductInfoProps) {
                   className="absolute inset-0"
                 >
                   {images.length > 0 ? (
-                    <Image
-                      src={images[activeImageIndex].url}
-                      alt={product.name}
-                      fill
-                      className="object-contain p-4"
-                      sizes="(max-width: 768px) 100vw, 40vw"
-                      priority
-                    />
+                    <>
+                      {imgLoading && (
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/10 dark:from-gray-700/40 dark:to-gray-800/20 animate-pulse" />
+                      )}
+                      <Image
+                        src={images[activeImageIndex].url}
+                        alt={product.name}
+                        fill
+                        className="object-contain p-4"
+                        sizes="(max-width: 768px) 100vw, 40vw"
+                        priority
+                        onLoadingComplete={() => setImgLoading(false)}
+                      />
+                    </>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300">
                       <svg className="w-20 h-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -109,6 +121,18 @@ export function ProductInfo({ product }: ProductInfoProps) {
             <div>
               <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 mb-2">{product.name}</h1>
               <p className="text-primary-600 dark:text-primary-400 font-medium text-sm tracking-wide uppercase">{product.brandName}</p>
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                {product.category && (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">
+                    {product.category}
+                  </span>
+                )}
+                {product.batchNumber && (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                    {t('product_batch', 'Lô')}: {product.batchNumber}
+                  </span>
+                )}
+              </div>
             </div>
 
             {product.description && (
@@ -178,10 +202,28 @@ export function ProductInfo({ product }: ProductInfoProps) {
                 <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{product.ingredientAnalysis}</p>
               </div>
             )}
-            
+
+            {/* Certifications */}
+            {product.certifications && product.certifications.length > 0 && (
+              <div className="glass glass-hover p-5 rounded-2xl animate-fade-up delay-700">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.5-2.5a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  {t('product_certifications', 'Chứng nhận')}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {product.certifications.map((c, i) => (
+                    <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 text-xs font-medium rounded-full border border-green-200 dark:border-green-800">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Tags */}
             {product.tags && product.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 animate-fade-up delay-700">
+              <div className="flex flex-wrap gap-2 animate-fade-up delay-800">
                 {product.tags.map((tag, i) => (
                   <span key={i} className="px-3 py-1.5 glass text-gray-700 dark:text-gray-200 font-medium text-xs rounded-full shadow-sm">
                     #{tag}

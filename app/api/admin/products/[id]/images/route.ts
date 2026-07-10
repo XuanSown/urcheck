@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApi } from '@/lib/auth';
 import prisma from '@/lib/db';
-import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase';
+import { supabaseAdmin, isSupabaseAdminConfigured, ensureProductImagesBucket } from '@/lib/supabase';
 
 const SUPABASE_BUCKET = 'product-images';
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -32,7 +32,20 @@ async function uploadToSupabase(buffer: Buffer, filename: string, contentType: s
     .from(SUPABASE_BUCKET)
     .getPublicUrl(filePath);
 
-  return publicUrl;
+  // Verify the public URL is actually readable. If the bucket isn't public
+  // (or not yet replicated), fall back to a long-lived signed URL so the
+  // image always displays.
+  try {
+    const res = await fetch(publicUrl, { method: 'HEAD' });
+    if (res.ok) return publicUrl;
+  } catch {
+    // fall through to signed URL
+  }
+  const { data: signed } = await supabaseAdmin!
+    .storage
+    .from(SUPABASE_BUCKET)
+    .createSignedUrl(filePath, 60 * 60 * 24 * 365);
+  return signed?.signedUrl ?? publicUrl;
 }
 
 // Helper: fallback in-memory data URL (dev mode without Supabase)
@@ -49,6 +62,9 @@ export async function POST(
     const auth = await requireAdminApi();
     if ('error' in auth) return auth.error;
     const { id } = await params;
+
+    // Make sure the storage bucket is public so uploaded images are readable
+    await ensureProductImagesBucket();
 
     // Verify product exists
     const product = await prisma.product.findUnique({
@@ -188,8 +204,7 @@ export async function DELETE(
     try {
       if (isSupabaseAdminConfigured() && !image.url.startsWith('data:')) {
         const url = new URL(image.url);
-        const pathname = url.pathname;
-        const filePath = pathname.replace(`/${SUPABASE_BUCKET}/`, '');
+        const filePath = url.pathname.split(`/${SUPABASE_BUCKET}/`)[1];
 
         await supabaseAdmin!
           .storage

@@ -197,6 +197,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {!isLoginPage && (
         <aside
         className={`
+          flex flex-col
           fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800
           transform transition-transform duration-300 ease-in-out
           lg:translate-x-0

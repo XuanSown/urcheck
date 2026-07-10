@@ -93,7 +93,14 @@ export default function CustomerRoutinesPage() {
             ))}
           </div>
         ) : (
-          <RoutineList routines={routines} onChanged={fetchRoutines} />
+          <RoutineList
+            routines={routines}
+            onChanged={fetchRoutines}
+            onEdit={(r) => {
+              setEditing(r);
+              setShowForm(true);
+            }}
+          />
         )}
       </div>
     </div>

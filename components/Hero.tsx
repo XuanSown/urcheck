@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { useLocale } from '@/components/I18nProvider';
-import { HeroScene3DFallback } from '@/components/home/HeroScene3D';
+import { HeroScene3DFallback } from '@/components/home/HeroScene3DFallback';
 
 const HeroScene3D = dynamic(() => import('@/components/home/HeroScene3D'), {
   ssr: false,

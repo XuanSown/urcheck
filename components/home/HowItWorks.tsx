@@ -1,11 +1,12 @@
 'use client';
+import type { SVGProps } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Section } from './Section';
 
 const steps = [
-  { n: '01', title: 'Quét mã QR', desc: 'Mỗi sản phẩm urcheck có mã QR duy nhất. Dùng camera hoặc nhập mã để bắt đầu.', icon: (p: any) => (<svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 001.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>) },
-  { n: '02', title: 'Hệ thống xác thực', desc: 'urcheck đối soát mã với nguồn gốc sản phẩm theo thời gian thực, chỉ trong vài giây.', icon: (p: any) => (<svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>) },
-  { n: '03', title: 'An tâm sử dụng', desc: 'Xem thông tin xuất xứ, hạn dùng và xác nhận chính hãng ngay trên màn hình.', icon: (p: any) => (<svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>) },
+  { n: '01', title: 'Quét mã QR', desc: 'Mỗi sản phẩm urcheck có mã QR duy nhất. Dùng camera hoặc nhập mã để bắt đầu.', icon: (p: SVGProps<SVGSVGElement>) => (<svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 001.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>) },
+  { n: '02', title: 'Hệ thống xác thực', desc: 'urcheck đối soát mã với nguồn gốc sản phẩm theo thời gian thực, chỉ trong vài giây.', icon: (p: SVGProps<SVGSVGElement>) => (<svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>) },
+  { n: '03', title: 'An tâm sử dụng', desc: 'Xem thông tin xuất xứ, hạn dùng và xác nhận chính hãng ngay trên màn hình.', icon: (p: SVGProps<SVGSVGElement>) => (<svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>) },
 ];
 
 export function HowItWorks() {

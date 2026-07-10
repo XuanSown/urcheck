@@ -1,11 +1,12 @@
 'use client';
+import type { SVGProps } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Section } from './Section';
 
 const items = [
-  { t: 'Mã QR duy nhất', d: 'Mỗi sản phẩm được gắn một mã QR không thể sao chép, liên kết trực tiếp với hồ sơ gốc.', icon: (p: any) => (<svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 11c0 3.517-1.009 6.799-3 9.5M5.5 5.5S7 4 9 4s3 1.5 3 1.5m0 0S12.5 7 14.5 7 17 5.5 17 5.5M9 4c0-1.657 1.343-3 3-3s3 1.343 3 3-1.343 3-3 3-3-1.343-3-3z" /></svg>) },
-  { t: 'Minh bạch nguồn gốc', d: 'Truy xuất đầy đủ thông tin xuất xứ, lô sản xuất và hạn sử dụng.', icon: (p: any) => (<svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>) },
-  { t: 'Cộng đồng kiểm chứng', d: 'Người dùng và thương hiệu cùng tham gia báo cáo, xây dựng hệ sinh thái tin cậy.', icon: (p: any) => (<svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4z" /></svg>) },
+  { t: 'Mã QR duy nhất', d: 'Mỗi sản phẩm được gắn một mã QR không thể sao chép, liên kết trực tiếp với hồ sơ gốc.', icon: (p: SVGProps<SVGSVGElement>) => (<svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 11c0 3.517-1.009 6.799-3 9.5M5.5 5.5S7 4 9 4s3 1.5 3 1.5m0 0S12.5 7 14.5 7 17 5.5 17 5.5M9 4c0-1.657 1.343-3 3-3s3 1.343 3 3-1.343 3-3 3-3-1.343-3-3z" /></svg>) },
+  { t: 'Minh bạch nguồn gốc', d: 'Truy xuất đầy đủ thông tin xuất xứ, lô sản xuất và hạn sử dụng.', icon: (p: SVGProps<SVGSVGElement>) => (<svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>) },
+  { t: 'Cộng đồng kiểm chứng', d: 'Người dùng và thương hiệu cùng tham gia báo cáo, xây dựng hệ sinh thái tin cậy.', icon: (p: SVGProps<SVGSVGElement>) => (<svg {...p} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4z" /></svg>) },
 ];
 
 export function TrustReasons() {

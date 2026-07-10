@@ -44,6 +44,7 @@ export function Hero({ onScan, onExplore }: { onScan?: () => void; onExplore?: (
         <motion.div {...rise()} className="relative">
           <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/5] sm:aspect-[4/3] lg:aspect-square bg-gradient-to-tr from-primary-500/10 to-transparent">
             <HeroScene3D />
+            <a href="/products/sample" className="sr-only">Xem sản phẩm</a>
             <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/20 to-transparent pointer-events-none" />
             <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur px-3 py-1.5 rounded-full text-sm font-medium text-gray-900 dark:text-white">
               <svg className="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>

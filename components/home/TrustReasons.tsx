@@ -14,7 +14,7 @@ export function TrustReasons() {
     <Section title="Tại sao tin tưởng urcheck" subtitle="Nền tảng xác thực được thiết kế để bảo vệ bạn">
       <div className="grid md:grid-cols-3 gap-6">
         {items.map((it, i) => (
-          <motion.div key={it.t} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: reduced ? 0 : i * 0.1 }} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 hover:border-primary-300 dark:hover:border-primary-700 transition-colors">
+          <motion.div key={it.t} initial={reduced ? false : { opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: reduced ? 0 : i * 0.1 }} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 hover:border-primary-300 dark:hover:border-primary-700 transition-colors">
             <div className="w-11 h-11 rounded-xl bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center">{it.icon({ className: 'w-6 h-6' })}</div>
             <h3 className="mt-4 font-semibold text-gray-900 dark:text-white">{it.t}</h3>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{it.d}</p>

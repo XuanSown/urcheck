@@ -41,7 +41,24 @@ export function DiscoverFeed({ skinType, brand }: { skinType?: string; brand?: s
     }
   }, [locale, skinType, brand, t]);
 
-  useEffect(() => { load(null, true); }, [load]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      setLoading(true); setError(null);
+      try {
+        const params = new URLSearchParams({ limit: '12' });
+        if (skinType) params.set('skinType', skinType);
+        if (brand) params.set('brand', brand);
+        const res = await fetch(`/api/feed?${params.toString()}`, { headers: { 'Accept-Language': locale } });
+        const data = await res.json();
+        if (data.success && active) {
+          setProducts(data.products); setCursor(data.nextCursor); setHasMore(data.hasMore);
+        } else if (active) setError(t('feed_error') || 'Đã xảy ra lỗi, vui lòng thử lại');
+      } catch { if (active) setError(t('feed_error') || 'Đã xảy ra lỗi, vui lòng thử lại'); }
+      finally { if (active) setLoading(false); }
+    })();
+    return () => { active = false; };
+  }, [locale, t, skinType, brand]);
 
   useEffect(() => {
     const el = sentinel.current;

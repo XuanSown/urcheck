@@ -29,7 +29,7 @@ export function WishlistGrid() {
   }, []);
 
   if (products === null) return <SkeletonGrid />;
-  if (auth) return <EmptyState title={t('discover_login_to_view')} action={<Link href="/login"><Button>{t('common_login') || 'Đăng nhập'}</Button></Link>} />;
+  if (auth) return <EmptyState title={t('discover_login_to_view')} action={<Link href="/customer/login"><Button>{t('common_login') || 'Đăng nhập'}</Button></Link>} />;
   if (products.length === 0) return <EmptyState title={t('discover_saved_empty')} />;
 
   return (

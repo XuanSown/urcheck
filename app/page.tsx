@@ -94,7 +94,7 @@ function HomeInner() {
       <Header />
 
       <main className="flex-1">
-        <Hero />
+        <Hero onScan={() => {}} />
 
         <section id="verify" className="py-10 sm:py-14 lg:py-16 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
           <div className="max-w-4xl mx-auto">

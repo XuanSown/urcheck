@@ -23,8 +23,9 @@ interface Product {
   tags: string[];
   status: string;
   brandName: string;
-  companyWebsite?: string;
-  companyContact?: string;
+  batchNumber?: string | null;
+  category?: string | null;
+  certifications: string[];
   purchaseLinks: Array<{
     platform: 'shopee' | 'tiki' | 'custom';
     url: string;
@@ -214,9 +215,10 @@ export default function EditProductPage() {
           usageInstructions: product.usageInstructions,
           tags: product.tags,
           status: product.status as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED',
-          brandName: product.brandName,
-          companyWebsite: product.companyWebsite,
-          companyContact: product.companyContact,
+  brandName: product.brandName,
+  batchNumber: product.batchNumber || undefined,
+  category: product.category || undefined,
+  certifications: product.certifications,
           purchaseLinks: product.purchaseLinks,
           existingImages: product.images,
         }}

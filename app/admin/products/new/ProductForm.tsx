@@ -26,10 +26,11 @@ export interface ProductFormData {
   status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
   purchaseLinks: Array<{ platform: string; url: string }>;
   brandName: string;
+  batchNumber?: string;
+  category?: string;
+  certifications: string[];
   verified: boolean;
   existingImages?: Array<{ id: string; url: string; isPrimary: boolean; altText?: string }>;
-  companyWebsite?: string;
-  companyContact?: string;
 }
 
 interface ProductFormProps {
@@ -95,6 +96,9 @@ export default function ProductForm({
     status: 'DRAFT',
     purchaseLinks: [{ platform: '', url: '' }],
     brandName: '',
+    batchNumber: '',
+    category: '',
+    certifications: [],
     verified: true,
   });
 
@@ -104,6 +108,9 @@ export default function ProductForm({
   const [previewData, setPreviewData] = useState<ProductFormData | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [tagInput, setTagInput] = useState('');
+  const [certInput, setCertInput] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [imageNotice, setImageNotice] = useState<string | null>(null);
   const [images, setImages] = useState<any[]>([]);
   // Pending files (khi tạo mới, chưa có productId để upload ngay)
   const [pendingFiles, setPendingFiles] = useState<{ file: File; previewUrl: string }[]>([]);
@@ -135,9 +142,10 @@ export default function ProductForm({
         purchaseLinks: initialData?.purchaseLinks || [],
         brandName: initialData?.brandName || '',
         verified: initialData?.verified ?? true,
+        batchNumber: initialData?.batchNumber || '',
+        category: initialData?.category || '',
+        certifications: initialData?.certifications || [],
         existingImages: initialData.existingImages || [],
-        companyWebsite: initialData.companyWebsite,
-        companyContact: initialData.companyContact,
       });
       setImages(initialData.existingImages || []);
     }
@@ -177,6 +185,26 @@ export default function ProductForm({
     }));
   };
 
+  const handleCertAdd = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && certInput.trim()) {
+      e.preventDefault();
+      if (!formData.certifications.includes(certInput.trim())) {
+        setFormData(prev => ({
+          ...prev,
+          certifications: [...prev.certifications, certInput.trim()],
+        }));
+      }
+      setCertInput('');
+    }
+  };
+
+  const removeCert = (cert: string) => {
+    setFormData(prev => ({
+      ...prev,
+      certifications: prev.certifications.filter(c => c !== cert),
+    }));
+  };
+
   const handlePurchaseLinkChange = (index: number, field: 'platform' | 'url', value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -206,12 +234,14 @@ export default function ProductForm({
     const fileArray = Array.from(files);
     const available = 3 - totalImageCount;
     if (available <= 0) {
-      alert('Đã đạt giới hạn tối đa 3 hình ảnh.');
+      setImageNotice('Đã đạt giới hạn tối đa 3 hình ảnh.');
       return;
     }
     const toAdd = fileArray.slice(0, available);
     if (fileArray.length > available) {
-      alert(`Chỉ ${available} ảnh đầu tiên được thêm vào.`);
+      setImageNotice(`Chỉ ${available} ảnh đầu tiên được thêm.`);
+    } else {
+      setImageNotice(null);
     }
 
     if (isEditing) {
@@ -252,20 +282,26 @@ export default function ProductForm({
   };
 
   // Upload tất cả pending files sau khi tạo sản phẩm thành công
-  const uploadPendingImages = async (newProductId: string) => {
-    if (pendingFiles.length === 0) return;
+  const uploadPendingImages = async (newProductId: string): Promise<boolean> => {
+    if (pendingFiles.length === 0) return true;
     setUploadingImages(true);
     try {
       for (const { file } of pendingFiles) {
         const formDataUpload = new FormData();
         formDataUpload.append('file', file);
-        await fetch(`/api/admin/products/${newProductId}/images`, {
+        const res = await fetch(`/api/admin/products/${newProductId}/images`, {
           method: 'POST',
           body: formDataUpload,
         });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'Upload ảnh thất bại');
+        }
       }
-    } catch (err) {
-      console.error('Upload pending images error:', err);
+      return true;
+    } catch (err: any) {
+      setError('Sản phẩm đã lưu nhưng một số ảnh chưa tải lên được: ' + err.message);
+      return false;
     } finally {
       setUploadingImages(false);
     }
@@ -307,30 +343,30 @@ export default function ProductForm({
   const handleDragLeave = () => setIsDragOver(false);
 
   const validate = (): boolean => {
+    const errs: Record<string, string> = {};
+
     if (!formData.name.trim()) {
-      setError('Vui lòng nhập tên sản phẩm');
-      return false;
-    }
-    
-    if (formData.expiryType === 'months') {
-      if (formData.expiresInMonths && Number(formData.expiresInMonths) <= 0) {
-        setError('Vui lòng nhập số tháng hợp lệ hoặc để trống');
-        return false;
-      }
-    } else {
-      if (formData.manufactureDate && formData.expiryDate) {
-        if (new Date(formData.expiryDate) <= new Date(formData.manufactureDate)) {
-          setError('Ngày hết hạn phải sau ngày sản xuất');
-          return false;
-        }
-      }
+      errs.name = 'Vui lòng nhập tên sản phẩm';
     }
 
     if (!formData.brandName.trim()) {
-      setError('Vui lòng nhập tên thương hiệu');
-      return false;
+      errs.brandName = 'Vui lòng nhập tên thương hiệu';
     }
-    return true;
+
+    const expiryValid =
+      (formData.expiryType === 'months' && Number(formData.expiresInMonths) > 0) ||
+      (formData.manufactureDate && formData.expiryDate &&
+        new Date(formData.expiryDate) > new Date(formData.manufactureDate));
+
+    if (!expiryValid) {
+      errs.expiry = formData.expiryType === 'months'
+        ? 'Vui lòng nhập số tháng hết hạn lớn hơn 0'
+        : 'Ngày hết hạn phải sau ngày sản xuất';
+    }
+
+    setFieldErrors(errs);
+    setError(errs.name || errs.brandName || errs.expiry || null);
+    return Object.keys(errs).length === 0;
   };
 
   const handleDraftClick = () => {
@@ -385,6 +421,9 @@ export default function ProductForm({
         manufactureDate: data.expiryType === 'dates' && data.manufactureDate ? new Date(data.manufactureDate).toISOString() : null,
         expiryDate: data.expiryType === 'dates' && data.expiryDate ? new Date(data.expiryDate).toISOString() : null,
         expiresInMonths: data.expiryType === 'months' && data.expiresInMonths ? Number(data.expiresInMonths) : null,
+        batchNumber: data.batchNumber || null,
+        category: data.category || null,
+        certifications: data.certifications || [],
       };
 
       const response = await fetch('/api/admin/products', {
@@ -400,9 +439,12 @@ export default function ProductForm({
       }
 
       // Upload pending images (selected before product was created)
+      let imagesOk = true;
       if (pendingFiles.length > 0 && result.data?.id) {
-        await uploadPendingImages(result.data.id);
+        imagesOk = await uploadPendingImages(result.data.id);
       }
+
+      if (!imagesOk) return; // keep error visible, stop before success/QR dialog
 
       setSuccess('Lưu sản phẩm thành công!');
 
@@ -476,9 +518,13 @@ export default function ProductForm({
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-primary-500"
+                aria-invalid={!!fieldErrors.name}
+                className={`w-full px-4 py-2.5 rounded-lg border dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-primary-500 ${
+                  fieldErrors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
+                }`}
                 required
               />
+              {fieldErrors.name && <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>}
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -490,9 +536,13 @@ export default function ProductForm({
                 value={formData.brandName}
                 onChange={handleChange}
                 placeholder="VD: CeraVe, La Roche-Posay..."
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-primary-500"
+                aria-invalid={!!fieldErrors.brandName}
+                className={`w-full px-4 py-2.5 rounded-lg border dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-primary-500 ${
+                  fieldErrors.brandName ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
+                }`}
                 required
               />
+              {fieldErrors.brandName && <p className="mt-1 text-sm text-red-600">{fieldErrors.brandName}</p>}
             </div>
             <div className="md:col-span-2 space-y-3">
               <label className="block text-sm font-medium text-gray-700">Hạn sử dụng</label>
@@ -622,6 +672,49 @@ export default function ProductForm({
                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-primary-500"
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Số lô / Batch number
+              </label>
+              <input
+                type="text"
+                name="batchNumber"
+                value={formData.batchNumber || ''}
+                onChange={handleChange}
+                placeholder="VD: LOT2024-AB12"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-primary-500"
+              />
+              <p className="mt-1 text-xs text-gray-500">Hiển thị trên trang xác thực QR cho người dùng.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Phân loại
+              </label>
+              <input
+                type="text"
+                name="category"
+                value={formData.category || ''}
+                onChange={handleChange}
+                placeholder="VD: Serum, Kem dưỡng, Sữa rửa mặt..."
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="verified"
+                  checked={formData.verified}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-primary-600 focus:ring-primary-500 rounded"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Đã xác minh (sản phẩm chính hãng)
+                </span>
+              </label>
+            </div>
           </div>
         </Card>
 
@@ -742,6 +835,34 @@ export default function ProductForm({
                 onChange={(e) => setTagInput(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-primary-500"
                 placeholder="Nhập tag rồi nhấn Enter"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Chứng nhận
+              </label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {formData.certifications.map(cert => (
+                  <span
+                    key={cert}
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm"
+                  >
+                    {cert}
+                    <button type="button" onClick={() => removeCert(cert)}>
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <input
+                type="text"
+                value={certInput}
+                onKeyDown={handleCertAdd}
+                onChange={(e) => setCertInput(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-primary-500"
+                placeholder="VD: FDA, CPA, Organic... rồi nhấn Enter"
               />
             </div>
             <div>
@@ -880,6 +1001,15 @@ export default function ProductForm({
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
               <span className="text-sm text-primary-700 dark:text-primary-400">Đang tải ảnh lên...</span>
+            </div>
+          )}
+
+          {imageNotice && (
+            <div className="mb-4 flex items-center gap-2 text-sm text-orange-600 bg-orange-50 p-3 rounded-lg border border-orange-200">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {imageNotice}
             </div>
           )}
 
@@ -1185,10 +1315,14 @@ export default function ProductForm({
                   {/* Company info */}
                   <div>
                     <p className="font-medium text-gray-900 dark:text-white\">{previewData.brandName}</p>
-                    {previewData.companyWebsite && (
-                      <a href={previewData.companyWebsite} target="_blank" rel="noopener noreferrer" className="text-primary-600 text-sm hover:underline">
-                        {previewData.companyWebsite}
-                      </a>
+                    {previewData.batchNumber && (
+                      <p className="text-gray-600 text-sm mt-1">Số lô: {previewData.batchNumber}</p>
+                    )}
+                    {previewData.category && (
+                      <p className="text-gray-600 text-sm">Phân loại: {previewData.category}</p>
+                    )}
+                    {previewData.certifications && previewData.certifications.length > 0 && (
+                      <p className="text-gray-600 text-sm">Chứng nhận: {previewData.certifications.join(', ')}</p>
                     )}
                   </div>
 

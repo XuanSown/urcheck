@@ -15,3 +15,5 @@ Task 6: complete (c469bd9..a2989c9, review clean)
 
 Task 7: build+deploy green, LIVE 200 + DB ok. PENDING: user runs supabase_manual.sql on Supabase.
 
+Task 7: COMPLETE. User ran supabase_rebuild.sql (drop+recreate 19 tables). Build+deploy green. / 200, /api/health DB ok, /api/feed success:true, /blog /support 200.
+

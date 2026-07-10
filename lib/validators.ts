@@ -21,9 +21,12 @@ export const productSchema = z.object({
   ).max(5).optional().default([]),
   brandName: z.string().min(1, 'Tên thương hiệu là bắt buộc').max(255),
   verified: z.boolean().optional().default(true),
+  batchNumber: z.string().max(100).optional().nullable(),
+  category: z.string().max(100).optional().nullable(),
+  certifications: z.array(z.string().max(100)).max(20).optional().default([]),
 }).refine(
   (data) => {
-    if (data.expiresInMonths) {
+    if (data.expiresInMonths && data.expiresInMonths > 0) {
       return true;
     }
     if (data.manufactureDate && data.expiryDate) {
@@ -34,7 +37,7 @@ export const productSchema = z.object({
     return false;
   },
   {
-    message: 'Vui lòng nhập ngày sản xuất và ngày hết hạn hợp lệ, hoặc nhập số tháng hết hạn',
+    message: 'Vui lòng nhập ngày sản xuất và ngày hết hạn hợp lệ, hoặc nhập số tháng hết hạn (lớn hơn 0)',
     path: ['expiryDate'],
   }
 );

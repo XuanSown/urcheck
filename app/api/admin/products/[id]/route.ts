@@ -116,6 +116,9 @@ export async function PUT(
           publishedAt: validatedData.status === 'PUBLISHED' ? new Date() : null,
           purchaseLinks: validatedData.purchaseLinks,
           brandName: validatedData.brandName,
+          batchNumber: validatedData.batchNumber || null,
+          category: validatedData.category || null,
+          certifications: validatedData.certifications || [],
           verified: validatedData.verified,
         },
       });
@@ -139,6 +142,9 @@ export async function PUT(
         status: product.status,
         purchaseLinks: product.purchaseLinks,
         brandName: product.brandName,
+        batchNumber: product.batchNumber,
+        category: product.category,
+        certifications: product.certifications,
         verified: product.verified,
 
       };
@@ -288,6 +294,9 @@ function formatProductResponse(product: any) {
     publishedAt: product.publishedAt?.toISOString() ?? null,
     purchaseLinks: product.purchaseLinks,
     brandName: product.brandName,
+    batchNumber: product.batchNumber,
+    category: product.category,
+    certifications: product.certifications,
     verified: product.verified,
     createdAt: product.createdAt.toISOString(),
     updatedAt: product.updatedAt.toISOString(),

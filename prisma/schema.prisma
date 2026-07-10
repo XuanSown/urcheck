@@ -30,6 +30,9 @@ model Product {
   publishedAt        DateTime?
   purchaseLinks      Json?
   brandName          String
+  batchNumber        String?
+  category           String?
+  certifications     String[]
   verified           Boolean       @default(true)
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt

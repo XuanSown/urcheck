@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useLocale } from '@/components/I18nProvider';
 import { ProductCard } from '@/components/ProductCard';
-import { SkeletonGrid, EmptyState } from './DiscoverStates';
+import { SkeletonGrid, EmptyState, ErrorState } from './DiscoverStates';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 
@@ -16,18 +16,24 @@ export function WishlistGrid() {
   const { t } = useLocale();
   const [products, setProducts] = useState<Product[] | null>(null);
   const [auth, setAuth] = useState(false);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  const load = () => {
     let active = true;
+    setError(false);
+    setProducts(null);
     fetch('/api/customer/wishlist').then((r) => r.json()).then((data) => {
       if (!active) return;
       if (data.auth) { setAuth(true); setProducts([]); }
       else if (data.success) setProducts(data.products);
-      else { setAuth(false); setProducts([]); }
-    }).catch(() => { if (active) { setAuth(false); setProducts([]); } });
+      else { setAuth(false); setError(true); }
+    }).catch(() => { if (active) { setAuth(false); setError(true); } });
     return () => { active = false; };
-  }, []);
+  };
 
+  useEffect(() => load(), []);
+
+  if (error) return <ErrorState message={t('feed_error') || 'Đã xảy ra lỗi, vui lòng thử lại'} onRetry={load} />;
   if (products === null) return <SkeletonGrid />;
   if (auth) return <EmptyState title={t('discover_login_to_view')} action={<Link href="/customer/login"><Button>{t('common_login') || 'Đăng nhập'}</Button></Link>} />;
   if (products.length === 0) return <EmptyState title={t('discover_saved_empty')} />;

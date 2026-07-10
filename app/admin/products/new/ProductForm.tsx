@@ -33,6 +33,17 @@ export interface ProductFormData {
   existingImages?: Array<{ id: string; url: string; isPrimary: boolean; altText?: string }>;
 }
 
+// Read a File as a base64 data URL so the local preview always renders,
+// independent of blob: URL support or any CSP restrictions.
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
 interface ProductFormProps {
   productId?: string;
   initialData?: Partial<ProductFormData> | null;
@@ -238,7 +249,7 @@ export default function ProductForm({
 
   const totalImageCount = isEditing ? images.length : pendingFiles.length;
 
-  const handleFilesSelected = (files: FileList | File[]) => {
+  const handleFilesSelected = async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
     const available = 3 - totalImageCount;
     if (available <= 0) {
@@ -256,11 +267,13 @@ export default function ProductForm({
       // Upload ngay lên server
       handleImageUpload(toAdd);
     } else {
-      // Lưu tạm, hiển thị preview
-      const newPending = toAdd.map((file) => ({
-        file,
-        previewUrl: URL.createObjectURL(file),
-      }));
+      // Lưu tạm, hiển thị preview bằng data URL (luôn hiển thị được)
+      const newPending = await Promise.all(
+        toAdd.map(async (file) => ({
+          file,
+          previewUrl: await readFileAsDataUrl(file),
+        }))
+      );
       setPendingFiles(prev => [...prev, ...newPending]);
     }
   };

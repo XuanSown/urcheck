@@ -1,113 +1,54 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useLocale } from '@/components/I18nProvider';
-import { ProductCard } from '@/components/ProductCard';
 import { FilterBar } from '@/components/FilterBar';
-import { Button } from '@/components/ui/Button';
-
-type Product = {
-  id: string;
-  name: string;
-  brandName: string;
-  skinType?: string | null;
-  imageUrl?: string | null;
-  suitableFor?: string[];
-  tags?: string[];
-};
+import { DiscoverFeed } from '@/components/discover/DiscoverFeed';
+import { WishlistGrid } from '@/components/discover/WishlistGrid';
 
 export default function DiscoverPage() {
-  const { locale, t } = useLocale();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
+  const { t } = useLocale();
+  const reduced = useReducedMotion();
+  const [tab, setTab] = useState<'discover' | 'saved'>('discover');
   const [skinType, setSkinType] = useState<string | undefined>();
   const [brand, setBrand] = useState<string | undefined>();
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchFeed = useCallback(async (p = 1, reset = false) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({ page: String(p), limit: '12' });
-      if (skinType) params.set('skinType', skinType);
-      if (brand) params.set('brand', brand);
-      const res = await fetch(`/api/feed?${params.toString()}`, { headers: { 'Accept-Language': locale } });
-      const data = await res.json();
-      if (data.success) {
-        const next = data.products;
-        setProducts((prev) => (reset ? next : [...prev, ...next]));
-        setTotal(data.pagination.total);
-        setHasMore(data.pagination.page * data.pagination.limit < data.pagination.total);
-        setPage(data.pagination.page);
-      }
-    } catch {
-      setError(t('feed_error') || 'Đã xảy ra lỗi khi tải dữ liệu, vui lòng thử lại');
-    } finally {
-      setLoading(false);
-    }
-  }, [locale, skinType, brand]);
-
-  useEffect(() => {
-    fetchFeed(1, true);
-  }, [fetchFeed]);
-
-  const loadMore = () => fetchFeed(page + 1);
-
-  const resetFilters = () => {
-    setSkinType(undefined);
-    setBrand(undefined);
-  };
+  const tabs = [
+    { key: 'discover' as const, label: t('discover_tab_discover') },
+    { key: 'saved' as const, label: t('discover_tab_saved') },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 px-4 py-8">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('feed_title')}</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">{t('feed_subtitle')}</p>
+        <motion.div initial={reduced ? { opacity: 0 } : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduced ? 0 : 0.3, ease: [0.16, 1, 0.3, 1] }}>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{tab === 'saved' ? t('discover_saved_title') : t('feed_title')}</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">{tab === 'saved' ? '' : t('feed_subtitle')}</p>
+        </motion.div>
+
+        <div className="flex gap-1 mt-6 border-b border-gray-200 dark:border-gray-800" role="tablist" aria-label="discover tabs">
+          {tabs.map((tb) => (
+            <button
+              key={tb.key}
+              role="tab"
+              aria-selected={tab === tb.key}
+              onClick={() => setTab(tb.key)}
+              className={`relative px-4 py-2 text-sm font-medium ${tab === tb.key ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+            >
+              {tb.label}
+              {tab === tb.key && <motion.span layoutId="discover-tab" className="absolute inset-x-0 -bottom-px h-0.5 bg-primary-600 dark:bg-primary-400" />}
+            </button>
+          ))}
         </div>
 
-        <FilterBar
-          skinType={skinType}
-          brand={brand}
-          onSkinTypeChange={setSkinType}
-          onBrandChange={setBrand}
-          onReset={resetFilters}
-        />
-
-        {loading && products.length === 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 animate-pulse">
-                <div className="aspect-square bg-gray-200 dark:bg-gray-800 rounded-xl mb-3" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/2 mb-2" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4" />
-              </div>
-            ))}
-          </div>
-        ) : products.length === 0 ? (
-          <p className="text-center text-gray-500 py-12">{t('feed_empty')}</p>
-        ) : error ? (
-          <div className="mt-8 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded-xl flex items-start gap-3" role="alert">
-            <p className="text-red-700 dark:text-red-400">{error}</p>
-          </div>
-        ) : (
+        {tab === 'discover' ? (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {products.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-            {hasMore && (
-              <div className="mt-8 text-center">
-                <Button onClick={loadMore} loading={loading} size="lg">
-                  {t('feed_load_more')}
-                </Button>
-              </div>
-            )}
+            <FilterBar skinType={skinType} brand={brand} onSkinTypeChange={setSkinType} onBrandChange={setBrand} onReset={() => { setSkinType(undefined); setBrand(undefined); }} />
+            <DiscoverFeed skinType={skinType} brand={brand} />
           </>
+        ) : (
+          <div className="pt-6"><WishlistGrid /></div>
         )}
       </div>
     </div>

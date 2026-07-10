@@ -1,10 +1,16 @@
 'use client';
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { useLocale } from '@/components/I18nProvider';
+import { HeroScene3DFallback } from '@/components/home/HeroScene3DFallback';
+
+const HeroScene3D = dynamic(() => import('@/components/home/HeroScene3D'), {
+  ssr: false,
+  loading: () => <HeroScene3DFallback />,
+});
 
 export function Hero({ onScan, onExplore }: { onScan?: () => void; onExplore?: () => void }) {
   const { t } = useLocale();
@@ -36,9 +42,9 @@ export function Hero({ onScan, onExplore }: { onScan?: () => void; onExplore?: (
           </motion.div>
         </div>
         <motion.div {...rise()} className="relative">
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/5] sm:aspect-[4/3] lg:aspect-square">
-            <Image src="https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=900&q=80" alt="Mỹ phẩm chính hãng được xác thực" fill sizes="(max-width:1024px) 90vw, 45vw" className="object-cover" priority />
-            <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/20 to-transparent" />
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/5] sm:aspect-[4/3] lg:aspect-square bg-gradient-to-tr from-primary-500/10 to-transparent">
+            <HeroScene3D />
+            <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/20 to-transparent pointer-events-none" />
             <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur px-3 py-1.5 rounded-full text-sm font-medium text-gray-900 dark:text-white">
               <svg className="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
               Đã xác minh

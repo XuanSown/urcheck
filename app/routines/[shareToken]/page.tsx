@@ -84,6 +84,8 @@ export default function SharedRoutinePage({ params }: { params: Promise<{ shareT
       if (data.success) {
         alert(t('routines_cloned'));
         router.push('/customer/routines');
+      } else {
+        alert(t('routines_clone_failed') || 'Không thể lưu routine. Vui lòng thử lại.');
       }
     } catch {
       // silent

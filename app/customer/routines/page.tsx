@@ -1,18 +1,31 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useCustomerAuth } from '@/components/CustomerAuth';
 import { RoutineForm } from '@/components/RoutineForm';
 import { RoutineList } from '@/components/RoutineList';
 import { useLocale } from '@/components/I18nProvider';
 
-export default function CustomerRoutinesPage() {
+function CustomerRoutinesContent() {
   const { customer, loading: authLoading } = useCustomerAuth();
   const { locale, t } = useLocale();
+  const searchParams = useSearchParams();
   const [routines, setRoutines] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<any>(null);
+
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (editId && routines.length && !showForm) {
+      const r = routines.find((x: any) => x.id === editId);
+      if (r) {
+        setEditing(r);
+        setShowForm(true);
+      }
+    }
+  }, [searchParams, routines, showForm]);
 
   const fetchRoutines = async () => {
     setLoading(true);
@@ -104,5 +117,13 @@ export default function CustomerRoutinesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function CustomerRoutinesPage() {
+  return (
+    <Suspense fallback={null}>
+      <CustomerRoutinesContent />
+    </Suspense>
   );
 }

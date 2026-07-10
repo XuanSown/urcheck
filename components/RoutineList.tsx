@@ -39,9 +39,11 @@ export function RoutineList({
       {routines.map((r) => (
         <div key={r.id} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6">
           <div className="flex items-start justify-between mb-3">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{r.title}</h3>
-              {r.description && <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{r.description}</p>}
+              <div>
+                <a href={`/customer/routines/${r.id}`} className="hover:underline">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{r.title}</h3>
+                </a>
+                {r.description && <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{r.description}</p>}
               <span className="inline-block mt-2 px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
                 {r.isPublic ? t('routines_public_label') : t('routines_private_label')}
               </span>

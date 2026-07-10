@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { requireCustomerApi } from '@/lib/customer-auth';
 import { z } from 'zod';
@@ -11,6 +11,36 @@ function mapRoutineItem(item: any) {
     brandName: item.product?.brandName ?? null,
     imageUrl: primaryImageUrl(item.product?.images) ?? null,
   };
+}
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const guard = await requireCustomerApi();
+  if ('error' in guard) return guard.error;
+
+  const routine = await prisma.routine.findFirst({
+    where: { id, customerId: guard.session.customerId },
+    include: {
+      items: {
+        orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+        include: {
+          product: {
+            include: { images: { where: { isPrimary: true }, take: 1, select: { url: true, isPrimary: true } } },
+          },
+        },
+      },
+    },
+  });
+
+  if (!routine) {
+    return NextResponse.json({ success: false, message: 'Không tìm thấy routine' }, { status: 404 });
+  }
+
+  const mapped = { ...routine, items: routine.items.map(mapRoutineItem) };
+  return NextResponse.json({ success: true, routine: mapped });
 }
 
 const ALLOWED_TIME_OF_DAY = ['morning', 'afternoon', 'evening', 'night'] as const;

@@ -159,6 +159,14 @@ export default function ProductForm({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+      if (error === fieldErrors[name]) setError(null);
+    }
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
@@ -369,8 +377,54 @@ export default function ProductForm({
     return Object.keys(errs).length === 0;
   };
 
-  const handleDraftClick = () => {
-    setFormData(prev => ({ ...prev, status: 'DRAFT' }));
+  const saveDraft = async (): Promise<boolean> => {
+    const ok = validate();
+    if (!ok) return false;
+    setLoading(true);
+    try {
+      const payload = {
+        ...formData,
+        status: 'DRAFT',
+        usages: formData.usages.filter((u) => u.trim() !== ''),
+        usageInstructions: formData.usageInstructions.filter((c) => c.trim() !== ''),
+        purchaseLinks: formData.purchaseLinks.filter((l) => l.url.trim() !== '' && l.platform.trim() !== ''),
+        manufactureDate: formData.expiryType === 'dates' && formData.manufactureDate ? new Date(formData.manufactureDate).toISOString() : null,
+        expiryDate: formData.expiryType === 'dates' && formData.expiryDate ? new Date(formData.expiryDate).toISOString() : null,
+        expiresInMonths: formData.expiryType === 'months' && formData.expiresInMonths ? Number(formData.expiresInMonths) : null,
+        batchNumber: formData.batchNumber || null,
+        category: formData.category || null,
+        certifications: formData.certifications || [],
+      };
+
+      const response = await fetch('/api/admin/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Lưu nháp thất bại');
+
+      if (pendingFiles.length > 0 && result.data?.id) {
+        await uploadPendingImages(result.data.id);
+      }
+      setSuccess('Đã lưu bản nháp');
+      setTimeout(() => router.push(`/admin/products/${result.data.id}`), 800);
+      return true;
+    } catch (err: any) {
+      setError(err.message);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDraftClick = async () => {
+    if (isEditing) {
+      // Lưu nháp và ở lại trang chỉnh sửa
+      await handleSubmitLocal(formData, 'DRAFT');
+    } else {
+      await saveDraft();
+    }
   };
 
   const handlePreviewClick = () => {
@@ -405,7 +459,7 @@ export default function ProductForm({
     }
   };
 
-  const handleSubmitLocal = async (data: ProductFormData) => {
+  const handleSubmitLocal = async (data: ProductFormData, forceStatus?: 'DRAFT' | 'PUBLISHED') => {
     setLoading(true);
 
     try {
@@ -418,6 +472,7 @@ export default function ProductForm({
 
       const payload = {
         ...cleanFormData,
+        status: forceStatus || formData.status,
         manufactureDate: data.expiryType === 'dates' && data.manufactureDate ? new Date(data.manufactureDate).toISOString() : null,
         expiryDate: data.expiryType === 'dates' && data.expiryDate ? new Date(data.expiryDate).toISOString() : null,
         expiresInMonths: data.expiryType === 'months' && data.expiresInMonths ? Number(data.expiresInMonths) : null,
@@ -425,6 +480,8 @@ export default function ProductForm({
         category: data.category || null,
         certifications: data.certifications || [],
       };
+
+      const isDraft = (forceStatus || formData.status) === 'DRAFT';
 
       const response = await fetch('/api/admin/products', {
         method: 'POST',
@@ -445,6 +502,12 @@ export default function ProductForm({
       }
 
       if (!imagesOk) return; // keep error visible, stop before success/QR dialog
+
+      if (isDraft) {
+        setSuccess('Đã lưu bản nháp');
+        setTimeout(() => router.push(`/admin/products/${result.data.id}`), 800);
+        return;
+      }
 
       setSuccess('Lưu sản phẩm thành công!');
 
@@ -468,9 +531,9 @@ export default function ProductForm({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto pb-24">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white\">
             {isEditing ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
@@ -479,21 +542,10 @@ export default function ProductForm({
             {isEditing ? 'Cập nhật thông tin sản phẩm' : 'Điền đầy đủ thông tin sản phẩm'}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => router.back()}>
-            Hủy
-          </Button>
-          <Button variant="secondary" onClick={handleDraftClick} disabled={loading}>
-            Lưu nháp
-          </Button>
-          <Button onClick={handleFormSubmit} loading={loading}>
-            {isEditing ? 'Cập nhật' : 'Tạo sản phẩm'}
-          </Button>
-        </div>
       </div>
 
       {error && (
-        <Card className="p-4 bg-red-50 border-red-200">
+        <Card className="p-4 bg-red-50 border-red-200 mb-6">
           <p className="text-red-700">{error}</p>
         </Card>
       )}
@@ -504,7 +556,7 @@ export default function ProductForm({
         </Card>
       )}
 
-      <form onSubmit={handleFormSubmit} className="space-y-6">
+      <form id="product-form" onSubmit={handleFormSubmit} className="space-y-6">
         {/* Basic Info */}
         <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4">Thông tin cơ bản</h2>
@@ -1137,20 +1189,27 @@ export default function ProductForm({
             </div>
           </Card>
         )}
+      </form>
 
-        {/* Bottom actions */}
-        <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
+      {/* Sticky footer action bar */}
+      <div className="fixed bottom-0 left-0 right-0 lg:left-64 z-40 border-t border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-gray-900/90 backdrop-blur supports-[backdrop-filter]:bg-white/75">
+        <div className="max-w-4xl mx-auto px-4 lg:px-8 py-3 flex items-center justify-between gap-3">
+          <Button type="button" variant="ghost" onClick={() => router.back()} disabled={loading}>
             Hủy
           </Button>
-          <Button type="button" variant="secondary" onClick={handlePreviewClick}>
-            Xem trước
-          </Button>
-          <Button type="submit" loading={submitting || loading}>
-            {isEditing ? 'Cập nhật' : 'Tạo sản phẩm'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="secondary" onClick={handlePreviewClick} disabled={loading}>
+              Xem trước
+            </Button>
+            <Button type="button" variant="outline" onClick={handleDraftClick} disabled={loading} loading={loading && (formData.status === 'DRAFT')}>
+              Lưu nháp
+            </Button>
+            <Button type="submit" form="product-form" disabled={submitting || loading} loading={submitting || loading}>
+              {isEditing ? 'Cập nhật' : 'Tạo sản phẩm'}
+            </Button>
+          </div>
         </div>
-      </form>
+      </div>
 
       {/* QR Code Dialog - shown after successful save */}
       {generatedQr && (

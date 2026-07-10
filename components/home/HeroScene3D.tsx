@@ -119,7 +119,7 @@ function Particles() {
   );
 }
 
-function StaticFallback() {
+export function HeroScene3DFallback() {
   return (
     <div
       className="h-full w-full flex items-center justify-center"
@@ -171,7 +171,7 @@ export function HeroScene3D() {
     return () => window.removeEventListener('mousemove', onMove);
   }, [mount]);
 
-  if (!mount) return <StaticFallback />;
+  if (!mount) return <HeroScene3DFallback />;
 
   return (
     <Canvas

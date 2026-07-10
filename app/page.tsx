@@ -8,6 +8,11 @@ import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { ProductInfo } from '@/components/ProductInfo';
 import { Footer } from '@/components/Footer';
+import { HowItWorks } from '@/components/home/HowItWorks';
+import { Stats } from '@/components/home/Stats';
+import { TrustReasons } from '@/components/home/TrustReasons';
+import { FinalCta } from '@/components/home/FinalCta';
+import { Section } from '@/components/home/Section';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Button } from '@/components/ui/Button';
 import { QrScanner } from '@/components/QrScanner';
@@ -94,25 +99,10 @@ function HomeInner() {
       <Header />
 
       <main className="flex-1">
-        <Hero onScan={() => {}} />
+        <Hero onScan={() => setShowScanner(true)} />
 
-        <section id="verify" className="py-10 sm:py-14 lg:py-16 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
+        <Section id="verify" title={t('verify_title')} subtitle={t('verify_subtitle')}>
           <div className="max-w-4xl mx-auto">
-            <motion.div
-              className="text-center mb-8 sm:mb-12"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-50px' }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary-900 dark:text-primary-400 mb-3 sm:mb-4">
-                {t('verify_title')}
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 max-w-xl sm:max-w-2xl mx-auto text-sm sm:text-base">
-                {t('verify_subtitle')}
-              </p>
-            </motion.div>
-
             {/* Verify form (always visible) */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -253,7 +243,12 @@ function HomeInner() {
               )}
             </AnimatePresence>
           </div>
-        </section>
+        </Section>
+
+        <HowItWorks />
+        <Stats />
+        <TrustReasons />
+        <FinalCta onScan={() => setShowScanner(true)} />
       </main>
 
       <Footer />

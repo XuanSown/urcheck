@@ -14,6 +14,9 @@ export interface Product {
   publishedAt?: string | Date;
   purchaseLinks?: Array<{ platform: string; url: string }>;
   brandName: string;
+  category?: string;
+  certifications?: string[];
+  batchNumber?: string;
   imageUrl?: string | null;
   images?: ProductImage[];
   verified: boolean;

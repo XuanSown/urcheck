@@ -31,7 +31,7 @@ export function Hero({ onScan, onExplore }: { onScan?: () => void; onExplore?: (
               {t('hero_cta')}
             </Button>
             <Link href="/discover" onClick={onExplore} className="w-full sm:w-auto">
-              <Button size="xl" variant="outline" className="w-full sm:w-auto">{t('hero_explore') ?? 'Khám phá sản phẩm'}</Button>
+              <Button size="xl" variant="outline" className="w-full sm:w-auto">{t('hero_explore')}</Button>
             </Link>
           </motion.div>
         </div>

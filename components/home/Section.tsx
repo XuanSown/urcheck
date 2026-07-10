@@ -15,7 +15,7 @@ export function Section({ id, title, subtitle, children, className = '' }: { id?
             transition={{ duration: reduced ? 0 : 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="text-center mb-10 sm:mb-14"
           >
-            {title && <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">{title}</h2>}
+            {title && <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary-900 dark:text-primary-400">{title}</h2>}
             {subtitle && <p className="mt-3 text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">{subtitle}</p>}
           </motion.div>
         )}

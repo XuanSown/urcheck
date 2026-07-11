@@ -9,26 +9,11 @@ export interface AdminSession {
   expires?: number;
 }
 
-export interface CustomerSession {
-  customerId: string;
-  deviceId: string;
-  email?: string;
-}
-
 function getAdminSecret(): Uint8Array {
   const secret =
     process.env.ADMIN_SESSION_SECRET ?? process.env.SECRET_KEY;
   if (!secret) {
     throw new Error('Missing ADMIN_SESSION_SECRET / SECRET_KEY environment variable');
-  }
-  return new TextEncoder().encode(secret);
-}
-
-function getCustomerSecret(): Uint8Array {
-  const secret =
-    process.env.JWT_SECRET ?? process.env.ADMIN_SESSION_SECRET ?? process.env.SECRET_KEY;
-  if (!secret) {
-    throw new Error('Missing JWT_SECRET / ADMIN_SESSION_SECRET / SECRET_KEY environment variable');
   }
   return new TextEncoder().encode(secret);
 }
@@ -55,32 +40,6 @@ export async function verifyAdminSession(token: string): Promise<AdminSession | 
       role: p.role as string,
       deviceFingerprint: p.deviceFingerprint as string | undefined,
       expires: typeof p.exp === 'number' ? p.exp * 1000 : Date.now() + 7 * 24 * 60 * 60 * 1000,
-    };
-  } catch {
-    return null;
-  }
-}
-
-export async function signCustomerSession(session: CustomerSession): Promise<string> {
-  try {
-    const jwt = await new SignJWT({ ...session })
-      .setProtectedHeader({ typ: 'JWT', alg: 'HS256' })
-      .setExpirationTime('30d')
-      .sign(getCustomerSecret());
-    return jwt;
-  } catch {
-    return '';
-  }
-}
-
-export async function verifyCustomerSession(token: string): Promise<CustomerSession | null> {
-  try {
-    const { payload } = await jwtVerify(token, getCustomerSecret(), { algorithms: ['HS256'] });
-    const p = payload as unknown as Record<string, unknown>;
-    return {
-      customerId: p.customerId as string,
-      deviceId: p.deviceId as string,
-      email: p.email as string | undefined,
     };
   } catch {
     return null;

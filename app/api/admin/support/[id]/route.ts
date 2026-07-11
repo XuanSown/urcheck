@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { requireAdminApi } from '@/lib/auth';
 import prisma from '@/lib/db';
+import { escapeHtml } from '@/lib/security';
+
+const supportUpdateSchema = z.object({
+  slug: z.string().min(1).max(255).optional(),
+  titleVi: z.string().min(1).max(500).optional(),
+  titleEn: z.string().min(1).max(500).optional(),
+  bodyVi: z.string().max(20000).nullable().optional(),
+  bodyEn: z.string().max(20000).nullable().optional(),
+  category: z.string().min(1).max(255).optional(),
+  status: z.enum(['DRAFT', 'PUBLISHED']).optional(),
+  order: z.number().int().optional(),
+});
 
 export async function GET(
   request: NextRequest,
@@ -32,7 +45,12 @@ export async function PUT(
     if ('error' in auth) return auth.error;
     const { id } = await params;
 
-    const data = await request.json();
+    const rawData = await request.json();
+    const parsed = supportUpdateSchema.safeParse(rawData);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.format() }, { status: 400 });
+    }
+    const data = parsed.data;
     const existing = await prisma.supportArticle.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ success: false, error: 'Bài viết không tồn tại' }, { status: 404 });
@@ -44,8 +62,8 @@ export async function PUT(
         slug: data.slug ?? existing.slug,
         titleVi: data.titleVi ?? existing.titleVi,
         titleEn: data.titleEn ?? existing.titleEn,
-        bodyVi: data.bodyVi !== undefined ? data.bodyVi : existing.bodyVi,
-        bodyEn: data.bodyEn !== undefined ? data.bodyEn : existing.bodyEn,
+        bodyVi: data.bodyVi !== undefined ? (data.bodyVi ? escapeHtml(data.bodyVi) : data.bodyVi) : existing.bodyVi,
+        bodyEn: data.bodyEn !== undefined ? (data.bodyEn ? escapeHtml(data.bodyEn) : data.bodyEn) : existing.bodyEn,
         category: data.category ?? existing.category,
         status: data.status ?? existing.status,
         order: data.order !== undefined ? data.order : existing.order,

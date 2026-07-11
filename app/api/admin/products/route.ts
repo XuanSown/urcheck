@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAdminApi } from '@/lib/auth';
 import prisma from '@/lib/db';
 import { productSchema } from '@/lib/validators';
+import { sanitizeForPrisma, escapeHtml } from '@/lib/security';
 import { primaryImageUrl } from '@/lib/product-utils';
 import {
   buildQrUrl,
@@ -148,6 +149,7 @@ export async function POST(request: NextRequest) {
     if ('error' in auth) return auth.error;
     const body = await request.json();
     const validatedData = productSchema.parse(body);
+    const sanitizedData = sanitizeForPrisma(validatedData) as typeof validatedData;
 
 
 
@@ -156,26 +158,26 @@ export async function POST(request: NextRequest) {
       // Create product
       const product = await tx.product.create({
         data: {
-          name: validatedData.name,
-          description: validatedData.description,
+          name: sanitizedData.name,
+          description: sanitizedData.description ? escapeHtml(sanitizedData.description) : sanitizedData.description,
 
           manufactureDate: validatedData.manufactureDate ? new Date(validatedData.manufactureDate) : null,
           expiryDate: validatedData.expiryDate ? new Date(validatedData.expiryDate) : null,
-          expiresInMonths: validatedData.expiresInMonths || null,
-          skinType: validatedData.skinType,
-          suitableFor: validatedData.suitableFor,
-          usages: validatedData.usages,
-          usageInstructions: validatedData.usageInstructions,
-          ingredientAnalysis: validatedData.ingredientAnalysis,
-          tags: validatedData.tags,
-          status: validatedData.status,
-          publishedAt: validatedData.status === 'PUBLISHED' ? new Date() : null,
-          purchaseLinks: validatedData.purchaseLinks,
-          brandName: validatedData.brandName,
-          batchNumber: validatedData.batchNumber || null,
-          category: validatedData.category || null,
-          certifications: validatedData.certifications || [],
-          verified: validatedData.verified,
+          expiresInMonths: sanitizedData.expiresInMonths || null,
+          skinType: sanitizedData.skinType,
+          suitableFor: sanitizedData.suitableFor,
+          usages: sanitizedData.usages,
+          usageInstructions: sanitizedData.usageInstructions,
+          ingredientAnalysis: sanitizedData.ingredientAnalysis,
+          tags: sanitizedData.tags,
+          status: sanitizedData.status,
+          publishedAt: sanitizedData.status === 'PUBLISHED' ? new Date() : null,
+          purchaseLinks: sanitizedData.purchaseLinks,
+          brandName: sanitizedData.brandName,
+          batchNumber: sanitizedData.batchNumber || null,
+          category: sanitizedData.category || null,
+          certifications: sanitizedData.certifications || [],
+          verified: sanitizedData.verified,
         },
       });
 
@@ -215,7 +217,7 @@ export async function POST(request: NextRequest) {
         data: {
           productId: product.id,
           productSnapshot,
-          changedBy: 'system',
+          changedBy: auth.user?.id ?? 'system',
           changeReason: 'Tạo mới sản phẩm',
         },
       });

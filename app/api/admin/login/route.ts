@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loginAdmin } from '@/lib/auth';
 import { signAdminSession } from '@/lib/session';
-import { defaultRateLimiter } from '@/lib/security';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { z } from 'zod';
+import prisma from '@/lib/db';
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
@@ -28,10 +29,10 @@ export async function POST(request: NextRequest) {
     }
     const validated = loginSchema.parse(body);
 
-    const rate = await defaultRateLimiter.check(request, 'admin:login');
-    if (!rate.allowed) {
+    const rate = await checkRateLimit('login', getIp(request));
+    if (rate.limited) {
       return NextResponse.json(
-        { success: false, error: `Quá nhiều lần thử. Vui lòng thử lại sau ${rate.retryAfter} giây.` },
+        { success: false, error: `Quá nhiều lần thử. Vui lòng thử lại sau ${rate.retryAfterSec} giây.` },
         { status: 429 }
       );
     }
@@ -50,10 +51,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: result.error || 'Đang nhap that bai' }, { status: 401 });
     }
 
+    // Fetch user with tokenVersion for session token
+    const adminUser = await prisma.adminUser.findUnique({
+      where: { id: result.user!.id },
+      select: { id: true, username: true, role: true, tokenVersion: true },
+    });
+
     const jwtToken = await signAdminSession({
-      userId: result.user!.id,
-      username: result.user!.username,
-      role: result.user!.role,
+      userId: adminUser!.id,
+      username: adminUser!.username,
+      role: adminUser!.role,
+      tokenVersion: adminUser!.tokenVersion,
     });
 
     const response = NextResponse.json({

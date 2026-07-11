@@ -47,13 +47,18 @@ function decodeCursor(raw: string | null): DecodedCursor | null {
 }
 
 export async function GET(request: Request) {
-  const guard = await requireCustomerApi();
-  const customerId = 'session' in guard ? guard.session?.customerId ?? null : null;
   const { searchParams } = new URL(request.url);
   const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '12', 10) || 12));
   const cursor = decodeCursor(searchParams.get('cursor'));
   const skinTypeFilter = searchParams.get('skinType') || undefined;
   const brandFilter = searchParams.get('brand') || undefined;
+
+  const guard = await requireCustomerApi();
+  // If auth failed (no session or invalid), fall through to public feed
+  if ('error' in guard) {
+    return feedPublic(limit, skinTypeFilter, brandFilter, cursor);
+  }
+  const customerId = guard.session.customerId;
 
   if (!customerId) return feedPublic(limit, skinTypeFilter, brandFilter, cursor);
 

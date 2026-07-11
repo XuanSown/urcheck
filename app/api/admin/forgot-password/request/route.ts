@@ -2,14 +2,15 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { sendOtpEmail } from '@/lib/mailer';
 import crypto from 'crypto';
-import { defaultRateLimiter } from '@/lib/security';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
   try {
-    const rate = await defaultRateLimiter.check(request, 'admin:forgot');
-    if (!rate.allowed) {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown';
+    const rate = await checkRateLimit('login', `${ip}:forgot`);
+    if (rate.limited) {
       return NextResponse.json(
-        { success: false, error: `Quá nhiều lần thử. Vui lòng thử lại sau ${rate.retryAfter} giây.` },
+        { success: false, error: `Quá nhiều lần thử. Vui lòng thử lại sau ${rate.retryAfterSec} giây.` },
         { status: 429 }
       );
     }

@@ -11,6 +11,15 @@ export async function POST(request: Request) {
   if (!productId || typeof productId !== 'string') {
     return NextResponse.json({ success: false, error: 'Thiếu productId' }, { status: 400 });
   }
+
+  const product = await prisma.product.findUnique({
+    where: { id: productId, status: 'PUBLISHED' },
+    select: { id: true },
+  });
+  if (!product) {
+    return NextResponse.json({ success: false, error: 'Sản phẩm không tồn tại' }, { status: 404 });
+  }
+
   const existing = await prisma.userFavorite.findUnique({ where: { customerId_productId: { customerId, productId } } });
   if (existing) {
     await prisma.userFavorite.delete({ where: { id: existing.id } });

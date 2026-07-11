@@ -77,6 +77,21 @@ export async function POST(request: Request) {
 
   const { title, description, isPublic, items } = parsed.data;
 
+  // Validate all productIds exist and are PUBLISHED
+  const productIds = items.map((item) => item.productId);
+  const validProducts = await prisma.product.findMany({
+    where: { id: { in: productIds }, status: 'PUBLISHED' },
+    select: { id: true },
+  });
+  const validIds = new Set(validProducts.map((p) => p.id));
+  const invalidIds = productIds.filter((id) => !validIds.has(id));
+  if (invalidIds.length > 0) {
+    return NextResponse.json(
+      { success: false, error: `Sản phẩm không hợp lệ: ${invalidIds.join(', ')}` },
+      { status: 400 }
+    );
+  }
+
   const routine = await prisma.routine.create({
     data: {
       customerId: guard.session.customerId,

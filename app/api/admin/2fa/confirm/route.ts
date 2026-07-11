@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { requireAdminApi } from '@/lib/auth';
 import { verifyToken } from '@/lib/twofactor';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { z } from 'zod';
 
 const schema = z.object({ token: z.string().min(1) });
@@ -11,6 +12,14 @@ export async function POST(request: Request) {
   if ('error' in guard) return guard.error;
 
   const user = guard.user!;
+
+  const rl = await checkRateLimit('login', `2fa-confirm:${user.id}`);
+  if (rl.limited) {
+    return NextResponse.json(
+      { success: false, error: `Quá nhiều lần thử. Vui lòng thử lại sau ${Math.ceil(rl.retryAfterSec / 60)} phút` },
+      { status: 429 }
+    );
+  }
 
   try {
     const body = schema.parse(await request.json());

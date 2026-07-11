@@ -104,6 +104,21 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (isPublic !== undefined) data.isPublic = isPublic;
 
   if (items) {
+    // Validate all productIds exist and are PUBLISHED
+    const productIds = items.map((item) => item.productId);
+    const validProducts = await prisma.product.findMany({
+      where: { id: { in: productIds }, status: 'PUBLISHED' },
+      select: { id: true },
+    });
+    const validIds = new Set(validProducts.map((p) => p.id));
+    const invalidIds = productIds.filter((id) => !validIds.has(id));
+    if (invalidIds.length > 0) {
+      return NextResponse.json(
+        { success: false, error: `Sản phẩm không hợp lệ: ${invalidIds.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
     await prisma.routineItem.deleteMany({ where: { routineId: id } });
     data.items = {
       create: items.map((item, idx) => ({

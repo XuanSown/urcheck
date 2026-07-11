@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAdminApi } from '@/lib/auth';
 import prisma from '@/lib/db';
 import type { Prisma } from '@prisma/client';
+import { sanitizeForPrisma, escapeHtml } from '@/lib/security';
 
 const supportArticleSchema = z.object({
   slug: z.string().min(1, 'Slug là bắt buộc').max(255),
@@ -68,7 +69,8 @@ export async function POST(request: NextRequest) {
     if ('error' in auth) return auth.error;
 
     const body = await request.json();
-    const data = supportArticleSchema.parse(body);
+    const parsed = supportArticleSchema.parse(body);
+    const data = sanitizeForPrisma(parsed) as typeof parsed;
 
     const existing = await prisma.supportArticle.findUnique({ where: { slug: data.slug } });
     if (existing) {
@@ -83,8 +85,8 @@ export async function POST(request: NextRequest) {
         slug: data.slug,
         titleVi: data.titleVi,
         titleEn: data.titleEn,
-        bodyVi: data.bodyVi,
-        bodyEn: data.bodyEn,
+        bodyVi: data.bodyVi ? escapeHtml(data.bodyVi) : data.bodyVi,
+        bodyEn: data.bodyEn ? escapeHtml(data.bodyEn) : data.bodyEn,
         category: data.category,
         status: data.status,
         order: data.order ?? 0,

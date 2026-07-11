@@ -116,6 +116,38 @@ export async function GET(
 
     const productImageUrl = primaryImageUrl(product.images);
 
+    // For invalid/unverified products, only return minimal info
+    const productResponse = isValid
+      ? {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          manufactureDate: product.manufactureDate ? product.manufactureDate.toISOString() : null,
+          expiryDate: product.expiryDate ? product.expiryDate.toISOString() : null,
+          imageUrl: productImageUrl,
+          brandName: product.brandName,
+          category: product.category,
+          certifications: product.certifications,
+          batchNumber: product.batchNumber,
+          verified: product.verified,
+          skinType: product.skinType,
+          suitableFor: product.suitableFor,
+          usages: product.usages,
+          usageInstructions: product.usageInstructions,
+          ingredientAnalysis: product.ingredientAnalysis,
+          tags: product.tags,
+          purchaseLinks: product.purchaseLinks,
+          images: product.images,
+          createdAt: product.createdAt.toISOString(),
+          updatedAt: product.updatedAt.toISOString(),
+        }
+      : {
+          id: product.id,
+          name: product.name,
+          verified: product.verified,
+          status: product.status,
+        };
+
     return NextResponse.json({
       success: true,
       valid: isValid,
@@ -127,29 +159,7 @@ export async function GET(
         lastScannedAt: qrCode.lastScannedAt?.toISOString() ?? null,
         isActive: qrCode.isActive,
       },
-      product: {
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        manufactureDate: product.manufactureDate ? product.manufactureDate.toISOString() : null,
-        expiryDate: product.expiryDate ? product.expiryDate.toISOString() : null,
-        imageUrl: productImageUrl,
-        brandName: product.brandName,
-        category: product.category,
-        certifications: product.certifications,
-        batchNumber: product.batchNumber,
-        verified: product.verified,
-        skinType: product.skinType,
-        suitableFor: product.suitableFor,
-        usages: product.usages,
-        usageInstructions: product.usageInstructions,
-        ingredientAnalysis: product.ingredientAnalysis,
-        tags: product.tags,
-        purchaseLinks: product.purchaseLinks,
-        images: product.images,
-        createdAt: product.createdAt.toISOString(),
-        updatedAt: product.updatedAt.toISOString(),
-      },
+      product: productResponse,
       message: isValid
         ? 'Sản phẩm hợp lệ'
         : isExpired

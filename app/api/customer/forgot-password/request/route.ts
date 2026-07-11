@@ -83,7 +83,7 @@ export async function POST(request: Request) {
     await sendOtpEmail(trimmed, otp);
 
     const customer = await prisma.customerAccount.findFirst({
-      where: { email: trimmed, password: { not: null } },
+      where: { email: trimmed },
     });
 
     if (customer) {

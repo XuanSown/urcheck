@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import prisma from '@/lib/db';
 import { requireAdminApi } from '@/lib/auth';
+
+const qrPatchSchema = z.object({ isActive: z.boolean() });
 
 export async function PATCH(
   request: NextRequest,
@@ -13,9 +16,10 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
 
-    if (typeof body.isActive !== 'boolean') {
+    const parsed = qrPatchSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Trường isActive phải là boolean' },
+        { success: false, error: 'isActive phải là boolean' },
         { status: 400 }
       );
     }
@@ -30,7 +34,7 @@ export async function PATCH(
 
     const updated = await prisma.qrCode.update({
       where: { id },
-      data: { isActive: body.isActive },
+      data: { isActive: parsed.data.isActive },
       select: { id: true, isActive: true },
     });
 

@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
     const secure = request.headers.get('x-forwarded-proto') === 'https';
 
-    const lim = await checkRateLimit('register', ip, { windowMs: 60 * 60 * 1000, max: 3 });
+    const lim = await checkRateLimit('register', ip);
     if (lim.limited) {
       return NextResponse.json(
         { success: false, error: `Quá nhiều lần đăng ký. Thử lại sau ${Math.ceil(lim.retryAfterSec / 60)} phút` },

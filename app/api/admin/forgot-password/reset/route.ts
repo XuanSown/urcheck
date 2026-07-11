@@ -1,14 +1,33 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import bcrypt from 'bcrypt';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { validatePasswordComplexity } from '@/lib/password-validation';
 
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown';
+    const rate = await checkRateLimit('login', `${ip}:reset`);
+    if (rate.limited) {
+      return NextResponse.json(
+        { success: false, error: `Quá nhiều lần thử. Vui lòng thử lại sau ${rate.retryAfterSec} giây.` },
+        { status: 429 }
+      );
+    }
+
     const { email, otp, newPassword } = await request.json();
 
     if (!email || !otp || !newPassword) {
       return NextResponse.json(
         { success: false, error: 'Vui lòng cung cấp đầy đủ thông tin' },
+        { status: 400 }
+      );
+    }
+
+    const pwValidation = validatePasswordComplexity(newPassword);
+    if (!pwValidation.valid) {
+      return NextResponse.json(
+        { success: false, error: pwValidation.errors.join(' ') },
         { status: 400 }
       );
     }

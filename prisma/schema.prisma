@@ -89,6 +89,7 @@ model AdminUser {
   lastLogin DateTime?
   twoFactorSecret String?
   twoFactorEnabled Boolean @default(false)
+  tokenVersion Int @default(0)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
@@ -104,7 +105,8 @@ model ScanLog {
   userAgent  String?
   scannedAt  DateTime @default(now())
 
-  qrCode QrCode @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+  qrCode     QrCode          @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+  customer   CustomerAccount? @relation(fields: [customerId], references: [id], onDelete: SetNull)
 
   @@index([qrCodeId])
   @@index([scannedAt])
@@ -217,17 +219,19 @@ model CustomerAccount {
   id                  String    @id @default(cuid())
   deviceId            String    @unique
   email               String?   @unique
-  password            String?
+  password            String
   resetToken          String?   @unique
   resetTokenExpiresAt DateTime?
   isVerified          Boolean   @default(false)
   isActive            Boolean   @default(true)
+  tokenVersion        Int       @default(0)
   createdAt           DateTime  @default(now())
 
   favorites    UserFavorite[]
   collections  Collection[]
   reviews      ProductReview[]
   loginLogs    CustomerLoginLog[]
+  scanLogs     ScanLog[]
 
   routines Routine[]
 

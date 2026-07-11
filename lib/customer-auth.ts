@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import bcrypt from 'bcrypt';
 import prisma from './db';
 import { SignJWT, jwtVerify as joseJwtVerify } from 'jose';
+import { getCustomerSecret } from './secrets';
 
 const CUSTOMER_SESSION_COOKIE = 'customer_session';
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
@@ -10,37 +11,47 @@ type CustomerPayload = {
   sub: string;
   email?: string | null;
   role: 'CUSTOMER';
+  tokenVersion?: number;
   exp: number;
 };
 
-function getSecret() {
-  const secret =
-    process.env.JWT_SECRET ??
-    process.env.ADMIN_SESSION_SECRET ??
-    process.env.SECRET_KEY;
-  if (!secret) {
-    throw new Error('Missing JWT_SECRET / ADMIN_SESSION_SECRET / SECRET_KEY environment variable');
+// Simple in-memory cache for verifySession (5s TTL)
+interface CacheEntry {
+  value: { customerId: string; email?: string | null; role: 'CUSTOMER' } | null;
+  expires: number;
+}
+const sessionCache = new Map<string, CacheEntry>();
+const SESSION_CACHE_TTL = 5_000; // 5 seconds
+
+function getCacheKey(token: string): string {
+  // Use a hash of the token as cache key to avoid storing full tokens
+  let hash = 0;
+  for (let i = 0; i < token.length; i++) {
+    hash = ((hash << 5) - hash) + token.charCodeAt(i);
+    hash |= 0;
   }
-  return new TextEncoder().encode(secret);
+  return `session:${hash}`;
 }
 
 export async function jwtSign(customer: {
   id: string;
   email?: string | null;
+  tokenVersion?: number;
 }): Promise<string> {
   return new SignJWT({
     sub: customer.id,
     email: customer.email,
     role: 'CUSTOMER' as const,
+    tokenVersion: customer.tokenVersion ?? 0,
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime(`${SESSION_MAX_AGE}s`)
-    .sign(getSecret());
+    .sign(getCustomerSecret());
 }
 
 export async function jwtVerify(token: string): Promise<CustomerPayload | null> {
   try {
-    const { payload } = await joseJwtVerify(token, getSecret(), {
+    const { payload } = await joseJwtVerify(token, getCustomerSecret(), {
       algorithms: ['HS256'],
     });
     return payload as CustomerPayload;
@@ -91,7 +102,7 @@ export async function registerCustomer(args: {
       password: hashedPassword,
       isVerified: true,
     },
-    select: { id: true, email: true },
+    select: { id: true, email: true, tokenVersion: true },
   });
 
   await logCustomerAction({
@@ -100,7 +111,7 @@ export async function registerCustomer(args: {
     action: 'register',
   });
 
-  const token = await jwtSign(customer);
+  const token = await jwtSign({ id: customer.id, email: customer.email, tokenVersion: customer.tokenVersion ?? 0 });
 
   return { success: true, customerId: customer.id, token };
 }
@@ -167,7 +178,7 @@ export async function loginCustomer(args: {
     return { success: false, error: 'Email hoặc mật khẩu không đúng' };
   }
 
-  const token = await jwtSign({ id: user.id, email: user.email });
+  const token = await jwtSign({ id: user.id, email: user.email, tokenVersion: user.tokenVersion ?? 0 });
 
   await logCustomerAction({
     customerId: user.id,
@@ -184,6 +195,18 @@ export async function loginCustomer(args: {
 
 export async function logoutCustomer(): Promise<void> {
   const cookieStore = await cookies();
+  const cookie = cookieStore.get(CUSTOMER_SESSION_COOKIE);
+  if (cookie?.value) {
+    const payload = await jwtVerify(cookie.value);
+    if (payload?.sub) {
+      await prisma.customerAccount.update({
+        where: { id: payload.sub },
+        data: { tokenVersion: { increment: 1 } },
+      });
+      // Invalidate cache for this session
+      sessionCache.delete(getCacheKey(cookie.value));
+    }
+  }
   cookieStore.delete(CUSTOMER_SESSION_COOKIE);
 }
 
@@ -198,25 +221,41 @@ export async function verifySession(): Promise<{
     return null;
   }
 
+  const cacheKey = getCacheKey(cookie.value);
+  const cached = sessionCache.get(cacheKey);
+  if (cached && Date.now() < cached.expires) {
+    return cached.value;
+  }
+
   const payload = await jwtVerify(cookie.value);
   if (!payload) {
+    sessionCache.set(cacheKey, { value: null, expires: Date.now() + SESSION_CACHE_TTL });
     return null;
   }
 
   const customer = await prisma.customerAccount.findUnique({
     where: { id: payload.sub },
-    select: { id: true, email: true },
+    select: { id: true, email: true, tokenVersion: true },
   });
 
   if (!customer) {
+    sessionCache.set(cacheKey, { value: null, expires: Date.now() + SESSION_CACHE_TTL });
     return null;
   }
 
-  return {
+  const tokenVer = typeof payload.tokenVersion === 'number' ? payload.tokenVersion : 0;
+  if (tokenVer !== customer.tokenVersion) {
+    sessionCache.set(cacheKey, { value: null, expires: Date.now() + SESSION_CACHE_TTL });
+    return null;
+  }
+
+  const result = {
     customerId: customer.id,
     email: customer.email,
-    role: 'CUSTOMER',
+    role: 'CUSTOMER' as const,
   };
+  sessionCache.set(cacheKey, { value: result, expires: Date.now() + SESSION_CACHE_TTL });
+  return result;
 }
 
 export async function requireCustomerApi() {

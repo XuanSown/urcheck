@@ -1,6 +1,5 @@
 /**
  * Centralized security utilities for Next.js 16 + TypeScript.
- * - Rate limiting (sliding window, in-memory)
  * - CORS helpers
  * - Security headers
  * - Input sanitization & prototype-pollution protection
@@ -9,147 +8,7 @@
  */
 
 /* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
-
-export interface RateLimitResult {
-  allowed: boolean;
-  retryAfter?: number;
-}
-
-export interface RateLimiterOptions {
-  windowMs?: number;
-  max?: number;
-  keySuffix?: string;
-  limits?: Record<string, { windowMs: number; max: number }>;
-}
-
-interface Bucket {
-  count: number;
-  resetTime: number;
-}
-
-/* ------------------------------------------------------------------ */
-/*  1. RateLimiter — sliding-window (in-memory Map)                    */
-/* ------------------------------------------------------------------ */
-
-export class RateLimiter {
-  private readonly windowMs: number;
-  private readonly max: number;
-  private readonly keySuffix: string;
-  private readonly presetLimits: Record<string, { windowMs: number; max: number }>;
-  private readonly store: Map<string, Bucket>;
-  private cleanupTimer: ReturnType<typeof setInterval> | null = null;
-
-  // Preset endpoints (suffix key used after current keySuffix)
-  private static readonly PRESET_LIMITS = {
-    'admin:login': { windowMs: 15 * 60 * 1000, max: 5 },
-    'customer:login': { windowMs: 15 * 60 * 1000, max: 5 },
-    'admin:forgot': { windowMs: 15 * 60 * 1000, max: 3 },
-  } as const;
-
-  constructor(options: RateLimiterOptions = {}) {
-    this.windowMs = options.windowMs ?? 60_000;
-    this.max = options.max ?? 100;
-    this.keySuffix = options.keySuffix ?? '';
-    this.presetLimits = options.limits ?? { ...RateLimiter.PRESET_LIMITS };
-    this.store = new Map();
-
-    // Periodic cleanup of expired buckets (every 2 minutes)
-    this.cleanupTimer = setInterval(() => this.purgeExpired(), 2 * 60_000);
-    // Don't block process exit
-    if (typeof globalThis !== 'undefined') {
-      // Node domain or similar is not needed for plain setInterval
-    }
-  }
-
-  /**
-   * Extract client IP from common reverse-proxy headers.
-   * x-forwarded-for may contain a comma-separated list; the first entry is the original client.
-   */
-  private extractIp(request: Request): string {
-    const headers = request.headers;
-
-    const candidates: string[] = [
-      headers.get('x-forwarded-for')?.split(',')[0].trim(),
-      headers.get('cf-connecting-ip'),
-      headers.get('x-real-ip'),
-    ].filter((v): v is string => typeof v === 'string' && v.length > 0);
-
-    // Fallback — will be the same for all requests without proxy headers;
-    // production MUST sit behind a reverse proxy.
-    const ip = candidates[0] ?? 'unknown';
-
-    return `${ip}${this.keySuffix ? `:${this.keySuffix}` : ''}`;
-  }
-
-  /**
-   * Return the effective (windowMs, max) for a given preset key or the default.
-   */
-  private resolveLimits(endpoint?: string): { windowMs: number; max: number } {
-    if (endpoint && endpoint in this.presetLimits) {
-      return this.presetLimits[endpoint];
-    }
-    return { windowMs: this.windowMs, max: this.max };
-  }
-
-  /**
-   * Check rate limit for the incoming request.
-   * Preset endpoints: 'admin:login', 'customer:login' — pass via `endpoint`.
-   */
-  async check(request: Request, endpoint?: string): Promise<RateLimitResult> {
-    const key = this.extractIp(request);
-    const { windowMs, max } = this.resolveLimits(endpoint);
-    const now = Date.now();
-    const bucketKey = `${key}:${endpoint ?? ''}`;
-
-    const bucket = this.store.get(bucketKey);
-
-    if (!bucket || now >= bucket.resetTime) {
-      // New window (or expired)
-      const newBucket: Bucket = {
-        count: 1,
-        resetTime: now + windowMs,
-      };
-      this.store.set(bucketKey, newBucket);
-      return { allowed: true };
-    }
-
-    // Still in window
-    if (bucket.count >= max) {
-      const retryAfter = Math.ceil((bucket.resetTime - now) / 1000);
-      return { allowed: false, retryAfter };
-    }
-
-    bucket.count += 1;
-    return { allowed: true };
-  }
-
-  /** Remove buckets whose window has expired. */
-  private purgeExpired(): void {
-    const now = Date.now();
-    for (const [k, v] of Array.from(this.store)) {
-      if (now >= v.resetTime) {
-        this.store.delete(k);
-      }
-    }
-  }
-
-  /** Stop the cleanup timer. Call on shutdown / tests. */
-  destroy(): void {
-    if (this.cleanupTimer) {
-      clearInterval(this.cleanupTimer);
-      this.cleanupTimer = null;
-    }
-    this.store.clear();
-  }
-}
-
-// Singleton instance — reasonable defaults: 100 req / minute
-export const defaultRateLimiter = new RateLimiter();
-
-/* ------------------------------------------------------------------ */
-/*  2. CORS helpers                                                    */
+/*  1. CORS helpers                                                    */
 /* ------------------------------------------------------------------ */
 
 /**
@@ -226,7 +85,7 @@ export function buildCorsMiddleware(
 }
 
 /* ------------------------------------------------------------------ */
-/*  3. Security headers                                                */
+/*  2. Security headers                                                */
 /* ------------------------------------------------------------------ */
 
 export function securityHeaders(): Record<string, string> {
@@ -257,7 +116,7 @@ export function securityHeaders(): Record<string, string> {
 }
 
 /* ------------------------------------------------------------------ */
-/*  4. Input sanitisation                                              */
+/*  3. Input sanitisation                                              */
 /* ------------------------------------------------------------------ */
 
 /**
@@ -316,7 +175,7 @@ export function sanitizeForPrisma(input: unknown): unknown {
 }
 
 /* ------------------------------------------------------------------ */
-/*  5. Miscellaneous                                                   */
+/*  4. Miscellaneous                                                   */
 /* ------------------------------------------------------------------ */
 
 /**

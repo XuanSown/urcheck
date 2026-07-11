@@ -1,5 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { NextResponse } from 'next/server';
+import { getAdminSecret } from './secrets';
+import prisma from './db';
 
 export interface AdminSession {
   userId: string;
@@ -7,15 +9,7 @@ export interface AdminSession {
   role: string;
   deviceFingerprint?: string;
   expires?: number;
-}
-
-function getAdminSecret(): Uint8Array {
-  const secret =
-    process.env.ADMIN_SESSION_SECRET ?? process.env.SECRET_KEY;
-  if (!secret) {
-    throw new Error('Missing ADMIN_SESSION_SECRET / SECRET_KEY environment variable');
-  }
-  return new TextEncoder().encode(secret);
+  tokenVersion?: number;
 }
 
 export async function signAdminSession(session: AdminSession): Promise<string> {
@@ -40,6 +34,7 @@ export async function verifyAdminSession(token: string): Promise<AdminSession | 
       role: p.role as string,
       deviceFingerprint: p.deviceFingerprint as string | undefined,
       expires: typeof p.exp === 'number' ? p.exp * 1000 : Date.now() + 7 * 24 * 60 * 60 * 1000,
+      tokenVersion: typeof p.tokenVersion === 'number' ? p.tokenVersion : 0,
     };
   } catch {
     return null;

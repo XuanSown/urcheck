@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { requireAdminApi } from '@/lib/auth';
 import prisma from '@/lib/db';
+import { escapeHtml } from '@/lib/security';
+
+const blogUpdateSchema = z.object({
+  slug: z.string().min(1).max(255).optional(),
+  titleVi: z.string().min(1).max(500).optional(),
+  titleEn: z.string().min(1).max(500).optional(),
+  excerptVi: z.string().max(2000).nullable().optional(),
+  excerptEn: z.string().max(2000).nullable().optional(),
+  bodyVi: z.string().nullable().optional(),
+  bodyEn: z.string().nullable().optional(),
+  coverUrl: z.string().max(2000).nullable().optional(),
+  author: z.string().max(255).nullable().optional(),
+  status: z.enum(['DRAFT', 'PUBLISHED']).optional(),
+});
 
 export async function GET(
   request: NextRequest,
@@ -32,7 +47,12 @@ export async function PUT(
     if ('error' in auth) return auth.error;
     const { id } = await params;
 
-    const data = await request.json();
+    const rawData = await request.json();
+    const parsed = blogUpdateSchema.safeParse(rawData);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.format() }, { status: 400 });
+    }
+    const data = parsed.data;
     const existing = await prisma.blogPost.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ success: false, error: 'Bài viết không tồn tại' }, { status: 404 });
@@ -50,16 +70,16 @@ export async function PUT(
         titleEn: data.titleEn ?? existing.titleEn,
         excerptVi: data.excerptVi !== undefined ? data.excerptVi : existing.excerptVi,
         excerptEn: data.excerptEn !== undefined ? data.excerptEn : existing.excerptEn,
-        bodyVi: data.bodyVi !== undefined ? data.bodyVi : existing.bodyVi,
-        bodyEn: data.bodyEn !== undefined ? data.bodyEn : existing.bodyEn,
+        bodyVi: data.bodyVi !== undefined ? (data.bodyVi ? escapeHtml(data.bodyVi) : data.bodyVi) : existing.bodyVi,
+        bodyEn: data.bodyEn !== undefined ? (data.bodyEn ? escapeHtml(data.bodyEn) : data.bodyEn) : existing.bodyEn,
         coverUrl: data.coverUrl !== undefined ? data.coverUrl : existing.coverUrl,
         author: data.author !== undefined ? data.author : existing.author,
         status: newStatus,
         publishedAt:
           nowPublished && !wasPublished
             ? new Date()
-            : data.publishedAt !== undefined
-              ? data.publishedAt
+            : (rawData as { publishedAt?: string | Date }).publishedAt !== undefined
+              ? (rawData as { publishedAt?: string | Date }).publishedAt
               : existing.publishedAt,
       },
     });

@@ -102,6 +102,20 @@ export function logoutAdmin(response: import('next/server').NextResponse): impor
   return clearAdminSessionCookie(response);
 }
 
+// Logout function that also invalidates server-side session
+export async function logoutAdminWithInvalidation(): Promise<import('next/server').NextResponse> {
+  const { NextResponse } = await import('next/server');
+  const session = await verifyAdminSessionFromCookie();
+  if (session) {
+    await prisma.adminUser.update({
+      where: { id: session.userId },
+      data: { tokenVersion: { increment: 1 } },
+    });
+  }
+  const response = NextResponse.json({ success: true, message: 'Đăng xuất thành công' }, { status: 200 });
+  return clearAdminSessionCookie(response);
+}
+
 // Get current admin user with full details
 export async function getCurrentAdmin() {
   const session = await verifyAdminSessionFromCookie();
@@ -118,7 +132,9 @@ export async function getCurrentAdmin() {
 export async function requireAdmin() {
   const session = await verifyAdminSessionFromCookie();
   if (!session) redirect('/admin/login');
-  return await getCurrentAdmin();
+  const user = await getCurrentAdmin();
+  if (!user) redirect('/admin/login');
+  return user;
 }
 
 // Admin guard for API route handlers
@@ -146,5 +162,16 @@ async function verifyAdminSessionFromCookie(): Promise<AdminSession | null> {
   const session = await verifyAdminSession(sessionCookie.value);
   if (!session) return null;
 
-  return { userId: session.userId, username: session.username, role: session.role };
+  // Check token version for session invalidation
+  const user = await prisma.adminUser.findUnique({
+    where: { id: session.userId },
+    select: { id: true, username: true, role: true, tokenVersion: true },
+  });
+  if (!user) return null;
+
+  if ((session.tokenVersion ?? 0) !== user.tokenVersion) {
+    return null;
+  }
+
+  return { userId: user.id, username: user.username, role: user.role };
 }

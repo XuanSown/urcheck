@@ -14,7 +14,6 @@ jobs:
       JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-dummy-jwt-secret' }}
       ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET || 'ci-dummy-admin-secret' }}
       SECRET_KEY: ${{ secrets.SECRET_KEY || 'ci-dummy-secret' }}
-      NODE_ENV: production
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

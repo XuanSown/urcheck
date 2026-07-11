@@ -25,7 +25,10 @@ export function useCustomerAuth() {
   }, []);
 
   const logout = useCallback(async () => {
-    await fetch('/api/customer/logout', { method: 'POST' });
+    await fetch('/api/customer/logout', {
+      method: 'POST',
+      headers: { 'x-requested-with': 'XMLHttpRequest' },
+    });
     setCustomer(null);
   }, []);
 

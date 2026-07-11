@@ -136,7 +136,7 @@ export async function POST(
       try {
         const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         url = await uploadToSupabase(buffer, filename, file.type);
-      } catch (uploadError: any) {
+      } catch (uploadError: unknown) {
         console.error('Upload to Supabase failed, falling back to data URL:', uploadError);
         url = bufferToDataUrl(buffer, file.type);
       }

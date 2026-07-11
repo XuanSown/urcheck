@@ -1,6 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApi } from '@/lib/auth';
 import prisma from '@/lib/db';
+import type { Prisma, ProductStatus } from '@prisma/client';
+
+interface ProductSnapshot {
+  name?: string;
+  description?: string | null;
+  manufactureDate?: Date | string | null;
+  expiryDate?: Date | string | null;
+  skinType?: string | null;
+  suitableFor?: string | null;
+  usages?: string[];
+  usageInstructions?: string[];
+  ingredientAnalysis?: string | null;
+  tags?: string[];
+  status?: ProductStatus;
+  purchaseLinks?: Prisma.InputJsonValue | null;
+  brandName?: string;
+  verified?: boolean;
+}
 
 export async function POST(
   request: NextRequest,
@@ -52,7 +70,7 @@ export async function POST(
     }
 
     // Apply the rollback - restore from snapshot
-    const snapshot = version.productSnapshot as any;
+    const snapshot = version.productSnapshot as ProductSnapshot;
 
     if (!snapshot || typeof snapshot !== 'object') {
       return NextResponse.json(
@@ -63,14 +81,14 @@ export async function POST(
 
     await prisma.$transaction(async (tx) => {
       // Update product fields from snapshot
-      const updatedProduct = await tx.product.update({
+      await tx.product.update({
         where: { id },
         data: {
           name: snapshot.name,
           description: snapshot.description,
 
-          manufactureDate: new Date(snapshot.manufactureDate),
-          expiryDate: new Date(snapshot.expiryDate),
+          manufactureDate: new Date(snapshot.manufactureDate as string | number | Date),
+          expiryDate: new Date(snapshot.expiryDate as string | number | Date),
           skinType: snapshot.skinType,
           suitableFor: snapshot.suitableFor,
           usages: snapshot.usages,
@@ -81,7 +99,7 @@ export async function POST(
           purchaseLinks: snapshot.purchaseLinks,
           brandName: snapshot.brandName,
           verified: snapshot.verified,
-        },
+        } as unknown as Prisma.ProductUpdateInput,
       });
 
 

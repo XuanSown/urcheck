@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { requireAdminApi } from '@/lib/auth';
 import { z } from 'zod';
+import type { Prisma } from '@prisma/client';
 
 const updateBadgeSchema = z.object({
   name: z.string().trim().min(1, 'Tên huy hiệu là bắt buộc').max(255).optional(),
@@ -32,12 +33,12 @@ export async function PUT(
       );
     }
 
-    const updateData: Record<string, unknown> = {};
+    const updateData: Prisma.BadgeUpdateInput = {};
     if (parsed.name !== undefined) updateData.name = parsed.name;
     if (parsed.descriptionVi !== undefined) updateData.descriptionVi = parsed.descriptionVi;
     if (parsed.descriptionEn !== undefined) updateData.descriptionEn = parsed.descriptionEn;
     if (parsed.icon !== undefined) updateData.icon = parsed.icon;
-    if (parsed.criteriaJson !== undefined) updateData.criteriaJson = parsed.criteriaJson as any;
+    if (parsed.criteriaJson !== undefined) updateData.criteriaJson = parsed.criteriaJson as unknown as Prisma.InputJsonValue;
     if (parsed.order !== undefined) updateData.order = parsed.order;
 
     const badge = await prisma.badge.update({

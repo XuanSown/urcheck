@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdminApi } from '@/lib/auth';
 import prisma from '@/lib/db';
+import type { Prisma, ContentStatus } from '@prisma/client';
 
 const blogPostSchema = z.object({
   slug: z.string().min(1, 'Slug là bắt buộc').max(255),
@@ -26,9 +27,9 @@ export async function GET(request: NextRequest) {
     const status = (searchParams.get('status') || '').trim();
     const search = (searchParams.get('search') || '').trim();
 
-    const where: any = {};
+    const where: Prisma.BlogPostWhereInput = {};
     if (status && ['DRAFT', 'PUBLISHED'].includes(status)) {
-      where.status = status;
+      where.status = status as ContentStatus;
     }
     if (search) {
       where.OR = [

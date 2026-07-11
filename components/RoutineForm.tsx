@@ -29,7 +29,7 @@ export function RoutineForm({
   onClose,
   onSaved,
 }: {
-  routine?: Routine;
+  routine?: Routine | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -59,7 +59,7 @@ export function RoutineForm({
   };
 
   const addItem = () =>
-    setItems((prev) => [...prev, { productId: '', productName: '', timeOfDay: 'night', order: prev.length, notes: null }]);
+    setItems((prev) => [...prev, { id: crypto.randomUUID(), productId: '', productName: '', timeOfDay: 'night', order: prev.length, notes: null }]);
 
   const removeItem = (idx: number) => setItems((prev) => prev.filter((_, i) => i !== idx));
 
@@ -127,7 +127,7 @@ export function RoutineForm({
               <ProductPicker
                 value={
                   item.productId
-                    ? { productId: item.productId, productName: item.productName, brandName: item.brandName, imageUrl: item.imageUrl }
+                    ? { productId: item.productId, productName: item.productName ?? '', brandName: item.brandName, imageUrl: item.imageUrl }
                     : null
                 }
                 onChange={(p: PickedProduct) =>

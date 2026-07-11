@@ -112,11 +112,11 @@ export default function VersionHistoryPage() {
         PUBLISHED: 'Đã xuất bản',
         ARCHIVED: 'Đã lưu trữ',
       };
-      return statusMap[value] || value;
+      return statusMap[String(value)] || String(value);
     }
 
     if (field === 'manufactureDate' || field === 'expiryDate') {
-      return formatDate(value);
+      return formatDate(value as string);
     }
 
     if (Array.isArray(value)) {

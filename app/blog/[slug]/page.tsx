@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { DEFAULT_LOCALE, readLocaleFromCookies, type Locale } from '@/lib/i18n';
+import { DEFAULT_LOCALE, readLocaleFromCookies } from '@/lib/i18n';
 import BlogArticle from '@/components/blog/BlogArticle';
 
 export async function generateMetadata({

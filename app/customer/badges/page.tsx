@@ -5,35 +5,47 @@ import { useCustomerAuth } from '@/components/CustomerAuth';
 import { BadgeGrid } from '@/components/BadgeGrid';
 import { useLocale } from '@/components/I18nProvider';
 
+type CustomerBadge = {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  earnedAt: string | null;
+};
+
 export default function CustomerBadgesPage() {
   const { customer, loading: authLoading } = useCustomerAuth();
   const { locale, t } = useLocale();
-  const [badges, setBadges] = useState<any[]>([]);
+  const [badges, setBadges] = useState<CustomerBadge[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchBadges = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/customer/badges?locale=${locale}`);
-      if (!res.ok) {
-        setError(t('auth_conn_error'));
+  useEffect(() => {
+    if (authLoading) return;
+    let cancelled = false;
+    (async () => {
+      if (!customer) {
+        setLoading(false);
         return;
       }
-      const data = await res.json();
-      if (data.success) setBadges(data.badges);
-    } catch {
-      setError(t('auth_conn_error'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!authLoading && customer) fetchBadges();
-    else if (!authLoading && !customer) setLoading(false);
-  }, [authLoading, customer, locale]);
+      try {
+        const res = await fetch(`/api/customer/badges?locale=${locale}`);
+        if (!res.ok) {
+          if (!cancelled) setError(t('auth_conn_error'));
+          return;
+        }
+        const data = await res.json();
+        if (!cancelled && data.success) setBadges(data.badges);
+      } catch {
+        if (!cancelled) setError(t('auth_conn_error'));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, customer, locale, t]);
 
   if (authLoading) {
     return (

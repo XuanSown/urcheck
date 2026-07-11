@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { DEFAULT_LOCALE, readLocaleFromCookies, type Locale } from '@/lib/i18n';
+import { DEFAULT_LOCALE, readLocaleFromCookies } from '@/lib/i18n';
 import { BlogContent, type BlogPostPreview } from '@/components/blog/BlogContent';
 
 export const metadata: Metadata = {

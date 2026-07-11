@@ -2,17 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useCustomerAuth } from '@/components/CustomerAuth';
 import { useLocale } from '@/components/I18nProvider';
 import { Button } from '@/components/ui/Button';
-import { TIME_ORDER, groupItemsByTimeOfDay } from '@/lib/routine-utils';
+import { TIME_ORDER, groupItemsByTimeOfDay, type Routine } from '@/lib/routine-utils';
 
 export default function RoutineDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { customer, loading: authLoading } = useCustomerAuth();
   const { t, locale } = useLocale();
   const router = useRouter();
   const [id, setId] = useState<string | null>(null);
-  const [routine, setRoutine] = useState<any>(null);
+  const [routine, setRoutine] = useState<Routine | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -55,7 +56,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
         <div className="text-center">
           <p className="text-gray-700 dark:text-gray-300 mb-4">{t('routines_not_found')}</p>
-          <a href="/customer/routines" className="text-primary-600 hover:underline">{t('routines_back')}</a>
+          <Link href="/customer/routines" className="text-primary-600 hover:underline">{t('routines_back')}</Link>
         </div>
       </div>
     );
@@ -104,9 +105,9 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
           if (!items.length) return null;
           return (
             <div key={time} className="mb-6">
-              <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">{t(`routines_${time}` as any)}</h2>
+              <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">{t(`routines_${time}`)}</h2>
               <div className="space-y-2">
-                {items.map((it: any) => (
+                {items.map((it) => (
                   <div key={it.id} className="flex items-center gap-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3">
                     {it.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -124,7 +125,7 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
           );
         })}
 
-        <a href="/customer/routines" className="text-sm text-primary-600 hover:underline">{t('routines_back')}</a>
+        <Link href="/customer/routines" className="text-sm text-primary-600 hover:underline">{t('routines_back')}</Link>
       </div>
     </div>
   );

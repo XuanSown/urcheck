@@ -1,51 +1,57 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useCustomerAuth } from '@/components/CustomerAuth';
 import { RoutineForm } from '@/components/RoutineForm';
 import { RoutineList } from '@/components/RoutineList';
 import { useLocale } from '@/components/I18nProvider';
+import { type Routine } from '@/lib/routine-utils';
 
 function CustomerRoutinesContent() {
   const { customer, loading: authLoading } = useCustomerAuth();
-  const { locale, t } = useLocale();
+  const { t } = useLocale();
   const searchParams = useSearchParams();
-  const [routines, setRoutines] = useState<any[]>([]);
+  const [routines, setRoutines] = useState<Routine[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState<any>(null);
+  const [editing, setEditing] = useState<Routine | null>(null);
 
   useEffect(() => {
-    const editId = searchParams.get('edit');
-    if (editId && routines.length && !showForm) {
-      const r = routines.find((x: any) => x.id === editId);
-      if (r) {
-        setEditing(r);
-        setShowForm(true);
+    (async () => {
+      const editId = searchParams.get('edit');
+      if (editId && routines.length && !showForm) {
+        const r = routines.find((x) => x.id === editId);
+        if (r) {
+          setEditing(r);
+          setShowForm(true);
+        }
       }
-    }
+    })();
   }, [searchParams, routines, showForm]);
 
-  const fetchRoutines = async () => {
-    setLoading(true);
+  const fetchRoutines = useCallback(async () => {
     try {
-      const res = await fetch('/api/customer/routines', {
-        headers: { 'Accept-Language': locale },
-      });
+      const res = await fetch('/api/customer/routines');
       const data = await res.json();
       if (data.success) setRoutines(data.routines);
     } catch {
       // silent
-    } finally {
-      setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (!authLoading && customer) fetchRoutines();
-    else if (!authLoading && !customer) setLoading(false);
-  }, [authLoading, customer, locale]);
+    if (authLoading) return;
+    (async () => {
+      if (!customer) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      await fetchRoutines();
+      setLoading(false);
+    })();
+  }, [authLoading, customer, fetchRoutines]);
 
   if (authLoading) {
     return (

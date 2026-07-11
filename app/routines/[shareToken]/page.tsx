@@ -5,14 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useCustomerAuth } from '@/components/CustomerAuth';
 import { useLocale } from '@/components/I18nProvider';
 import { Button } from '@/components/ui/Button';
-import { TIME_ORDER, groupItemsByTimeOfDay } from '@/lib/routine-utils';
+import { TIME_ORDER, groupItemsByTimeOfDay, type Routine } from '@/lib/routine-utils';
 
 export default function SharedRoutinePage({ params }: { params: Promise<{ shareToken: string }> }) {
-  const { customer, loading: authLoading } = useCustomerAuth();
+  const { customer } = useCustomerAuth();
   const { t, locale } = useLocale();
   const router = useRouter();
   const [shareToken, setShareToken] = useState<string | null>(null);
-  const [routine, setRoutine] = useState<any>(null);
+  const [routine, setRoutine] = useState<Routine | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [cloning, setCloning] = useState(false);
@@ -69,7 +69,7 @@ export default function SharedRoutinePage({ params }: { params: Promise<{ shareT
           title: routine.title,
           description: routine.description,
           isPublic: false,
-          items: (routine.items || []).map((it: any) => ({
+          items: (routine.items || []).map((it) => ({
             productId: it.productId,
             productName: it.productName,
             brandName: it.brandName,
@@ -112,9 +112,9 @@ export default function SharedRoutinePage({ params }: { params: Promise<{ shareT
           if (!items.length) return null;
           return (
             <div key={time} className="mb-6">
-              <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">{t(`routines_${time}` as any)}</h2>
+              <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">{t(`routines_${time}`)}</h2>
               <div className="space-y-2">
-                {items.map((it: any, idx: number) => (
+                {items.map((it, idx: number) => (
                   <div key={it.id ?? idx} className="flex items-center gap-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3">
                     {it.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element

@@ -61,10 +61,10 @@ font-family: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
 
 | Token | Hex | Use |
 | --- | --- | --- |
-| `--primary-400` | `#fb923c` | Orange light |
-| `--primary-500` | `#f97316` | Orange main |
-| `--primary-600` | `#ea580c` | Orange dark *(brand)* |
-| `--primary-700` | `#c2410c` | Orange deeper |
+| `--primary-400` | `#6f92c4` | Navy light |
+| `--primary-500` | `#4d72ad` | Navy main |
+| `--primary-600` | `#2c4c7e` | Navy dark *(brand)* |
+| `--primary-700` | `#244068` | Navy deeper |
 | `--accent-stone` | `#78716c` | Stone accent |
 
 ### Motion & Texture

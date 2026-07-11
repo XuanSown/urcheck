@@ -1,13 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { useLocale } from '@/components/I18nProvider';
 
 export function HowCta() {
   const { t } = useLocale();
-  const reducedMotion = useReducedMotion();
 
   return (
     <section className="relative py-20 sm:py-28 lg:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden">

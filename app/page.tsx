@@ -3,7 +3,6 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { ProductInfo } from '@/components/ProductInfo';
@@ -34,7 +33,7 @@ interface VerifyResponse {
 function HomeInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { locale, setLocale, t } = useLocale();
+  const { locale, t } = useLocale();
 
   // Input state - auto-fill from ?q= when arriving via QR scan.
   const [codeInput, setCodeInput] = useState<string>('');
@@ -42,16 +41,6 @@ function HomeInner() {
   const [error, setError] = useState<string | null>(null);
   const [verifyResult, setVerifyResult] = useState<VerifyResponse | null>(null);
   const [showScanner, setShowScanner] = useState(false);
-
-  // When ?q=AB12CD is in the URL, pre-fill the input and trigger verification.
-  useEffect(() => {
-    const q = searchParams.get('q');
-    if (q && !verifyResult && !isLoading) {
-      setCodeInput(q);
-      void handleVerify(q);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleVerify = async (rawInput?: string) => {
     const input = (rawInput ?? codeInput).trim();
@@ -85,6 +74,18 @@ function HomeInner() {
       setIsLoading(false);
     }
   };
+
+  // When ?q=AB12CD is in the URL, pre-fill the input and trigger verification.
+  useEffect(() => {
+    (async () => {
+      const q = searchParams.get('q');
+      if (q && !verifyResult && !isLoading) {
+        setCodeInput(q);
+        await handleVerify(q);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleReset = () => {
     setVerifyResult(null);

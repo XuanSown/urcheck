@@ -60,7 +60,7 @@ export function CustomerLoginForm({ mode = 'login' }: { mode?: Mode }) {
       } else {
         window.location.href = '/customer/login';
       }
-    } catch (err) {
+    } catch {
       setError(t('auth_conn_error') || 'Không thể kết nối tới máy chủ');
     } finally {
       setIsLoading(false);

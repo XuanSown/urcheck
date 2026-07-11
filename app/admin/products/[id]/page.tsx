@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { formatDate } from '@/lib/format-utils';
 import ProductForm, { ProductFormData } from '../new/ProductForm';
 
 interface Product {
@@ -31,20 +29,17 @@ interface Product {
     url: string;
   }>;
   images: Array<{ id: string; url: string; sortOrder: number; isPrimary: boolean }>;
-  qrCode?: any;
+  qrCode?: { code: string; url: string } | null;
 }
 
 export default function EditProductPage() {
   const params = useParams();
-  const router = useRouter();
   const productId = params.id as string;
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [previewData, setPreviewData] = useState<ProductFormData | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
 
   const fetchProduct = useCallback(async () => {
     setLoading(true);
@@ -59,8 +54,8 @@ export default function EditProductPage() {
       }
 
       setProduct(data.data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -68,7 +63,7 @@ export default function EditProductPage() {
 
   useEffect(() => {
     if (productId) {
-      fetchProduct();
+      (async () => { await fetchProduct(); })();
     }
   }, [productId, fetchProduct]);
 
@@ -106,9 +101,10 @@ export default function EditProductPage() {
       if (!asDraft) {
         alert('Cập nhật sản phẩm thành công!');
       }
-    } catch (err: any) {
-      setError(err.message);
-      alert(`Lỗi: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message);
+      alert(`Lỗi: ${message}`);
     } finally {
       setSubmitting(false);
     }

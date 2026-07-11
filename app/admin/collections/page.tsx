@@ -37,26 +37,25 @@ export default function CollectionsPage() {
   const [pendingDelete, setPendingDelete] = useState<Collection | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const fetchCollections = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams();
-      params.set('page', String(page));
-      if (search) params.set('search', search);
-      const res = await fetch(`/api/admin/collections?${params.toString()}`);
-      const data = await res.json();
-      if (data.success) {
-        setCollections(data.data.collections);
-        setPagination(data.data.pagination);
-      } else {
-        setError(data.error);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Lỗi tải dữ liệu');
-    } finally {
-      setLoading(false);
-    }
+  const fetchCollections = useCallback(() => {
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    if (search) params.set('search', search);
+    fetch(`/api/admin/collections?${params.toString()}`)
+      .then((res) => res.json())
+      .then((data: { success: boolean; data?: { collections: Collection[]; pagination: Pagination }; error?: string }) => {
+        setError(null);
+        if (data.success && data.data) {
+          setCollections(data.data.collections);
+          setPagination(data.data.pagination);
+        } else {
+          setError(data.error ?? 'Lỗi tải dữ liệu');
+        }
+      })
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : 'Lỗi tải dữ liệu');
+      })
+      .finally(() => setLoading(false));
   }, [page, search]);
 
   useEffect(() => {
@@ -84,8 +83,8 @@ export default function CollectionsPage() {
       } else {
         toast({ type: 'error', title: 'Thất bại', description: data.error });
       }
-    } catch (err: any) {
-      toast({ type: 'error', title: 'Lỗi', description: err.message });
+    } catch (err: unknown) {
+      toast({ type: 'error', title: 'Lỗi', description: err instanceof Error ? err.message : 'Lỗi không xác định' });
     } finally {
       setBusy(false);
       setPendingDelete(null);

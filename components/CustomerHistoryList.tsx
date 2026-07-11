@@ -1,4 +1,4 @@
-type HistoryItem = {
+export type HistoryItem = {
   scannedAt: string;
   isValid: boolean;
   status: 'valid' | 'expired' | 'unverified';

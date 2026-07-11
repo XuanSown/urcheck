@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, useReducedMotion, type Variants } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { useLocale } from '@/components/I18nProvider';
 
 const ICONS = [
@@ -34,7 +34,6 @@ const STEPS = [
 
 export function HowSteps() {
   const { t } = useLocale();
-  const reducedMotion = useReducedMotion();
 
   const card: Variants = {
     hidden: { opacity: 0, y: 40 },

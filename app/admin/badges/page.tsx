@@ -51,22 +51,21 @@ export default function BadgesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Badge | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchBadges = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/admin/badges');
-      const data = await res.json();
-      if (data.success) {
-        setBadges(data.data);
-      } else {
-        setError(data.error);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Đã xảy ra lỗi');
-    } finally {
-      setLoading(false);
-    }
+  const fetchBadges = useCallback(() => {
+    fetch('/api/admin/badges')
+      .then((res) => res.json())
+      .then((data: { success: boolean; data?: Badge[]; error?: string }) => {
+        setError(null);
+        if (data.success) {
+          setBadges(data.data ?? []);
+        } else {
+          setError(data.error ?? 'Đã xảy ra lỗi');
+        }
+      })
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi');
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {

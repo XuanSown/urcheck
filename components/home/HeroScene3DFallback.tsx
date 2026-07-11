@@ -1,5 +1,3 @@
-const PRIMARY = '#2c4c7e';
-
 export function HeroScene3DFallback() {
   return (
     <div

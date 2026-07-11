@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdminApi } from '@/lib/auth';
 import prisma from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 
 const supportArticleSchema = z.object({
   slug: z.string().min(1, 'Slug là bắt buộc').max(255),
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
     const search = (searchParams.get('search') || '').trim();
     const category = (searchParams.get('category') || '').trim();
 
-    const where: any = {};
+    const where: Prisma.SupportArticleWhereInput = {};
     if (category) where.category = category;
     if (search) {
       where.OR = [

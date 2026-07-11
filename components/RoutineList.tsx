@@ -2,25 +2,16 @@
 
 import { useLocale } from '@/components/I18nProvider';
 import { Button } from '@/components/ui/Button';
-
-type RoutineItemInput = {
-  productId?: string;
-  productName?: string;
-  brandName?: string;
-  imageUrl?: string;
-  timeOfDay?: string;
-  order?: number;
-  notes?: string;
-};
+import type { Routine, RoutineItem } from '@/lib/routine-utils';
 
 export function RoutineList({
   routines,
   onChanged,
   onEdit,
 }: {
-  routines: any[];
+  routines: Routine[];
   onChanged: () => void;
-  onEdit?: (routine: any) => void;
+  onEdit?: (routine: Routine) => void;
 }) {
   const { t } = useLocale();
 
@@ -64,12 +55,12 @@ export function RoutineList({
             <p className="text-sm text-gray-500">{t('routines_no_products')}</p>
           ) : (
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {r.items.map((it: any, idx: number) => (
+              {r.items.map((it: RoutineItem, idx: number) => (
                 <div key={it.id ?? idx} className="py-2 flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-900 dark:text-white">{it.productName}</p>
                     {it.timeOfDay && (
-                      <p className="text-xs text-gray-500">{t(`routines_${it.timeOfDay}` as any)}</p>
+                      <p className="text-xs text-gray-500">{t(`routines_${it.timeOfDay}`)}</p>
                     )}
                   </div>
                 </div>

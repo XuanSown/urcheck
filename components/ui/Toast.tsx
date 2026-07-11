@@ -155,4 +155,6 @@ export function useToast(): ToastContextValue {
   return ctx;
 }
 
-export default { ToastProvider, useToast };
+const Toast = { ToastProvider, useToast };
+
+export default Toast;

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { RoutineItem } from '@prisma/client';
 import prisma from '@/lib/db';
 import { primaryImageUrl } from '@/lib/product-utils';
+
+type ShareRoutineItem = RoutineItem & {
+  product: { name: string; brandName: string | null; images: { url: string }[] } | null;
+};
 
 export async function GET(
   _request: NextRequest,
@@ -28,7 +33,7 @@ export async function GET(
     );
   }
 
-  const items = routine.items.map((it: any) => ({
+  const items = routine.items.map((it: ShareRoutineItem) => ({
     id: it.id,
     productId: it.productId,
     timeOfDay: it.timeOfDay,

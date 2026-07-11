@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -15,6 +15,13 @@ interface AdminAccount {
   createdAt: string;
 }
 
+interface AccountFormData {
+  username: string;
+  email: string;
+  password?: string;
+  isActive: boolean;
+}
+
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,33 +31,33 @@ export default function AccountsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<AccountFormData>({
     username: '',
     email: '',
     password: '',
     isActive: true,
   });
 
-  const fetchAccounts = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/admin/accounts');
-      const data = await res.json();
-      if (data.success) {
-        setAccounts(data.data);
-      } else {
-        setError(data.error);
-      }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchAccounts = useCallback(() => {
+    fetch('/api/admin/accounts')
+      .then((res) => res.json())
+      .then((data: { success: boolean; data?: AdminAccount[]; error?: string }) => {
+        setError(null);
+        if (data.success) {
+          setAccounts(data.data ?? []);
+        } else {
+          setError(data.error ?? 'Đã xảy ra lỗi');
+        }
+      })
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi');
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
     fetchAccounts();
-  }, []);
+  }, [fetchAccounts]);
 
   const handleDelete = async (id: string, username: string) => {
     if (!confirm(`Bạn có chắc chắn muốn xóa tài khoản "${username}" không? Hành động này không thể hoàn tác.`)) {
@@ -69,7 +76,7 @@ export default function AccountsPage() {
       } else {
         alert(data.error);
       }
-    } catch (err: any) {
+    } catch {
       alert('Đã xảy ra lỗi khi xóa tài khoản');
     }
   };
@@ -91,24 +98,6 @@ export default function AccountsPage() {
     setIsModalOpen(true);
   };
 
-  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
-    try {
-      const res = await fetch(`/api/admin/accounts/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: !currentStatus }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setAccounts(accounts.map(acc => acc.id === id ? { ...acc, isActive: !currentStatus } : acc));
-      } else {
-        alert(data.error);
-      }
-    } catch (err) {
-      alert('Lỗi cập nhật trạng thái');
-    }
-  };
-
   const handleSaveAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -118,7 +107,7 @@ export default function AccountsPage() {
       const url = editingId ? `/api/admin/accounts/${editingId}` : '/api/admin/accounts';
       const method = editingId ? 'PUT' : 'POST';
       
-      const payload: any = { ...formData };
+      const payload: AccountFormData = { ...formData };
       if (editingId && !payload.password) {
         delete payload.password;
       }
@@ -136,7 +125,7 @@ export default function AccountsPage() {
       } else {
         alert(data.error);
       }
-    } catch (err: any) {
+    } catch {
       alert('Đã xảy ra lỗi khi lưu tài khoản');
     } finally {
       setIsSubmitting(false);

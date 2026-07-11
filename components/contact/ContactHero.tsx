@@ -1,11 +1,10 @@
 'use client';
 
-import { motion, useReducedMotion, type Variants } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { useLocale } from '@/components/I18nProvider';
 
 export function ContactHero() {
   const { t } = useLocale();
-  const reducedMotion = useReducedMotion();
 
   const reveal: Variants = {
     hidden: { opacity: 0, y: 24 },

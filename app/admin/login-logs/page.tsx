@@ -27,22 +27,22 @@ export default function AdminLoginLogsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchLogs = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/admin/login-logs');
-      const data: LogsResponse = await response.json();
-      if (!response.ok || !data.success) {
-        throw new Error((data as any).error || 'Lỗi khi tải dữ liệu');
-      }
-      setLogs(data.data.logs);
-    } catch (err: any) {
-      setError(err.message);
-      toast({ type: 'error', title: err.message || 'Đã xảy ra lỗi' });
-    } finally {
-      setLoading(false);
-    }
+  const fetchLogs = useCallback(() => {
+    fetch('/api/admin/login-logs')
+      .then((response) => response.json().then((data) => ({ response, data })))
+      .then(({ response, data }: { response: Response; data: LogsResponse & { error?: string } }) => {
+        setError(null);
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Lỗi khi tải dữ liệu');
+        }
+        setLogs(data.data.logs);
+      })
+      .catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : 'Đã xảy ra lỗi';
+        setError(message);
+        toast({ type: 'error', title: message });
+      })
+      .finally(() => setLoading(false));
   }, [toast]);
 
   useEffect(() => {

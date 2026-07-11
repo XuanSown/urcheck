@@ -33,15 +33,15 @@ export default function AdminSupportPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Lỗi tải dữ liệu');
       setArticles(data.data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchArticles();
+    (async () => { await fetchArticles(); })();
   }, [fetchArticles]);
 
   const handleDelete = async (article: SupportArticle) => {
@@ -52,8 +52,8 @@ export default function AdminSupportPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Xóa thất bại');
       setArticles((prev) => prev.filter((a) => a.id !== article.id));
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : String(err));
     } finally {
       setDeletingId(null);
     }

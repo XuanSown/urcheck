@@ -3,12 +3,10 @@
 import { useRef, useState } from 'react';
 import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useLocale } from '@/components/I18nProvider';
 import {
   QR_ALLOWED_SIZES_CM,
-  cmToPixels,
   type QrLabelSize,
 } from '@/lib/qr-utils';
 

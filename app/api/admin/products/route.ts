@@ -8,6 +8,32 @@ import {
   buildQrUrl,
   generateQrCode,
 } from '@/lib/qr-utils';
+import type { Prisma, ProductStatus } from '@prisma/client';
+
+interface ProductListItem {
+  id: string;
+  name: string;
+  description: string | null;
+  manufactureDate: Date | null;
+  expiryDate: Date | null;
+  expiresInMonths: number | null;
+  skinType: string | null;
+  suitableFor: string | null;
+  ingredientAnalysis: Prisma.JsonValue;
+  tags: Prisma.JsonValue;
+  status: string;
+  publishedAt: Date | null;
+  purchaseLinks: Prisma.JsonValue;
+  brandName: string | null;
+  batchNumber: string | null;
+  category: string | null;
+  certifications: Prisma.JsonValue;
+  verified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  images: Array<{ id: string; url: string; isPrimary: boolean; altText: string | null }>;
+  _count: { versions: number };
+}
 
 // GET /api/admin/products?page=&limit=&search=&status=
 export async function GET(request: NextRequest) {
@@ -24,10 +50,10 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause
-    const where: any = {};
+    const where: Prisma.ProductWhereInput = {};
 
     if (status && ['DRAFT', 'PUBLISHED', 'ARCHIVED'].includes(status)) {
-      where.status = status;
+      where.status = status as ProductStatus;
     }
 
     if (search) {
@@ -155,7 +181,7 @@ export async function POST(request: NextRequest) {
 
       // Auto-create QR code for this product (one product = one QR)
       const qrCodeValue = generateQrCode(product.name);
-      const qrCode = await tx.qrCode.create({
+      await tx.qrCode.create({
         data: {
           code: qrCodeValue,
           url: buildQrUrl(qrCodeValue),
@@ -246,7 +272,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function formatProductResponse(product: any) {
+function formatProductResponse(product: ProductListItem) {
   return {
     id: product.id,
     name: product.name,

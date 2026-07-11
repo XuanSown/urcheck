@@ -139,7 +139,7 @@ export async function loginCustomer(args: {
   let valid = false;
   try {
     valid = await bcrypt.compare(password, user.password);
-  } catch (error) {
+  } catch {
     await logCustomerAction({
       customerId: user.id,
       deviceId,

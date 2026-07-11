@@ -3,6 +3,36 @@ import { z } from 'zod';
 import { requireAdminApi } from '@/lib/auth';
 import prisma from '@/lib/db';
 import { productSchema } from '@/lib/validators';
+import type { Prisma } from '@prisma/client';
+
+interface ProductWithRelations {
+  id: string;
+  name: string;
+  description: string | null;
+  manufactureDate: Date | null;
+  expiryDate: Date | null;
+  expiresInMonths: number | null;
+  skinType: string | null;
+  suitableFor: string | null;
+  usages: Prisma.JsonValue;
+  usageInstructions: string[];
+  ingredientAnalysis: Prisma.JsonValue;
+  tags: Prisma.JsonValue;
+  status: string;
+  publishedAt: Date | null;
+  purchaseLinks: Prisma.JsonValue;
+  brandName: string | null;
+  batchNumber: string | null;
+  category: string | null;
+  certifications: Prisma.JsonValue;
+  verified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  images: Array<Record<string, unknown>>;
+  _count?: { versions: number };
+  versions?: Array<Record<string, unknown>>;
+  qrCodes?: { code: string; url: string }[];
+}
 
 export async function GET(
   request: NextRequest,
@@ -272,7 +302,7 @@ export async function DELETE(
   }
 }
 
-function formatProductResponse(product: any) {
+function formatProductResponse(product: ProductWithRelations) {
   // Primary image now lives in ProductImage; no fallback from removed product.imageUrl
   const existingImages = product.images || [];
 

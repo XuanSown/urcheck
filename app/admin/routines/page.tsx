@@ -52,15 +52,15 @@ export default function RoutinesPage() {
       } else {
         setError(data.error);
       }
-    } catch (err: any) {
-      setError(err.message || 'Lỗi tải dữ liệu');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err) || 'Lỗi tải dữ liệu');
     } finally {
       setLoading(false);
     }
   }, [page, search]);
 
   useEffect(() => {
-    fetchRoutines();
+    (async () => { await fetchRoutines(); })();
   }, [fetchRoutines]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -84,8 +84,8 @@ export default function RoutinesPage() {
       } else {
         toast({ type: 'error', title: 'Thất bại', description: data.error });
       }
-    } catch (err: any) {
-      toast({ type: 'error', title: 'Lỗi', description: err.message });
+    } catch (err: unknown) {
+      toast({ type: 'error', title: 'Lỗi', description: err instanceof Error ? err.message : String(err) });
     } finally {
       setBusy(false);
       setPendingDelete(null);

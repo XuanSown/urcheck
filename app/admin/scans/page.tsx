@@ -50,22 +50,23 @@ export default function AdminScansPage() {
       const data: ScansResponse = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error((data as any).error || 'Lỗi khi tải dữ liệu');
+        throw new Error((data as { error?: string }).error || 'Lỗi khi tải dữ liệu');
       }
 
       setScans(data.data.scans);
       setTotalPages(data.data.pagination.totalPages);
       setTotal(data.data.pagination.total);
-    } catch (err: any) {
-      setError(err.message);
-      toast({ type: 'error', title: err.message || 'Đã xảy ra lỗi' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Đã xảy ra lỗi';
+      setError(message);
+      toast({ type: 'error', title: message });
     } finally {
       setLoading(false);
     }
   }, [toast]);
 
   useEffect(() => {
-    fetchScans(page, search);
+    (async () => { await fetchScans(page, search); })();
   }, [page, search, fetchScans]);
 
   const handleSearch = (e: React.FormEvent) => {

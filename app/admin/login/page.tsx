@@ -58,7 +58,7 @@ function AuthForms() {
       } else {
         setError(data.error || 'Đăng nhập thất bại');
       }
-    } catch (err) {
+    } catch {
       setError('Lỗi kết nối, vui lòng thử lại');
     } finally {
       setIsLoading(false);
@@ -112,7 +112,7 @@ function AuthForms() {
       } else {
         setError(data.error);
       }
-    } catch (err) {
+    } catch {
       setError('Lỗi kết nối, vui lòng thử lại');
     } finally {
       setIsLoading(false);
@@ -157,7 +157,7 @@ function AuthForms() {
       } else {
         setError(data.error);
       }
-    } catch (err) {
+    } catch {
       setError('Lỗi kết nối, vui lòng thử lại');
     } finally {
       setIsLoading(false);

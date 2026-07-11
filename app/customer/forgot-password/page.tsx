@@ -7,7 +7,7 @@ import { useLocale } from '@/components/I18nProvider';
 type Step = 'request' | 'reset';
 
 export default function ForgotPasswordPage() {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const [step, setStep] = useState<Step>('request');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
         setMessage(data.message || 'Đã gửi yêu cầu');
         setStep('reset');
       }
-    } catch (err) {
+    } catch {
       setError('Không thể kết nối tới máy chủ');
     } finally {
       setIsLoading(false);
@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
       } else {
         window.location.href = '/customer/login';
       }
-    } catch (err) {
+    } catch {
       setError('Không thể kết nối tới máy chủ');
     } finally {
       setIsLoading(false);

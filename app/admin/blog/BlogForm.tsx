@@ -47,17 +47,19 @@ export default function BlogForm({ postId, initialData, submitting = false }: Bl
 
   useEffect(() => {
     if (initialData) {
-      setFormData({
-        slug: initialData.slug || '',
-        titleVi: initialData.titleVi || '',
-        titleEn: initialData.titleEn || '',
-        excerptVi: initialData.excerptVi || '',
-        excerptEn: initialData.excerptEn || '',
-        bodyVi: initialData.bodyVi || '',
-        bodyEn: initialData.bodyEn || '',
-        coverUrl: initialData.coverUrl || '',
-        author: initialData.author || '',
-        status: initialData.status || 'DRAFT',
+      Promise.resolve().then(() => {
+        setFormData({
+          slug: initialData.slug || '',
+          titleVi: initialData.titleVi || '',
+          titleEn: initialData.titleEn || '',
+          excerptVi: initialData.excerptVi || '',
+          excerptEn: initialData.excerptEn || '',
+          bodyVi: initialData.bodyVi || '',
+          bodyEn: initialData.bodyEn || '',
+          coverUrl: initialData.coverUrl || '',
+          author: initialData.author || '',
+          status: initialData.status || 'DRAFT',
+        });
       });
     }
   }, [initialData]);
@@ -105,8 +107,8 @@ export default function BlogForm({ postId, initialData, submitting = false }: Bl
 
       setSuccess('Lưu bài viết thành công!');
       setTimeout(() => router.push('/admin/blog'), 1200);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi');
     } finally {
       setLoading(false);
     }

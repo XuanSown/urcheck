@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApi } from '@/lib/auth';
 import prisma from '@/lib/db';
+import type { Prisma, ReviewStatus } from '@prisma/client';
 
 const VALID_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
 
@@ -17,9 +18,9 @@ export async function GET(request: NextRequest) {
     const status = (searchParams.get('status') || '').trim();
     const productId = (searchParams.get('productId') || '').trim();
 
-    const where: any = {};
+    const where: Prisma.ProductReviewWhereInput = {};
     if (status && (VALID_STATUS as readonly string[]).includes(status)) {
-      where.status = status;
+      where.status = status as ReviewStatus;
     }
     if (productId) {
       where.productId = productId;

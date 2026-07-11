@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { requireAdminApi } from '@/lib/auth';
 import { z } from 'zod';
+import type { Prisma } from '@prisma/client';
 
 const createBadgeSchema = z.object({
   name: z.string().trim().min(1, 'Tên huy hiệu là bắt buộc').max(255),
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
         descriptionVi: parsed.descriptionVi,
         descriptionEn: parsed.descriptionEn,
         icon: parsed.icon,
-        criteriaJson: parsed.criteriaJson as any,
+        criteriaJson: parsed.criteriaJson as unknown as Prisma.InputJsonValue,
         order: parsed.order ?? 0,
       },
       select: {

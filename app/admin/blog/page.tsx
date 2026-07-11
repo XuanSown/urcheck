@@ -25,19 +25,18 @@ export default function AdminBlogPage() {
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const fetchPosts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/admin/blog');
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Lỗi tải dữ liệu');
-      setPosts(data.data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  const fetchPosts = useCallback(() => {
+    fetch('/api/admin/blog')
+      .then((res) => res.json().then((data) => ({ res, data })))
+      .then(({ res, data }: { res: Response; data: { data?: BlogPost[]; error?: string } }) => {
+        setError(null);
+        if (!res.ok) throw new Error(data.error || 'Lỗi tải dữ liệu');
+        setPosts(data.data ?? []);
+      })
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : 'Lỗi tải dữ liệu');
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -52,8 +51,8 @@ export default function AdminBlogPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Xóa thất bại');
       setPosts((prev) => prev.filter((p) => p.id !== post.id));
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Xóa thất bại');
     } finally {
       setDeletingId(null);
     }

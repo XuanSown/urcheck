@@ -17,7 +17,7 @@ interface CurrentAdmin {
 export default function AdminSettingsPage() {
   const { toast } = useToast();
   const [admin, setAdmin] = useState<CurrentAdmin | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   const [showEnable, setShowEnable] = useState(false);
   const [secret, setSecret] = useState('');
@@ -44,8 +44,8 @@ export default function AdminSettingsPage() {
       setSecret(data.data.secret);
       setOtpauthUri(data.data.otpauthUri);
       setShowEnable(true);
-    } catch (err: any) {
-      toast({ type: 'error', title: err.message || 'Lỗi' });
+    } catch (err: unknown) {
+      toast({ type: 'error', title: err instanceof Error ? err.message : 'Lỗi' });
     } finally {
       setEnabling(false);
     }
@@ -67,8 +67,8 @@ export default function AdminSettingsPage() {
       setSecret('');
       setOtpauthUri('');
       if (admin) setAdmin({ ...admin, twoFactorEnabled: true });
-    } catch (err: any) {
-      toast({ type: 'error', title: err.message || 'Lỗi' });
+    } catch (err: unknown) {
+      toast({ type: 'error', title: err instanceof Error ? err.message : 'Lỗi' });
     } finally {
       setEnabling(false);
     }

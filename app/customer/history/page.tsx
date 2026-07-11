@@ -2,18 +2,17 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useCustomerAuth } from '@/components/CustomerAuth';
-import { CustomerHistoryList } from '@/components/CustomerHistoryList';
+import { CustomerHistoryList, type HistoryItem } from '@/components/CustomerHistoryList';
 import Link from 'next/link';
 
 export default function CustomerHistoryPage() {
   const { customer, loading: authLoading } = useCustomerAuth();
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [pagination, setPagination] = useState<{ page: number; totalPages: number; total: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchHistory = useCallback(
     async (page: number) => {
-      setLoading(true);
       try {
         const res = await fetch(`/api/customer/history?page=${page}&limit=10`);
         if (!res.ok) {
@@ -31,19 +30,22 @@ export default function CustomerHistoryPage() {
         }
       } catch (err) {
         console.error('Failed to load history:', err);
-      } finally {
-        setLoading(false);
       }
     },
     []
   );
 
   useEffect(() => {
-    if (!authLoading && customer) {
-      fetchHistory(1);
-    } else if (!authLoading && !customer) {
+    if (authLoading) return;
+    (async () => {
+      if (!customer) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      await fetchHistory(1);
       setLoading(false);
-    }
+    })();
   }, [authLoading, customer, fetchHistory]);
 
   if (authLoading) {

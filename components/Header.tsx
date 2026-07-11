@@ -13,7 +13,6 @@ interface HeaderProps {
 }
 
 export function Header({ className }: HeaderProps) {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -25,7 +24,6 @@ export function Header({ className }: HeaderProps) {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      setIsScrolled(currentScrollY > 10);
       if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
         setIsHidden(true);
         if (isMobileMenuOpen) setIsMobileMenuOpen(false);
@@ -57,13 +55,6 @@ export function Header({ className }: HeaderProps) {
     { href: '/brands', label: t('nav_brands') },
     { href: '/contact', label: t('nav_contact') },
   ];
-
-  const authLinks = customer
-    ? []
-    : [
-        { href: '/customer/login', label: t('auth_login_btn') || 'Đăng nhập', variant: 'ghost' as const },
-        { href: '/customer/register', label: t('auth_register_btn') || 'Đăng ký', variant: 'solid' as const },
-      ];
 
   return (
     <header

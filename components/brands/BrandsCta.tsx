@@ -1,13 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { motion, useReducedMotion, type Variants } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { useLocale } from '@/components/I18nProvider';
 
 export function BrandsCta() {
   const { t } = useLocale();
-  const reducedMotion = useReducedMotion();
 
   const reveal: Variants = {
     hidden: { opacity: 0, y: 24 },

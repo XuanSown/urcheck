@@ -30,7 +30,7 @@ export function Logo({ className = '', size = 'md', variant = 'dark' }: LogoProp
         alt="ur check"
         width={width}
         height={height}
-        className={`object-contain ${imgClass} dark:invert`}
+        className={`object-contain ${imgClass} ${variant === 'dark' ? 'dark:invert' : ''}`}
         style={{
           width: 'auto',
           height: 'auto',

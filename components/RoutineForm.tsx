@@ -5,6 +5,7 @@ import { useCustomerAuth } from '@/components/CustomerAuth';
 import { useLocale } from '@/components/I18nProvider';
 import { Button } from '@/components/ui/Button';
 import { ProductPicker, type PickedProduct } from '@/components/ProductPicker';
+import type { Routine, RoutineItem } from '@/lib/routine-utils';
 
 const TIME_OPTIONS = [
   { value: 'morning', labelKey: 'routines_morning' },
@@ -28,7 +29,7 @@ export function RoutineForm({
   onClose,
   onSaved,
 }: {
-  routine?: any;
+  routine?: Routine;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -37,9 +38,10 @@ export function RoutineForm({
   const [title, setTitle] = useState(routine?.title ?? '');
   const [description, setDescription] = useState(routine?.description ?? '');
   const [isPublic, setIsPublic] = useState(routine?.isPublic ?? false);
-  const [items, setItems] = useState<RoutineItemInput[]>(
+  const [items, setItems] = useState<RoutineItem[]>(
     routine?.items?.length
-      ? routine.items.map((it: any) => ({
+      ? routine.items.map((it: RoutineItem) => ({
+          id: it.id,
           productId: it.productId || '',
           productName: it.productName || '',
           brandName: it.brandName ?? null,
@@ -48,7 +50,7 @@ export function RoutineForm({
           order: it.order ?? 0,
           notes: it.notes ?? null,
         }))
-      : [{ productId: '', productName: '', timeOfDay: 'night', order: 0, notes: null }]
+      : [{ id: '', productId: '', productName: '', timeOfDay: 'night', order: 0, notes: null }]
   );
   const [saving, setSaving] = useState(false);
 

@@ -41,8 +41,8 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState<ScanMode>('idle');
   const [error, setError] = useState<string | null>(null);
-  const [isScanning, setIsScanning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const prevOpenRef = useRef(false);
 
   const stopScanner = useCallback(() => {
     if (scannerRef.current) {
@@ -56,16 +56,19 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
         // Ignore.
       }
     }
-    setIsScanning(false);
     setMode('idle');
   }, []);
 
-  // Reset state every time the dialog re-opens.
+  // Reset state when the dialog re-opens (after a closed->open transition),
+  // deferred to a microtask so we never setState synchronously inside the effect.
   useEffect(() => {
-    if (isOpen) {
-      setMode('idle');
-      setError(null);
+    if (isOpen && !prevOpenRef.current) {
+      queueMicrotask(() => {
+        setMode('idle');
+        setError(null);
+      });
     }
+    prevOpenRef.current = isOpen;
   }, [isOpen]);
 
   // Always stop the camera when the dialog closes or unmounts.
@@ -119,12 +122,13 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         stream.getTracks().forEach(track => track.stop());
-      } catch (mediaError: any) {
-        if (mediaError?.name === 'NotAllowedError') {
+      } catch (mediaError: unknown) {
+        const errName = mediaError instanceof Error ? mediaError.name : '';
+        if (errName === 'NotAllowedError') {
           throw new Error(t('qr_scanner_err_no_cam_perm'));
-        } else if (mediaError?.name === 'NotFoundError') {
+        } else if (errName === 'NotFoundError') {
           throw new Error(t('qr_scanner_err_no_cam'));
-        } else if (mediaError?.name === 'NotReadableError') {
+        } else if (errName === 'NotReadableError') {
           throw new Error(t('qr_scanner_err_cam_in_use'));
         } else {
           throw new Error(t('qr_scanner_err_cam_fail'));
@@ -156,8 +160,6 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
           // Per-frame decode failures are normal; ignore.
         }
       );
-
-      setIsScanning(true);
     } catch (err) {
       const message = err instanceof Error ? err.message : t('qr_scanner_err_generic');
       setError(message);
@@ -186,7 +188,7 @@ export function QrScanner({ isOpen, onClose, onScanSuccess }: QrScannerProps) {
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
     },
-    [onScanSuccess]
+    [onScanSuccess, t]
   );
 
   const triggerFileUpload = () => {

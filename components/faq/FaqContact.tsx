@@ -1,12 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useLocale } from '@/components/I18nProvider';
 
 export function FaqContact() {
   const { t } = useLocale();
-  const reducedMotion = useReducedMotion();
 
   const reveal = {
     hidden: { opacity: 0, y: 20 },

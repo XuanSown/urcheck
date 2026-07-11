@@ -36,6 +36,8 @@ export async function POST(request: NextRequest) {
       request.headers.get('x-real-ip') ||
       'unknown';
 
+    const secure = request.headers.get('x-forwarded-proto') === 'https';
+
     const now = Date.now();
     purge(now);
     const key = `customer:login:${ip}`;
@@ -69,7 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await setCustomerSessionCookie(result.token!);
+    await setCustomerSessionCookie(result.token!, secure);
     return NextResponse.json(
       { success: true, message: 'Đăng nhập thành công' },
       { status: 200 }

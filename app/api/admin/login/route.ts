@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loginAdmin } from '@/lib/auth';
-import { signAdminSession, setAdminSessionCookie } from '@/lib/session';
+import { signAdminSession } from '@/lib/session';
 import { defaultRateLimiter } from '@/lib/security';
 import { z } from 'zod';
 
@@ -62,11 +62,13 @@ export async function POST(request: NextRequest) {
       user: { username: validated.username },
     });
 
+    const secure = request.headers.get('x-forwarded-proto') === 'https';
+
     response.cookies.set({
       name: 'admin_session',
       value: jwtToken,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure,
       sameSite: 'lax',
       path: '/',
       maxAge: 7 * 24 * 60 * 60,

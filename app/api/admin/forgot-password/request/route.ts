@@ -30,8 +30,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, message: 'Nếu email tồn tại, một mã OTP đã được gửi.' });
     }
 
-    // Generate a 6-digit numeric OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate a 6-digit numeric OTP using a CSPRNG (not Math.random)
+    const otp = crypto.randomInt(100000, 1000000).toString();
     
     // Expires in 5 minutes
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);

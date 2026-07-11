@@ -16,15 +16,21 @@ export interface CustomerSession {
 }
 
 function getAdminSecret(): Uint8Array {
-  return new TextEncoder().encode(
-    process.env.ADMIN_SESSION_SECRET ?? process.env.SECRET_KEY ?? 'fallback-secret-change-me'
-  );
+  const secret =
+    process.env.ADMIN_SESSION_SECRET ?? process.env.SECRET_KEY;
+  if (!secret) {
+    throw new Error('Missing ADMIN_SESSION_SECRET / SECRET_KEY environment variable');
+  }
+  return new TextEncoder().encode(secret);
 }
 
 function getCustomerSecret(): Uint8Array {
-  return new TextEncoder().encode(
-    process.env.JWT_SECRET ?? process.env.ADMIN_SESSION_SECRET ?? process.env.SECRET_KEY ?? 'fallback-secret-change-me'
-  );
+  const secret =
+    process.env.JWT_SECRET ?? process.env.ADMIN_SESSION_SECRET ?? process.env.SECRET_KEY;
+  if (!secret) {
+    throw new Error('Missing JWT_SECRET / ADMIN_SESSION_SECRET / SECRET_KEY environment variable');
+  }
+  return new TextEncoder().encode(secret);
 }
 
 export async function signAdminSession(session: AdminSession): Promise<string> {

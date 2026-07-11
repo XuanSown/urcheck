@@ -25,21 +25,34 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [currentUser, setCurrentUser] = useState<{username?: string, role?: string, email?: string} | null>(null);
+  const [authState, setAuthState] = useState<'checking' | 'authed' | 'unauthed'>('checking');
 
   const isLoginPage = pathname === '/admin/login';
 
   useEffect(() => {
     if (!isLoginPage) {
+      setAuthState('checking');
       fetch('/api/admin/verify')
         .then(res => res.json())
         .then(data => {
           if (data.success && data.user) {
+            setAuthState('authed');
             setCurrentUser(data.user);
+          } else {
+            setAuthState('unauthed');
           }
         })
-        .catch(console.error);
+        .catch(() => setAuthState('unauthed'));
+    } else {
+      setAuthState('authed');
     }
   }, [isLoginPage]);
+
+  useEffect(() => {
+    if (!isLoginPage && authState === 'unauthed') {
+      router.replace('/admin/login');
+    }
+  }, [authState, isLoginPage, router]);
 
   useEffect(() => {
     // Close sidebar when route changes on mobile
@@ -177,6 +190,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }
     return pathname.startsWith(href);
   };
+
+  if (!isLoginPage && authState === 'checking') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+        <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isLoginPage && authState === 'unauthed') {
+    return null;
+  }
 
   return (
     <div className="admin-scope min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">

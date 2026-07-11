@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { registerCustomer, setCustomerSessionCookie, logCustomerAction } from '@/lib/customer-auth';
 import { validatePasswordComplexity } from '@/lib/password-validation';
-import { checkRateLimit, incrementRateLimit } from '@/lib/rate-limit';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { z } from 'zod';
 
 const registerSchema = z.object({
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
     const secure = request.headers.get('x-forwarded-proto') === 'https';
 
-    const lim = checkRateLimit('register', ip, { windowMs: 60 * 60 * 1000, max: 3 });
+    const lim = await checkRateLimit('register', ip, { windowMs: 60 * 60 * 1000, max: 3 });
     if (lim.limited) {
       return NextResponse.json(
         { success: false, error: `Quá nhiều lần đăng ký. Thử lại sau ${Math.ceil(lim.retryAfterSec / 60)} phút` },
@@ -50,7 +50,6 @@ export async function POST(request: Request) {
     const result = await registerCustomer({ email, password });
 
     if (!result.success) {
-      incrementRateLimit('register', ip);
       await logCustomerAction({
         customerId: result.customerId,
         email,

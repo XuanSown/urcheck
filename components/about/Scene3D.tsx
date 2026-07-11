@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float } from '@react-three/drei';
 import { useReducedMotion } from 'framer-motion';
@@ -76,9 +76,17 @@ function Particles() {
 
 export function Scene3D() {
   const reducedMotion = useReducedMotion();
+  const [mount, setMount] = useState(false);
 
-  if (reducedMotion) {
-    // Static fallback — never mount heavy WebGL for reduced-motion users.
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 640px)');
+    const update = () => setMount(!reducedMotion && mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, [reducedMotion]);
+
+  if (!mount) {
     return (
       <div
         className="h-full w-full"

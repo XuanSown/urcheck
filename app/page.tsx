@@ -95,7 +95,15 @@ function HomeInner() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-950">
+    <div className="relative min-h-screen flex flex-col">
+      {/* Ambient blurred background — subtle navy mesh, no opaque white */}
+      <div aria-hidden className="fixed inset-0 -z-10 overflow-hidden bg-white dark:bg-gray-950">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-primary-100/50 dark:from-gray-950 dark:via-gray-950 dark:to-primary-900/20" />
+        <div className="absolute -top-40 -left-32 w-[28rem] h-[28rem] rounded-full bg-primary-200/40 dark:bg-primary-800/25 blur-3xl" />
+        <div className="absolute top-1/4 -right-32 w-[24rem] h-[24rem] rounded-full bg-primary-300/30 dark:bg-primary-700/20 blur-3xl" />
+        <div className="absolute bottom-10 left-1/4 w-[22rem] h-[22rem] rounded-full bg-accent-stone/15 dark:bg-accent-stone/10 blur-3xl" />
+      </div>
+
       <Header />
 
       <main className="flex-1">

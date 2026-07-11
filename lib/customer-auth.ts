@@ -14,9 +14,12 @@ type CustomerPayload = {
 };
 
 function getSecret() {
-  const secret = process.env.JWT_SECRET;
+  const secret =
+    process.env.JWT_SECRET ??
+    process.env.ADMIN_SESSION_SECRET ??
+    process.env.SECRET_KEY;
   if (!secret) {
-    throw new Error('Missing JWT_SECRET environment variable');
+    throw new Error('Missing JWT_SECRET / ADMIN_SESSION_SECRET / SECRET_KEY environment variable');
   }
   return new TextEncoder().encode(secret);
 }

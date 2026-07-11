@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useState, useEffect, useCallback, useTransition } from 'react';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -66,11 +67,11 @@ function AdminProductsInner() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
-  const [page, setPage] = useState(parseInt(searchParams.get('page') || '1'));
+  const [page] = useState(parseInt(searchParams.get('page') || '1'));
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [, setShowBulkActions] = useState(false);
 
   const fetchProducts = useCallback(async (pageNum: number, searchQuery: string, status: string) => {
     setLoading(true);
@@ -94,15 +95,15 @@ function AdminProductsInner() {
       setProducts(data.data.products);
       setTotalPages(data.data.pagination.totalPages);
       setTotal(data.data.pagination.total);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchProducts(page, search, statusFilter);
+    (async () => { await fetchProducts(page, search, statusFilter); })();
   }, [page, search, statusFilter, fetchProducts]);
 
   // Update URL when filters change
@@ -349,16 +350,20 @@ function AdminProductsInner() {
                   {/* Image */}
                   <div className="relative aspect-[4/3] bg-gray-100 dark:bg-gray-800">
                     {product.images && product.images.length > 0 ? (
-                      <img
+                      <Image
                         src={product.images.find(img => img.isPrimary)?.url || product.images[0].url}
                         alt={product.name}
+                        fill
                         className="w-full h-full object-cover"
+                        unoptimized
                       />
                     ) : primaryImageUrl(product.images) ? (
-                      <img
+                      <Image
                         src={primaryImageUrl(product.images)!}
                         alt={product.name}
+                        fill
                         className="w-full h-full object-cover"
+                        unoptimized
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100">

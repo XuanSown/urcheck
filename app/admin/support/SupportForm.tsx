@@ -42,7 +42,8 @@ export default function SupportForm({ articleId, initialData, submitting = false
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    if (initialData) {
+    if (!initialData) return;
+    (async () => {
       setFormData({
         slug: initialData.slug || '',
         titleVi: initialData.titleVi || '',
@@ -53,7 +54,7 @@ export default function SupportForm({ articleId, initialData, submitting = false
         status: initialData.status || 'PUBLISHED',
         order: initialData.order ?? 0,
       });
-    }
+    })();
   }, [initialData]);
 
   const handleChange = (
@@ -104,11 +105,11 @@ export default function SupportForm({ articleId, initialData, submitting = false
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Lưu thất bại');
 
-      setSuccess('Lưu bài viết hỗ trợ thành công!');
-      setTimeout(() => router.push('/admin/support'), 1200);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
+       setSuccess('Lưu bài viết hỗ trợ thành công!');
+       setTimeout(() => router.push('/admin/support'), 1200);
+     } catch (err: unknown) {
+       setError(err instanceof Error ? err.message : String(err));
+     } finally {
       setLoading(false);
     }
   };

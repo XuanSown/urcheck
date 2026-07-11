@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
 import { QrCodeDialog } from '@/components/admin/QrCodeDialog';
-import { useLocale } from '@/components/I18nProvider';
 import { QRCodeSVG } from 'qrcode.react';
 
 export interface ProductFormData {
@@ -84,7 +84,6 @@ export default function ProductForm({
   productId,
   initialData,
   onSubmit,
-  onPreview,
   submitting = false,
   qrCode,
 }: ProductFormProps) {
@@ -122,7 +121,7 @@ export default function ProductForm({
   const [certInput, setCertInput] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [imageNotice, setImageNotice] = useState<string | null>(null);
-  const [images, setImages] = useState<any[]>([]);
+  const [images, setImages] = useState<NonNullable<ProductFormData['existingImages']>>([]);
   // Pending files (khi tạo mới, chưa có productId để upload ngay)
   const [pendingFiles, setPendingFiles] = useState<{ file: File; previewUrl: string }[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
@@ -132,10 +131,16 @@ export default function ProductForm({
     url: string;
   } | null>(null);
   const [showQrDialog, setShowQrDialog] = useState(false);
-  const { t } = useLocale();
+
+  const formatDateInput = (date: string | Date): string => {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
+  };
 
   useEffect(() => {
-    if (initialData) {
+    if (!initialData) return;
+    (async () => {
       setFormData({
         name: initialData.name || '',
         description: initialData.description || '',
@@ -159,14 +164,8 @@ export default function ProductForm({
         existingImages: initialData.existingImages || [],
       });
       setImages(initialData.existingImages || []);
-    }
+    })();
   }, [initialData]);
-
-  const formatDateInput = (date: string | Date): string => {
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return '';
-    return d.toISOString().split('T')[0];
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -295,8 +294,8 @@ export default function ProductForm({
       });
       const uploadedImages = await Promise.all(uploadPromises);
       setImages(prev => [...prev, ...uploadedImages]);
-    } catch (err: any) {
-      alert('Upload ảnh thất bại: ' + err.message);
+    } catch (err: unknown) {
+      alert('Upload ảnh thất bại: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setUploadingImages(false);
     }
@@ -320,8 +319,8 @@ export default function ProductForm({
         }
       }
       return true;
-    } catch (err: any) {
-      setError('Sản phẩm đã lưu nhưng một số ảnh chưa tải lên được: ' + err.message);
+    } catch (err: unknown) {
+      setError('Sản phẩm đã lưu nhưng một số ảnh chưa tải lên được: ' + (err instanceof Error ? err.message : String(err)));
       return false;
     } finally {
       setUploadingImages(false);
@@ -344,7 +343,7 @@ export default function ProductForm({
       });
       if (!response.ok) throw new Error('Delete failed');
       setImages(prev => prev.filter(img => img.id !== imageId));
-    } catch (error) {
+    } catch {
       alert('Xóa ảnh thất bại');
     }
   };
@@ -421,12 +420,12 @@ export default function ProductForm({
         await uploadPendingImages(result.data.id);
       }
       setSuccess('Đã lưu bản nháp');
-      setTimeout(() => router.push(`/admin/products/${result.data.id}`), 800);
-      return true;
-    } catch (err: any) {
-      setError(err.message);
-      return false;
-    } finally {
+       setTimeout(() => router.push(`/admin/products/${result.data.id}`), 800);
+       return true;
+     } catch (err: unknown) {
+       setError(err instanceof Error ? err.message : String(err));
+       return false;
+     } finally {
       setLoading(false);
     }
   };
@@ -536,8 +535,8 @@ export default function ProductForm({
           router.push('/admin/products');
         }, 1500);
       }
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : String(error));
     } finally {
       setLoading(false);
     }
@@ -1083,11 +1082,13 @@ export default function ProductForm({
             <div className="grid grid-cols-3 gap-4">
               {pendingFiles.map((item, index) => (
                 <div key={index} className="relative group">
-                  <div className="aspect-square rounded-xl overflow-hidden bg-gray-100 border-2 border-dashed border-gray-200">
-                    <img
+                  <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 border-2 border-dashed border-gray-200">
+                    <Image
                       src={item.previewUrl}
                       alt={item.file.name}
+                      fill
                       className="w-full h-full object-cover"
+                      unoptimized
                     />
                   </div>
                   {index === 0 && (
@@ -1127,11 +1128,13 @@ export default function ProductForm({
             <div className="grid grid-cols-3 gap-4">
               {images.map((image) => (
                 <div key={image.id} className="relative group">
-                  <div className="aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800\">
-                    <img
+                  <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800\">
+                    <Image
                       src={image.url}
                       alt={image.altText || ''}
+                      fill
                       className="w-full h-full object-cover"
+                      unoptimized
                     />
                   </div>
                   {image.isPrimary && (
@@ -1264,12 +1267,14 @@ export default function ProductForm({
               <div className="grid md:grid-cols-2 gap-8">
                 {/* Left column - Preview */}
                 <div className="space-y-6">
-                  <div className="aspect-square rounded-xl bg-gray-100 flex items-center justify-center">
+                  <div className="relative aspect-square rounded-xl bg-gray-100 flex items-center justify-center">
                     {previewData.existingImages && previewData.existingImages.length > 0 ? (
-                      <img
+                      <Image
                         src={previewData.existingImages[0].url}
                         alt={previewData.name}
+                        fill
                         className="w-full h-full object-cover rounded-xl"
+                        unoptimized
                       />
                     ) : (
                       <svg className="w-20 h-20 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

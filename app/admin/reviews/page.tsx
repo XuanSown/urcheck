@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { PageHeader } from '@/components/admin/PageHeader';
@@ -92,15 +92,15 @@ export default function AdminReviewsPage() {
       setReviews(data.data.reviews);
       setTotalPages(data.data.pagination.totalPages);
       setTotal(data.data.pagination.total);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchReviews(page, statusFilter);
+    (async () => { await fetchReviews(page, statusFilter); })();
   }, [page, statusFilter, fetchReviews]);
 
   const openDialog = (review: Review, mode: 'approve' | 'reject' | 'delete') => {
@@ -127,8 +127,8 @@ export default function AdminReviewsPage() {
         type: 'success',
         title: status === 'APPROVED' ? 'Đã duyệt đánh giá' : 'Đã từ chối đánh giá',
       });
-    } catch (err: any) {
-      toast({ type: 'error', title: 'Thất bại', description: err.message });
+    } catch (err: unknown) {
+      toast({ type: 'error', title: 'Thất bại', description: err instanceof Error ? err.message : String(err) });
     } finally {
       setBusyId(null);
       closeDialog();
@@ -143,8 +143,8 @@ export default function AdminReviewsPage() {
       if (!res.ok) throw new Error(data.error || 'Xóa thất bại');
       setReviews((prev) => prev.filter((r) => r.id !== review.id));
       toast({ type: 'success', title: 'Đã xóa đánh giá' });
-    } catch (err: any) {
-      toast({ type: 'error', title: 'Thất bại', description: err.message });
+    } catch (err: unknown) {
+      toast({ type: 'error', title: 'Thất bại', description: err instanceof Error ? err.message : String(err) });
     } finally {
       setBusyId(null);
       closeDialog();

@@ -8,17 +8,11 @@ import { Button } from '@/components/ui/Button';
 
 interface Version {
   id: string;
-  productSnapshot: any;
-  imageSnapshot: any;
+  productSnapshot: Record<string, unknown>;
+  imageSnapshot: Record<string, unknown>;
   changeReason: string | null;
   changedBy: string;
   createdAt: string;
-}
-
-interface VersionDiff {
-  field: string;
-  oldValue: any;
-  newValue: any;
 }
 
 export default function VersionHistoryPage() {
@@ -32,7 +26,6 @@ export default function VersionHistoryPage() {
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
   const [showRollbackConfirm, setShowRollbackConfirm] = useState(false);
   const [rollingBack, setRollingBack] = useState<string | null>(null);
-  const [diffs, setDiffs] = useState<VersionDiff[]>([]);
 
   const fetchVersions = useCallback(async () => {
     setLoading(true);
@@ -47,8 +40,8 @@ export default function VersionHistoryPage() {
       }
 
       setVersions(data.data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -56,41 +49,9 @@ export default function VersionHistoryPage() {
 
   useEffect(() => {
     if (productId) {
-      fetchVersions();
+      (async () => { await fetchVersions(); })();
     }
   }, [productId, fetchVersions]);
-
-  const compareVersions = (oldData: any, newData: any): VersionDiff[] => {
-    const changes: VersionDiff[] = [];
-
-    if (!oldData || !newData) return changes;
-
-    const allKeys = new Set([...Object.keys(oldData), ...Object.keys(newData)]);
-
-    allKeys.forEach(key => {
-      const oldVal = oldData[key];
-      const newVal = newData[key];
-
-      // Special handling for arrays
-      if (Array.isArray(oldVal) && Array.isArray(newVal)) {
-        if (JSON.stringify(oldVal.sort()) !== JSON.stringify(newVal.sort())) {
-          changes.push({
-            field: key,
-            oldValue: oldVal,
-            newValue: newVal,
-          });
-        }
-      } else if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
-        changes.push({
-          field: key,
-          oldValue: oldVal,
-          newValue: newVal,
-        });
-      }
-    });
-
-    return changes;
-  };
 
   const handleViewVersion = (version: Version) => {
     setSelectedVersion(version);
@@ -114,8 +75,8 @@ export default function VersionHistoryPage() {
 
       alert('Khôi phục phiên bản thành công!');
       fetchVersions();
-    } catch (err: any) {
-      alert('Lỗi: ' + err.message);
+    } catch (err: unknown) {
+      alert('Lỗi: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setRollingBack(null);
     }
@@ -142,7 +103,7 @@ export default function VersionHistoryPage() {
     return labels[field] || field;
   };
 
-  const formatValue = (value: any, field: string): string => {
+  const formatValue = (value: unknown, field: string): string => {
     if (value === null || value === undefined) return '(trống)';
 
     if (field === 'status') {
@@ -292,7 +253,6 @@ export default function VersionHistoryPage() {
               <button
                 onClick={() => {
                   setSelectedVersion(null);
-                  setDiffs([]);
                 }}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >

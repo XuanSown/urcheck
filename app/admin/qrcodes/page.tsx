@@ -71,15 +71,15 @@ export default function QrCodesPage() {
       } else {
         setError(data.error);
       }
-    } catch (err: any) {
-      setError(err.message || 'Đã xảy ra lỗi');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err) || 'Đã xảy ra lỗi');
     } finally {
       setLoading(false);
     }
   }, [page, search, activeFilter]);
 
   useEffect(() => {
-    fetchQrCodes();
+    (async () => { await fetchQrCodes(); })();
   }, [fetchQrCodes]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -113,7 +113,7 @@ export default function QrCodesPage() {
           type: 'success',
         });
       }
-    } catch (err: any) {
+    } catch {
       setQrCodes((prev) =>
         prev.map((q) => (q.id === qr.id ? { ...q, isActive: qr.isActive } : q))
       );
@@ -138,7 +138,7 @@ export default function QrCodesPage() {
       } else {
         toast({ title: 'Lỗi', description: data.error, type: 'error' });
       }
-    } catch (err: any) {
+    } catch {
       toast({ title: 'Lỗi', description: 'Xóa mã QR thất bại', type: 'error' });
     } finally {
       setDeleting(false);

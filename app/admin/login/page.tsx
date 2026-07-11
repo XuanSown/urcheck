@@ -16,6 +16,8 @@ function AuthForms() {
   // Login state
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [twoFactorPending, setTwoFactorPending] = useState(false);
+  const [twoFactorToken, setTwoFactorToken] = useState('');
   
   // Forgot password state
   const [email, setEmail] = useState('');
@@ -43,7 +45,11 @@ function AuthForms() {
       });
       const data = await response.json();
 
-      if (response.ok && data.success) {
+      if (data.twoFactorRequired) {
+        setTwoFactorPending(true);
+        setError(null);
+        return;
+      } else if (response.ok && data.success) {
         const rawRedirect = searchParams.get('redirect') || '/admin';
         const safeRedirect = rawRedirect.startsWith('/admin') && !rawRedirect.startsWith('/admin/login')
             ? rawRedirect : '/admin';
@@ -53,6 +59,35 @@ function AuthForms() {
         setError(data.error || 'Đăng nhập thất bại');
       }
     } catch (err) {
+      setError('Lỗi kết nối, vui lòng thử lại');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTwoFactor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, twoFactorToken }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        const rawRedirect = searchParams.get('redirect') || '/admin';
+        const safeRedirect = rawRedirect.startsWith('/admin') && !rawRedirect.startsWith('/admin/login')
+            ? rawRedirect : '/admin';
+        router.push(safeRedirect);
+        router.refresh();
+      } else if (data.twoFactorRequired) {
+        setError('Mã xác thực không đúng');
+      } else {
+        setError(data.error || 'Đăng nhập thất bại');
+      }
+    } catch {
       setError('Lỗi kết nối, vui lòng thử lại');
     } finally {
       setIsLoading(false);
@@ -164,6 +199,23 @@ function AuthForms() {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 text-center mb-6">
                   Đăng nhập Admin
                 </h2>
+
+                {twoFactorPending ? (
+                  <form onSubmit={handleTwoFactor} className="space-y-5">
+                    <p className="text-sm text-gray-500 text-center mb-6">Tài khoản của bạn được bảo vệ bằng xác thực 2 bước. Nhập mã 6 số từ ứng dụng xác thực.</p>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Mã xác thực (2FA)</label>
+                      <input type="text" required maxLength={6} value={twoFactorToken} onChange={e => setTwoFactorToken(e.target.value.replace(/\D/g, ''))} disabled={isLoading} autoFocus
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 text-center text-xl tracking-[0.5em] font-bold" placeholder="------" />
+                    </div>
+                    <Button type="submit" size="lg" className="w-full" disabled={isLoading || twoFactorToken.length < 6}>
+                      {isLoading ? 'Đang xử lý...' : 'Xác thực'}
+                    </Button>
+                    <div className="text-center mt-4">
+                      <button type="button" onClick={() => { setTwoFactorPending(false); setTwoFactorToken(''); setError(null); }} className="text-sm text-gray-500 hover:text-gray-700">Hủy</button>
+                    </div>
+                  </form>
+                ) : (
                 <form onSubmit={handleLogin} className="space-y-5">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tên đăng nhập</label>
@@ -184,6 +236,7 @@ function AuthForms() {
                     {isLoading ? 'Đang xử lý...' : 'Đăng nhập'}
                   </Button>
                 </form>
+                )}
               </motion.div>
             )}
 

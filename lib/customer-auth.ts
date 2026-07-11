@@ -231,13 +231,13 @@ export async function requireCustomerApi() {
   return { session } as const;
 }
 
-export async function setCustomerSessionCookie(token: string): Promise<void> {
+export async function setCustomerSessionCookie(token: string, secure?: boolean): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set({
     name: CUSTOMER_SESSION_COOKIE,
     value: token,
     httpOnly: true,
-    secure: process.env.COOKIE_SECURE === 'true' || process.env.NODE_ENV === 'production',
+    secure: secure ?? (process.env.COOKIE_SECURE === 'true' || process.env.NODE_ENV === 'production'),
     sameSite: 'lax',
     path: '/',
     maxAge: SESSION_MAX_AGE,

@@ -38,6 +38,8 @@ export async function POST(request: Request) {
       request.headers.get('x-real-ip') ||
       'unknown';
 
+    const secure = request.headers.get('x-forwarded-proto') === 'https';
+
     const now = Date.now();
     purgeRegister(now);
     const key = `customer:register:${ip}`;
@@ -81,11 +83,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const b = registerAttempts.get(key);
-    if (b) b.count += 1;
-
     if (result.token) {
-      await setCustomerSessionCookie(result.token);
+      await setCustomerSessionCookie(result.token, secure);
     }
 
     await logCustomerAction({

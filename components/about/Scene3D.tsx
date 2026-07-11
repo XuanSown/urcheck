@@ -36,8 +36,8 @@ function Centerpiece() {
       <mesh ref={mesh}>
         <icosahedronGeometry args={[1.1, 1]} />
         <meshStandardMaterial
-          color="#ea580c"
-          emissive="#ea580c"
+          color="#2c4c7e"
+          emissive="#2c4c7e"
           emissiveIntensity={0.4}
           roughness={0.3}
           metalness={0.2}
@@ -63,7 +63,7 @@ function Particles() {
         />
       </bufferGeometry>
       <pointsMaterial
-        color="#ea580c"
+        color="#2c4c7e"
         size={0.03}
         sizeAttenuation
         transparent
@@ -84,7 +84,7 @@ export function Scene3D() {
         className="h-full w-full"
         style={{
           background:
-            'radial-gradient(circle at 50% 50%, rgba(234,88,12,0.35) 0%, rgba(234,88,12,0.08) 35%, transparent 70%)',
+            'radial-gradient(circle at 50% 50%, rgba(44,76,126,0.35) 0%, rgba(44,76,126,0.08) 35%, transparent 70%)',
         }}
         aria-hidden="true"
       />
@@ -100,7 +100,7 @@ export function Scene3D() {
     >
       <ambientLight intensity={0.6} />
       <directionalLight position={[3, 3, 3]} intensity={1.2} />
-      <pointLight position={[-3, -2, 2]} intensity={0.8} color="#ea580c" />
+      <pointLight position={[-3, -2, 2]} intensity={0.8} color="#2c4c7e" />
       <Centerpiece />
       <Particles />
     </Canvas>

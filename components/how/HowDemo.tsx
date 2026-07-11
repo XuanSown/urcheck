@@ -77,7 +77,7 @@ export function HowDemo() {
           <div className="liquid-glass rounded-3xl p-8 sm:p-10 text-center">
             <div className="flex justify-center">
               <motion.div
-                animate={reducedMotion ? undefined : { boxShadow: ['0 0 0 rgba(234,88,12,0)', '0 0 28px rgba(234,88,12,0.45)', '0 0 0 rgba(234,88,12,0)'] }}
+                animate={reducedMotion ? undefined : { boxShadow: ['0 0 0 rgba(44,76,126,0)', '0 0 28px rgba(44,76,126,0.45)', '0 0 0 rgba(44,76,126,0)'] }}
                 transition={reducedMotion ? { duration: 0 } : { duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
                 className="rounded-2xl bg-white p-4"
               >

@@ -179,7 +179,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
+    <div className="admin-scope min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
       {/* Mobile sidebar backdrop */}
       <AnimatePresence>
         {isSidebarOpen && (

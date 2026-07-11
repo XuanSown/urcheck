@@ -42,7 +42,7 @@ export function Preloader() {
 
               {/* Scanning line animation */}
               <motion.div
-                className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary-500 to-transparent shadow-[0_0_8px_rgba(249,115,22,0.6)]"
+                className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary-500 to-transparent shadow-[0_0_8px_rgba(44,76,126,0.6)]"
                 initial={{ top: '0%' }}
                 animate={{ top: '100%' }}
                 transition={{

@@ -17,7 +17,7 @@ export function Hero({ onScan, onExplore }: { onScan?: () => void; onExplore?: (
   const reduced = useReducedMotion();
   const rise = (d = 0.3) => ({ initial: reduced ? { opacity: 0 } : { opacity: 0, y: 30 }, animate: { opacity: 1, y: 0 }, transition: { duration: reduced ? 0 : d, ease: [0.16, 1, 0.3, 1] as const } });
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-950">
+    <section className="relative overflow-hidden bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 pb-16 sm:pb-24 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
         <div className="text-center lg:text-left">
           <motion.span {...rise()} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-sm font-medium mb-5">

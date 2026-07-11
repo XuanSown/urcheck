@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { loginCustomer, setCustomerSessionCookie } from '@/lib/customer-auth';
-import { checkRateLimit, incrementRateLimit } from '@/lib/rate-limit';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     const secure = request.headers.get('x-forwarded-proto') === 'https';
 
-    const lim = checkRateLimit('login', ip, { windowMs: 15 * 60 * 1000, max: 5 });
+    const lim = await checkRateLimit('login', ip, { windowMs: 15 * 60 * 1000, max: 5 });
     if (lim.limited) {
       return NextResponse.json(
         { success: false, error: `Quá nhiều lần đăng nhập thất bại. Thử lại sau ${Math.ceil(lim.retryAfterSec / 60)} phút` },
@@ -45,7 +45,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      incrementRateLimit('login', ip);
       return NextResponse.json(
         { success: false, error: result.error },
         { status: 401 }

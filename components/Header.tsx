@@ -82,19 +82,9 @@ export function Header({ className }: HeaderProps) {
             <div className="pointer-events-none absolute -top-10 -right-6 h-32 w-32 rounded-full bg-primary-500/20 blur-3xl" />
           </div>
 
-          <div className="relative flex items-center justify-between px-4 sm:px-6 py-2.5 sm:py-3">
-          <Link href="/" className="flex items-center gap-2 group">
-            <motion.div
-              whileHover={{ scale: 0.96 }}
-              whileTap={{ scale: 0.92 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-              className="relative"
-            >
-              <Logo size="sm" variant="dark" className="group-hover:opacity-80 transition-opacity duration-300" />
-            </motion.div>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-4">
+          <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 sm:px-6 py-2.5 sm:py-3">
+          {/* Left: nav links (desktop) */}
+          <div className="hidden md:flex items-center gap-4 justify-self-start">
             {navLinks.map((link, i) => (
               <motion.div
                 key={link.href}
@@ -110,88 +100,105 @@ export function Header({ className }: HeaderProps) {
                 </Link>
               </motion.div>
             ))}
+          </div>
 
-            {loading ? (
-              <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse ml-2" />
-            ) : customer ? (
-              <div 
-                className="relative flex items-center ml-2"
-                onMouseEnter={() => setIsProfileOpen(true)}
-                onMouseLeave={() => setIsProfileOpen(false)}
-              >
-                <button className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors py-2">
-                  <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold">
-                    {customer.email?.[0].toUpperCase() || 'U'}
-                  </div>
-                  <span className="max-w-[120px] truncate">{customer.email}</span>
-                  <svg className={`w-4 h-4 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+          {/* Center: logo */}
+          <Link href="/" className="flex items-center gap-2 group justify-self-center">
+            <motion.div
+              whileHover={{ scale: 0.96 }}
+              whileTap={{ scale: 0.92 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="relative"
+            >
+              <Logo size="sm" variant="dark" className="group-hover:opacity-80 transition-opacity duration-300" />
+            </motion.div>
+          </Link>
 
-                <AnimatePresence>
-                  {isProfileOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-100 dark:border-gray-800 py-2 overflow-hidden"
-                    >
-                      <Link
-                        href="/customer/routines"
-                        className="block px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-                      >
-                        Lịch trình
-                      </Link>
-                      <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                      >
-                        {t('auth_logout_btn') || 'Đăng xuất'}
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 ml-2">
-                <Link
-                  href="/customer/login"
-                  className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+          {/* Right: auth (desktop) + mobile toggle */}
+          <div className="flex items-center gap-2 justify-self-end">
+            <div className="hidden md:flex items-center gap-4">
+              {loading ? (
+                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse" />
+              ) : customer ? (
+                <div
+                  className="relative flex items-center"
+                  onMouseEnter={() => setIsProfileOpen(true)}
+                  onMouseLeave={() => setIsProfileOpen(false)}
                 >
-                  {t('auth_login_btn') || 'Đăng nhập'}
-                </Link>
-                <Link
-                  href="/customer/register"
-                  className="text-sm font-medium px-3 py-1.5 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-all duration-200"
-                >
-                  {t('auth_register_btn') || 'Đăng ký'}
-                </Link>
-              </div>
-            )}
-          </nav>
+                  <button className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors py-2">
+                    <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold">
+                      {customer.email?.[0].toUpperCase() || 'U'}
+                    </div>
+                    <span className="max-w-[120px] truncate">{customer.email}</span>
+                    <svg className={`w-4 h-4 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
 
-          <button
-            className="md:hidden relative z-10 p-2.5 -mr-2.5 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            <div className="w-6 h-6 relative flex flex-col justify-center items-center">
-              <motion.span
-                className="absolute w-5 h-[1.5px] bg-current rounded-full"
-                animate={isMobileMenuOpen ? { rotate: 45, y: 0 } : { rotate: 0, y: -5 }}
-                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-              />
-              <motion.span
-                className="absolute w-5 h-[1.5px] bg-current rounded-full"
-                animate={isMobileMenuOpen ? { rotate: -45, y: 0 } : { rotate: 0, y: 5 }}
-                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-              />
+                  <AnimatePresence>
+                    {isProfileOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-100 dark:border-gray-800 py-2 overflow-hidden"
+                      >
+                        <Link
+                          href="/customer/routines"
+                          className="block px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                        >
+                          Lịch trình
+                        </Link>
+                        <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
+                        <button
+                          onClick={handleLogout}
+                          className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        >
+                          {t('auth_logout_btn') || 'Đăng xuất'}
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/customer/login"
+                    className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                  >
+                    {t('auth_login_btn') || 'Đăng nhập'}
+                  </Link>
+                  <Link
+                    href="/customer/register"
+                    className="text-sm font-medium px-3 py-1.5 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-all duration-200"
+                  >
+                    {t('auth_register_btn') || 'Đăng ký'}
+                  </Link>
+                </div>
+              )}
             </div>
-        </button>
-      </div>
+
+            <button
+              className="md:hidden relative z-10 p-2.5 -mr-2.5 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              <div className="w-6 h-6 relative flex flex-col justify-center items-center">
+                <motion.span
+                  className="absolute w-5 h-[1.5px] bg-current rounded-full"
+                  animate={isMobileMenuOpen ? { rotate: 45, y: 0 } : { rotate: 0, y: -5 }}
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                />
+                <motion.span
+                  className="absolute w-5 h-[1.5px] bg-current rounded-full"
+                  animate={isMobileMenuOpen ? { rotate: -45, y: 0 } : { rotate: 0, y: 5 }}
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                />
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
 
       <AnimatePresence>

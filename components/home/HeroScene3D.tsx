@@ -7,7 +7,9 @@ import { useReducedMotion } from 'framer-motion';
 import * as THREE from 'three';
 import { HeroScene3DFallback } from './HeroScene3DFallback';
 
-const PRIMARY = '#ea580c';
+const PRIMARY = '#2c4c7e';
+const QR_DARK = '#111111';
+const QR_LIGHT = '#ffffff';
 
 // Tạo texture QR-like một lần (anchor góc + finder pattern + ma trận ngẫu nhiên cố định).
 function buildQrTexture(): THREE.CanvasTexture {
@@ -18,16 +20,16 @@ function buildQrTexture(): THREE.CanvasTexture {
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d')!;
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = QR_LIGHT;
   ctx.fillRect(0, 0, size, size);
-  ctx.fillStyle = PRIMARY;
+  ctx.fillStyle = QR_DARK;
   const finder = (x: number, y: number) => {
     ctx.fillRect(x * cell, y * cell, 7 * cell, 7 * cell);
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = QR_LIGHT;
     ctx.fillRect((x + 1) * cell, (y + 1) * cell, 5 * cell, 5 * cell);
-    ctx.fillStyle = PRIMARY;
+    ctx.fillStyle = QR_DARK;
     ctx.fillRect((x + 2) * cell, (y + 2) * cell, 3 * cell, 3 * cell);
-    ctx.fillStyle = PRIMARY;
+    ctx.fillStyle = QR_DARK;
   };
   // Ma trận ngẫu nhiên cố định (seed đơn giản để render ổn định).
   let seed = 1234567;
@@ -74,9 +76,9 @@ function QrCube({ pointer }: { pointer: React.MutableRefObject<{ x: number; y: n
         <boxGeometry args={[1.7, 1.7, 1.7]} />
         <meshStandardMaterial
           map={tex}
-          color={PRIMARY}
-          emissive={PRIMARY}
-          emissiveIntensity={0.35}
+          color={QR_LIGHT}
+          emissive={'#000000'}
+          emissiveIntensity={0}
           roughness={0.35}
           metalness={0.15}
         />

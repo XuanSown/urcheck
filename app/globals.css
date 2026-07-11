@@ -7,18 +7,18 @@
 :root {
   --background: #ffffff;
   --foreground: #111111;
-  /* Sophisticated Orange/Amber primary palette */
-  --primary: #ea580c;
-  --primary-50: #fff7ed;
-  --primary-100: #ffedd5;
-  --primary-200: #fed7aa;
-  --primary-300: #fdba74;
-  --primary-400: #fb923c;
-  --primary-500: #f97316;
-  --primary-600: #ea580c;
-  --primary-700: #c2410c;
-  --primary-800: #9a3412;
-  --primary-900: #7c2d12;
+  /* Sophisticated Navy primary palette */
+  --primary: #2c4c7e;
+  --primary-50: #eef2f8;
+  --primary-100: #dbe4f1;
+  --primary-200: #bccfe7;
+  --primary-300: #9bb6d8;
+  --primary-400: #6f92c4;
+  --primary-500: #4d72ad;
+  --primary-600: #2c4c7e;
+  --primary-700: #244068;
+  --primary-800: #1b3353;
+  --primary-900: #122441;
   /* Muted stone accent */
   --accent-stone: #78716c;
   --accent-stone-light: #a8a29e;
@@ -63,6 +63,7 @@
   --color-bg-subtle: var(--bg-subtle);
   --color-border: var(--border);
   --font-mono: var(--font-jetbrains-mono);
+  --font-display: var(--font-playfair);
 }
 
 /* Dark mode variables — activated when <html class="dark"> is set.
@@ -71,16 +72,16 @@
 .dark {
   --background: #0a0a0a;
   --foreground: #f5f5f5;
-  --primary-50: #2d1808;
-  --primary-100: #452208;
-  --primary-200: #5e2d0a;
-  --primary-300: #77360d;
-  --primary-400: #8f3f0f;
-  --primary-500: #a84812;
-  --primary-600: #c2410c;
-  --primary-700: #ea580c;
-  --primary-800: #fb923c;
-  --primary-900: #fed7aa;
+  --primary-50: #eef2f8;
+  --primary-100: #dbe4f1;
+  --primary-200: #bccfe7;
+  --primary-300: #6f92c4;
+  --primary-400: #9db9e3;
+  --primary-500: #4d72ad;
+  --primary-600: #2c4c7e;
+  --primary-700: #244068;
+  --primary-800: #1b3353;
+  --primary-900: #122441;
   --accent-stone: #d6d3d1;
   --accent-stone-light: #e7e5e4;
   --accent-stone-dark: #a8a29e;
@@ -118,6 +119,50 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+}
+
+/* Display headings use elegant serif (Playfair Display) for customer/public
+   pages, with refined uppercase for prominent titles. Admin keeps the
+   monospace brand font via `.admin-scope` reset. */
+h1, h2 {
+  font-family: var(--font-display), "Playfair Display", Georgia, serif;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* ========================================
+   ADMIN SCOPE — keep orange brand + mono headings
+   ======================================== */
+.admin-scope {
+  --primary: #ea580c;
+  --primary-50: #fff7ed;
+  --primary-100: #ffedd5;
+  --primary-200: #fed7aa;
+  --primary-300: #fdba74;
+  --primary-400: #fb923c;
+  --primary-500: #f97316;
+  --primary-600: #ea580c;
+  --primary-700: #c2410c;
+  --primary-800: #9a3412;
+  --primary-900: #7c2d12;
+}
+.dark .admin-scope {
+  --primary-50: #2d1808;
+  --primary-100: #452208;
+  --primary-200: #5e2d0a;
+  --primary-300: #77360d;
+  --primary-400: #8f3f0f;
+  --primary-500: #a84812;
+  --primary-600: #c2410c;
+  --primary-700: #ea580c;
+  --primary-800: #fb923c;
+  --primary-900: #fed7aa;
+}
+.admin-scope h1,
+.admin-scope h2 {
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 /* Smooth scrolling */
@@ -204,8 +249,8 @@ html {
 
 /* Pulse glow */
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(234, 88, 12, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(234, 88, 12, 0.6); }
+  0%, 100% { box-shadow: 0 0 20px rgba(44, 76, 126, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(44, 76, 126, 0.6); }
 }
 
 /* Shimmer sweep */
@@ -223,12 +268,12 @@ html {
 /* Glow pulse for borders */
 @keyframes glow-border {
   0%, 100% {
-    border-color: rgba(249, 115, 22, 0.2);
-    box-shadow: 0 0 15px rgba(249, 115, 22, 0.05);
+    border-color: rgba(44, 76, 126, 0.2);
+    box-shadow: 0 0 15px rgba(44, 76, 126, 0.05);
   }
   50% {
-    border-color: rgba(249, 115, 22, 0.5);
-    box-shadow: 0 0 30px rgba(249, 115, 22, 0.15);
+    border-color: rgba(44, 76, 126, 0.5);
+    box-shadow: 0 0 30px rgba(44, 76, 126, 0.15);
   }
 }
 
@@ -568,15 +613,15 @@ html {
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(249, 115, 22, 0.12) 0%,
-    rgba(249, 115, 22, 0.06) 40%,
+    rgba(44, 76, 126, 0.12) 0%,
+    rgba(44, 76, 126, 0.06) 40%,
     rgba(255, 255, 255, 0.08) 100%
   );
   backdrop-filter: blur(8px) saturate(140%);
   -webkit-backdrop-filter: blur(8px) saturate(140%);
-  border: 1px solid rgba(249, 115, 22, 0.15);
+  border: 1px solid rgba(44, 76, 126, 0.15);
   box-shadow:
-    0 4px 16px rgba(249, 115, 22, 0.08),
+    0 4px 16px rgba(44, 76, 126, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   pointer-events: none;
   z-index: 9999;

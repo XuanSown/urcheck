@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/db';
 import { requireCustomerApi } from '@/lib/customer-auth';
 import { z } from 'zod';
 import { primaryImageUrl } from '@/lib/product-utils';
 
-function mapRoutineItem(item: any) {
+type RoutineItemWithProduct = Prisma.RoutineItemGetPayload<{
+  include: {
+    product: {
+      include: { images: { where: { isPrimary: true }; take: 1; select: { url: true; isPrimary: true } } };
+    };
+  };
+}>;
+
+function mapRoutineItem(item: RoutineItemWithProduct) {
   return {
     ...item,
-    productName: item.product?.name ?? (item as any).productName ?? '',
+    productName: item.product?.name ?? '',
     brandName: item.product?.brandName ?? null,
     imageUrl: primaryImageUrl(item.product?.images) ?? null,
   };

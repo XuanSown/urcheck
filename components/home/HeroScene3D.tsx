@@ -1,17 +1,15 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { Float } from '@react-three/drei';
 import { useReducedMotion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 import * as THREE from 'three';
 import { HeroScene3DFallback } from './HeroScene3DFallback';
 
-const PRIMARY = '#ea580c';
+const PRIMARY = '#2c4c7e';
 const QR_DARK = '#111111';
 const QR_LIGHT = '#ffffff';
-const PRODUCT_URL = '/products/sample';
 
 // Tạo texture QR-like một lần (anchor góc + finder pattern + ma trận ngẫu nhiên cố định).
 function buildQrTexture(): THREE.CanvasTexture {
@@ -55,7 +53,7 @@ function buildQrTexture(): THREE.CanvasTexture {
   return tex;
 }
 
-function QrCube({ pointer, position = [0, 0, 0] }: { pointer: React.MutableRefObject<{ x: number; y: number }>; position?: [number, number, number] }) {
+function QrCube({ pointer }: { pointer: React.MutableRefObject<{ x: number; y: number }> }) {
   const mesh = useRef<THREE.Mesh>(null);
   const tex = useMemo(() => buildQrTexture(), []);
 
@@ -74,92 +72,17 @@ function QrCube({ pointer, position = [0, 0, 0] }: { pointer: React.MutableRefOb
 
   return (
     <Float speed={1.5} rotationIntensity={0.6} floatIntensity={1}>
-      <mesh ref={mesh} position={position}>
+      <mesh ref={mesh}>
         <boxGeometry args={[1.7, 1.7, 1.7]} />
         <meshStandardMaterial
           map={tex}
           color={QR_LIGHT}
-          roughness={0.4}
-          metalness={0.1}
+          emissive={'#000000'}
+          emissiveIntensity={0}
+          roughness={0.35}
+          metalness={0.15}
         />
       </mesh>
-    </Float>
-  );
-}
-
-// Lọ mỹ phẩm 3D dựng từ primitive thuần three.js (không tải file ngoài).
-const BOTTLE_PROFILE = [
-  new THREE.Vector2(0.0, -0.62),
-  new THREE.Vector2(0.30, -0.62),
-  new THREE.Vector2(0.32, -0.56),
-  new THREE.Vector2(0.32, 0.08),
-  new THREE.Vector2(0.24, 0.22),
-  new THREE.Vector2(0.13, 0.34),
-  new THREE.Vector2(0.13, 0.5),
-  new THREE.Vector2(0.0, 0.5),
-];
-
-function CosmeticBottle({
-  pointer,
-  onSelect,
-  position = [0.95, 0, 0],
-}: {
-  pointer: React.MutableRefObject<{ x: number; y: number }>;
-  onSelect: () => void;
-  position?: [number, number, number];
-}) {
-  const group = useRef<THREE.Group>(null);
-
-  useFrame((_, delta) => {
-    if (!group.current) return;
-    // Auto-rotate nền, đồng bộ với QR.
-    group.current.rotation.y += delta * 0.15;
-    const targetX = pointer.current.y * 0.3;
-    const targetZ = -pointer.current.x * 0.3;
-    group.current.rotation.x += (targetX - group.current.rotation.x) * 0.06;
-    group.current.rotation.z += (targetZ - group.current.rotation.z) * 0.06;
-  });
-
-  const onOver = () => {
-    document.body.style.cursor = 'pointer';
-  };
-  const onOut = () => {
-    document.body.style.cursor = '';
-  };
-  const onClick = (e: ThreeEvent<MouseEvent>) => {
-    e.stopPropagation();
-    onSelect();
-  };
-
-  return (
-    <Float speed={1.5} rotationIntensity={0.6} floatIntensity={1}>
-      <group ref={group} position={position} scale={0.8} onClick={onClick} onPointerOver={onOver} onPointerOut={onOut}>
-        {/* Thân thủy tinh */}
-        <mesh>
-          <latheGeometry args={[BOTTLE_PROFILE, 48]} />
-          <meshPhysicalMaterial
-            color="#eaf2f5"
-            transmission={0.9}
-            thickness={0.6}
-            roughness={0.12}
-            ior={1.45}
-            transparent
-            opacity={0.9}
-            clearcoat={0.6}
-            clearcoatRoughness={0.2}
-          />
-        </mesh>
-        {/* Dịch lỏng pha cam brand */}
-        <mesh position={[0, -0.28, 0]}>
-          <cylinderGeometry args={[0.27, 0.29, 0.55, 32]} />
-          <meshStandardMaterial color={PRIMARY} roughness={0.3} transparent opacity={0.8} />
-        </mesh>
-        {/* Nắp */}
-        <mesh position={[0, 0.55, 0]}>
-          <cylinderGeometry args={[0.14, 0.14, 0.16, 32]} />
-          <meshStandardMaterial color="#1f2937" roughness={0.4} metalness={0.3} />
-        </mesh>
-      </group>
     </Float>
   );
 }
@@ -203,7 +126,6 @@ function Particles() {
 
 export function HeroScene3D() {
   const reducedMotion = useReducedMotion();
-  const router = useRouter();
   const [mount, setMount] = useState(false);
   const [webglOk, setWebglOk] = useState(true);
   const pointer = useRef({ x: 0, y: 0 });
@@ -233,7 +155,7 @@ export function HeroScene3D() {
       camera={{ position: [0, 0, 4], fov: 45 }}
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: true }}
-      style={{ width: '100%', height: '100%' }}
+      style={{ pointerEvents: 'none', width: '100%', height: '100%' }}
       onCreated={({ gl }) => {
         if (!gl.getContext()) setWebglOk(false);
       }}
@@ -241,8 +163,7 @@ export function HeroScene3D() {
       <ambientLight intensity={0.6} />
       <directionalLight position={[3, 3, 3]} intensity={1.2} />
       <pointLight position={[-3, -2, 2]} intensity={0.8} color={PRIMARY} />
-      <QrCube pointer={pointer} position={[-0.7, 0, 0]} />
-      <CosmeticBottle pointer={pointer} onSelect={() => router.push(PRODUCT_URL)} />
+      <QrCube pointer={pointer} />
       <Particles />
     </Canvas>
   );

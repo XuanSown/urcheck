@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono } from "next/font/google";
+import { JetBrains_Mono, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Preloader } from "@/components/Preloader";
 import { I18nProvider } from "@/components/I18nProvider";
@@ -10,6 +10,13 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin", "vietnamese"],
   display: "swap",
   weight: ["300", "400", "500", "600", "700", "800"],
+});
+
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin", "vietnamese"],
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -40,7 +47,7 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`${jetbrainsMono.variable} h-full`}
+      className={`${jetbrainsMono.variable} ${playfairDisplay.variable} h-full`}
       suppressHydrationWarning
     >
       <head>

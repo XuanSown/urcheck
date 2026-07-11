@@ -47,7 +47,7 @@ export async function signAdminSession(session: AdminSession): Promise<string> {
 
 export async function verifyAdminSession(token: string): Promise<AdminSession | null> {
   try {
-    const { payload } = await jwtVerify(token, getAdminSecret());
+    const { payload } = await jwtVerify(token, getAdminSecret(), { algorithms: ['HS256'] });
     const p = payload as unknown as Record<string, unknown>;
     return {
       userId: p.userId as string,
@@ -75,7 +75,7 @@ export async function signCustomerSession(session: CustomerSession): Promise<str
 
 export async function verifyCustomerSession(token: string): Promise<CustomerSession | null> {
   try {
-    const { payload } = await jwtVerify(token, getCustomerSecret());
+    const { payload } = await jwtVerify(token, getCustomerSecret(), { algorithms: ['HS256'] });
     const p = payload as unknown as Record<string, unknown>;
     return {
       customerId: p.customerId as string,

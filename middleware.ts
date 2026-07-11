@@ -1,0 +1,75 @@
+import { NextResponse, type NextRequest } from 'next/server';
+import { jwtVerify } from 'jose';
+
+export const config = {
+  matcher: ['/api/customer/:path*', '/api/admin/:path*'],
+};
+
+const CUSTOMER_PUBLIC = [
+  '/api/customer/login',
+  '/api/customer/register',
+  '/api/customer/logout',
+];
+
+function isCustomerPublic(pathname: string): boolean {
+  if (CUSTOMER_PUBLIC.includes(pathname)) return true;
+  return (
+    pathname.startsWith('/api/customer/forgot-password') ||
+    pathname.startsWith('/api/customer/reset-password')
+  );
+}
+
+function isAdminPublic(pathname: string): boolean {
+  if (pathname === '/api/admin/login') return true;
+  return pathname.startsWith('/api/admin/forgot-password');
+}
+
+function getSecret(variants: (string | undefined)[]): Uint8Array | null {
+  const secret = variants.find((v) => v && v.length > 0);
+  if (!secret) return null;
+  return new TextEncoder().encode(secret);
+}
+
+async function verifyJwt(token: string, secret: Uint8Array | null): Promise<boolean> {
+  if (!secret || !token) return false;
+  try {
+    await jwtVerify(token, secret, { algorithms: ['HS256'] });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export default async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (pathname.startsWith('/api/customer')) {
+    if (isCustomerPublic(pathname)) {
+      return NextResponse.next();
+    }
+    const secret = getSecret([
+      process.env.JWT_SECRET,
+      process.env.ADMIN_SESSION_SECRET,
+      process.env.SECRET_KEY,
+    ]);
+    const token = request.cookies.get('customer_session')?.value ?? '';
+    if (!(await verifyJwt(token, secret))) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+    return NextResponse.next();
+  }
+
+  if (pathname.startsWith('/api/admin')) {
+    if (isAdminPublic(pathname)) {
+      return NextResponse.next();
+    }
+    const secret = getSecret([process.env.ADMIN_SESSION_SECRET, process.env.SECRET_KEY]);
+    const token = request.cookies.get('admin_session')?.value ?? '';
+    if (!(await verifyJwt(token, secret))) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+    return NextResponse.next();
+  }
+
+  return NextResponse.next();
+}

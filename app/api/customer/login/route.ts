@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { loginCustomer, setCustomerSessionCookie } from '@/lib/customer-auth';
+import { checkRateLimit, incrementRateLimit } from '@/lib/rate-limit';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 
@@ -7,16 +8,6 @@ const schema = z.object({
   email: z.string().email('Email không hợp lệ'),
   password: z.string().min(1, 'Vui lòng nhập mật khẩu'),
 });
-
-const WINDOW_MS = 15 * 60 * 1000;
-const MAX_ATTEMPTS = 5;
-const attempts = new Map<string, { count: number; resetTime: number }>();
-
-function purge(now: number) {
-  for (const [k, v] of Array.from(attempts)) {
-    if (now >= v.resetTime) attempts.delete(k);
-  }
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,21 +29,12 @@ export async function POST(request: NextRequest) {
 
     const secure = request.headers.get('x-forwarded-proto') === 'https';
 
-    const now = Date.now();
-    purge(now);
-    const key = `customer:login:${ip}`;
-    const bucket = attempts.get(key);
-
-    if (bucket && bucket.count >= MAX_ATTEMPTS && now < bucket.resetTime) {
-      const sec = Math.ceil((bucket.resetTime - now) / 1000);
+    const lim = checkRateLimit('login', ip, { windowMs: 15 * 60 * 1000, max: 5 });
+    if (lim.limited) {
       return NextResponse.json(
-        { success: false, error: `Quá nhiều lần đăng nhập thất bại. Thử lại sau ${Math.ceil(sec / 60)} phút` },
+        { success: false, error: `Quá nhiều lần đăng nhập thất bại. Thử lại sau ${Math.ceil(lim.retryAfterSec / 60)} phút` },
         { status: 429 }
       );
-    }
-
-    if (!bucket || now >= bucket.resetTime) {
-      attempts.set(key, { count: 0, resetTime: now + WINDOW_MS });
     }
 
     const result = await loginCustomer({
@@ -63,8 +45,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      const b = attempts.get(key);
-      if (b) b.count += 1;
+      incrementRateLimit('login', ip);
       return NextResponse.json(
         { success: false, error: result.error },
         { status: 401 }

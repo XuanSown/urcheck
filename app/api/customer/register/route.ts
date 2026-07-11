@@ -1,22 +1,13 @@
 import { NextResponse } from 'next/server';
 import { registerCustomer, setCustomerSessionCookie, logCustomerAction } from '@/lib/customer-auth';
 import { validatePasswordComplexity } from '@/lib/password-validation';
+import { checkRateLimit, incrementRateLimit } from '@/lib/rate-limit';
 import { z } from 'zod';
 
 const registerSchema = z.object({
   email: z.string().email('Email không hợp lệ').max(255, 'Email quá dài'),
   password: z.string().min(8, 'Mật khẩu cần ít nhất 8 ký tự').max(128, 'Mật khẩu quá dài'),
 });
-
-const REGISTER_WINDOW = 60 * 60 * 1000;
-const REGISTER_MAX = 3;
-const registerAttempts = new Map<string, { count: number; resetTime: number }>();
-
-function purgeRegister(now: number) {
-  for (const [k, v] of Array.from(registerAttempts)) {
-    if (now >= v.resetTime) registerAttempts.delete(k);
-  }
-}
 
 export async function POST(request: Request) {
   try {
@@ -40,21 +31,12 @@ export async function POST(request: Request) {
 
     const secure = request.headers.get('x-forwarded-proto') === 'https';
 
-    const now = Date.now();
-    purgeRegister(now);
-    const key = `customer:register:${ip}`;
-    const bucket = registerAttempts.get(key);
-
-    if (bucket && bucket.count >= REGISTER_MAX && now < bucket.resetTime) {
-      const sec = Math.ceil((bucket.resetTime - now) / 1000);
+    const lim = checkRateLimit('register', ip, { windowMs: 60 * 60 * 1000, max: 3 });
+    if (lim.limited) {
       return NextResponse.json(
-        { success: false, error: `Quá nhiều lần đăng ký. Thử lại sau ${Math.ceil(sec / 60)} phút` },
+        { success: false, error: `Quá nhiều lần đăng ký. Thử lại sau ${Math.ceil(lim.retryAfterSec / 60)} phút` },
         { status: 429 }
       );
-    }
-
-    if (!bucket || now >= bucket.resetTime) {
-      registerAttempts.set(key, { count: 0, resetTime: now + REGISTER_WINDOW });
     }
 
     const pwValidation = validatePasswordComplexity(password);
@@ -68,8 +50,7 @@ export async function POST(request: Request) {
     const result = await registerCustomer({ email, password });
 
     if (!result.success) {
-      const b = registerAttempts.get(key);
-      if (b) b.count += 1;
+      incrementRateLimit('register', ip);
       await logCustomerAction({
         customerId: result.customerId,
         email,

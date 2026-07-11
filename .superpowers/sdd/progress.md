@@ -1,19 +1,22 @@
-# SDD Progress
+# Customer Routines CRUD/UI Progress
+
+BASE: dd52625
 
 
-Task 1: complete (a8f66fc..bca0c55, review clean)
+Task 1: complete (dd52625..50d7db5, review clean)
 
-Task 2: complete (bca0c55..069c63e, review clean after fix)
+Task 2: complete (50d7db5..e3daf59, review clean)
 
-Task 3: complete (069c63e..914915b, review clean)
+Task 3: complete (e3daf59..d31f373, review clean)
 
-Task 4: complete (914915b..710c12c, review clean)
+Task 4: complete (d31f373..cc1b93d, review clean)
 
-Task 5: complete (710c12c..c469bd9, review clean)
+Task 5: complete (cc1b93d..84cd36d, review clean)
 
-Task 6: complete (c469bd9..a2989c9, review clean)
+Task 6: complete (84cd36d..238ae9c, review clean)
 
-Task 7: build+deploy green, LIVE 200 + DB ok. PENDING: user runs supabase_manual.sql on Supabase.
+Task 7: complete (238ae9c..e0271fb, review clean)
 
-Task 7: COMPLETE. User ran supabase_rebuild.sql (drop+recreate 19 tables). Build+deploy green. / 200, /api/health DB ok, /api/feed success:true, /blog /support 200.
+Task 8: complete (e0271fb..7b60207, review clean)
 
+Fix wave: complete (7b60207..0d67936, review clean, READY TO MERGE)

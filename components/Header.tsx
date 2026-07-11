@@ -83,11 +83,12 @@ export function Header({ className }: HeaderProps) {
           </div>
 
           <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 sm:px-6 py-2.5 sm:py-3">
-          {/* Left: nav links (desktop) */}
-          <div className="hidden md:flex items-center gap-4 justify-self-start">
+          {/* Left: empty spacer on mobile, nav links on desktop */}
+          <div className="flex items-center gap-4 justify-self-start">
             {navLinks.map((link, i) => (
               <motion.div
                 key={link.href}
+                className="hidden md:block"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * i, duration: 0.4 }}

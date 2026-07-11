@@ -42,27 +42,26 @@ export default function CustomersPage() {
   const [pendingDelete, setPendingDelete] = useState<Customer | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const fetchCustomers = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams();
-      params.set('page', String(page));
-      if (search) params.set('search', search);
-      if (activeFilter !== 'all') params.set('isActive', activeFilter);
-      const res = await fetch(`/api/admin/customers?${params.toString()}`);
-      const data = await res.json();
-      if (data.success) {
-        setCustomers(data.data.customers);
-        setPagination(data.data.pagination);
-      } else {
-        setError(data.error);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Lỗi tải dữ liệu');
-    } finally {
-      setLoading(false);
-    }
+  const fetchCustomers = useCallback(() => {
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    if (search) params.set('search', search);
+    if (activeFilter !== 'all') params.set('isActive', activeFilter);
+    fetch(`/api/admin/customers?${params.toString()}`)
+      .then((res) => res.json())
+      .then((data: { success: boolean; data?: { customers: Customer[]; pagination: Pagination }; error?: string }) => {
+        setError(null);
+        if (data.success && data.data) {
+          setCustomers(data.data.customers);
+          setPagination(data.data.pagination);
+        } else {
+          setError(data.error ?? 'Lỗi tải dữ liệu');
+        }
+      })
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : 'Lỗi tải dữ liệu');
+      })
+      .finally(() => setLoading(false));
   }, [page, search, activeFilter]);
 
   useEffect(() => {
@@ -99,8 +98,8 @@ export default function CustomersPage() {
       } else {
         toast({ type: 'error', title: 'Thất bại', description: data.error });
       }
-    } catch (err: any) {
-      toast({ type: 'error', title: 'Lỗi', description: err.message });
+    } catch (err: unknown) {
+      toast({ type: 'error', title: 'Lỗi', description: err instanceof Error ? err.message : 'Lỗi không xác định' });
     } finally {
       setBusy(false);
       setPendingToggle(null);
@@ -122,8 +121,8 @@ export default function CustomersPage() {
       } else {
         toast({ type: 'error', title: 'Thất bại', description: data.error });
       }
-    } catch (err: any) {
-      toast({ type: 'error', title: 'Lỗi', description: err.message });
+    } catch (err: unknown) {
+      toast({ type: 'error', title: 'Lỗi', description: err instanceof Error ? err.message : 'Lỗi không xác định' });
     } finally {
       setBusy(false);
       setPendingDelete(null);

@@ -4,7 +4,7 @@ import prisma from '@/lib/db';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import { formatNumber, formatDate, formatPercent } from '@/lib/format-utils';
+import { formatNumber } from '@/lib/format-utils';
 
 // Async component to fetch dashboard data
 async function getDashboardData() {
